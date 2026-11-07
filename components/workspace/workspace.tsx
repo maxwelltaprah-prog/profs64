@@ -3,7 +3,7 @@
 import { type UIMessage } from "ai";
 import { Code2, MessageSquare, PanelRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { iconProps } from "@/components/ui/icons";
 import { type ProjectFile } from "@/lib/db/projects";
@@ -61,10 +61,21 @@ export function Workspace({
     }, 150);
   }, [projectId]);
 
+  // The stream closes before the server has settled the charge, so one refresh can read the
+  // old balance. Refresh now for the files and again shortly after for the credits.
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onFinished = useCallback(() => {
     refreshFiles();
-    router.refresh(); // re-reads the credit balance shown in the header
+    router.refresh();
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => router.refresh(), 2000);
   }, [refreshFiles, router]);
+  useEffect(
+    () => () => {
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+    },
+    [],
+  );
 
   const tabs: Array<{ id: Tab; label: string; Icon: typeof Code2 }> = [
     { id: "code", label: "Code", Icon: Code2 },

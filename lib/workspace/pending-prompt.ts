@@ -98,6 +98,17 @@ export function projectNameFromPrompt(text: string): string {
   if (cleaned.length === 0) return "New project";
   if (cleaned.length <= PROJECT_NAME_MAX) return cleaned;
   const cut = cleaned.slice(0, PROJECT_NAME_MAX);
-  const lastSpace = cut.lastIndexOf(" ");
-  return (lastSpace > PROJECT_NAME_MAX / 2 ? cut.slice(0, lastSpace) : cut).trimEnd();
+  // Prefer ending at a clause boundary, then at a word boundary, so the name reads as a phrase.
+  const half = PROJECT_NAME_MAX / 2;
+  const clause = Math.max(
+    ...[".", ":", ";", ",", "!", "?", " - ", " ("].map((m) => cut.lastIndexOf(m)),
+  );
+  const stop =
+    clause > half ? clause : cut.lastIndexOf(" ") > half ? cut.lastIndexOf(" ") : cut.length;
+  return (
+    cut
+      .slice(0, stop)
+      .replace(/[\s.:;,!?(-]+$/, "")
+      .trimEnd() || cut.trimEnd()
+  );
 }

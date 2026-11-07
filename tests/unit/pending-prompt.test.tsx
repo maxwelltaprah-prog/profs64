@@ -77,6 +77,14 @@ describe("pending prompt storage", () => {
     expect(long.length).toBeLessThanOrEqual(60);
     expect(long.endsWith(" ")).toBe(false);
     expect(long).toBe("A very long description of an application that goes on and");
+    expect(
+      projectNameFromPrompt(
+        "Build a landing page for a coffee shop called Bean There: a Hero with the name",
+      ),
+    ).toBe("Build a landing page for a coffee shop called Bean There");
+    expect(
+      projectNameFromPrompt("Make me a todo app, with dark mode and a weekly view please"),
+    ).toBe("Make me a todo app, with dark mode and a weekly view");
   });
 });
 
