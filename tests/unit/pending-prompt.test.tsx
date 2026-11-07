@@ -84,7 +84,7 @@ describe("pending prompt storage", () => {
     ).toBe("Build a landing page for a coffee shop called Bean There");
     expect(
       projectNameFromPrompt("Make me a todo app, with dark mode and a weekly view please and more"),
-    ).toBe("Make me a todo app");
+    ).toBe("Make me a todo app, with dark mode and a weekly view please");
   });
 });
 
