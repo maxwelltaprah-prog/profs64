@@ -6,21 +6,24 @@ import { badRequest } from "@/lib/security/errors";
 import { logger } from "@/lib/security/logger";
 import { assertPasswordAcceptable } from "@/lib/security/password-guard";
 import { enforceLimits, LIMITS } from "@/lib/security/rate-limit";
+import { safeRedirectPath } from "@/lib/security/redirect";
 import { readJson } from "@/lib/security/request";
 import { AUTH_BODY_LIMIT_BYTES, signupSchema } from "@/lib/security/schemas";
 
 export const POST = withApi("auth.signup", async (request, { requestId }) => {
   await enforceLimits([{ config: LIMITS.signupIp, key: hashForKey(getClientIp(request.headers)) }]);
-  const { email, password } = await readJson(request, signupSchema, AUTH_BODY_LIMIT_BYTES);
+  const { email, password, next } = await readJson(request, signupSchema, AUTH_BODY_LIMIT_BYTES);
 
   await assertPasswordAcceptable(password, email, requestId);
 
   const base = appBaseUrl(request);
+  const landing = safeRedirectPath(next);
+  const callback = `/auth/callback?next=${encodeURIComponent(landing)}`;
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: base ? { emailRedirectTo: `${base}/auth/callback` } : {},
+    options: base ? { emailRedirectTo: `${base}${callback}` } : {},
   });
 
   if (error) {

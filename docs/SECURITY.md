@@ -69,6 +69,7 @@ This document describes what the code does and how each claim was checked. "Chec
 - **Supply chain.** Exact version pins (enforced by a test), `npm audit` in CI and in `ship-check`, Dependabot configuration, CodeQL workflow, gitleaks in CI and pre-commit. The workflows have not run (KI-2).
 - **Terms and privacy.** Placeholder pages exist and say plainly that they have not been reviewed by a lawyer.
 - **Data subject requests.** Export and deletion are implemented (Account page, `/api/account/export`, `/api/account/delete`) and unit tested with mocked storage; the underlying `export_user_data` function and deletion cascade are integration tested.
+- **Pending prompt in the browser.** The home-page prompt is kept in `localStorage` until the person has signed in. It is untrusted on the way back: it is length-capped on save and on read, dropped if malformed or older than a day, sent only into the project whose id was recorded with it, and validated by the chat route like any typed message. Client components import limits from `lib/security/limits.ts`, not from the Zod schemas, because Zod 4 compiles parsers with `new Function` and the CSP forbids `eval` (a guardrail test enforces this).
 - **Not implemented:** MFA enrolment, an admin console, automatic retention limits on chat messages, per-request zero-data-retention routing, and an alert when spend crosses a threshold.
 
 ## Reporting

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -86,5 +86,23 @@ describe("project guardrails", () => {
     for (const [name, version] of Object.entries(all)) {
       expect(version, `${name} is not pinned`).toMatch(SEMVER);
     }
+  });
+
+  it("client components never import the Zod schemas module (its parsers need eval, which the CSP blocks)", () => {
+    const walk = (dir: string): string[] =>
+      readdirSync(dir).flatMap((entry) => {
+        const full = path.join(dir, entry);
+        if (statSync(full).isDirectory()) return walk(full);
+        return /\.tsx?$/.test(entry) ? [full] : [];
+      });
+    const offenders = [...walk(path.join(root, "components")), ...walk(path.join(root, "lib"))]
+      .filter((file) => {
+        const source = readFileSync(file, "utf8");
+        const isClient =
+          source.startsWith('"use client"') || file.includes(`${path.sep}workspace${path.sep}`);
+        return isClient && source.includes("@/lib/security/schemas");
+      })
+      .map((file) => path.relative(root, file));
+    expect(offenders).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { AuthForm } from "@/components/auth/auth-form";
-import { PASSWORD_MIN } from "@/lib/security/schemas";
+import { PASSWORD_MIN } from "@/lib/security/limits";
 
 import type { Metadata } from "next";
 

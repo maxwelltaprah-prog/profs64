@@ -47,6 +47,8 @@ test("protected pages send signed-out visitors to sign in and keep the destinati
   await expect(page).toHaveURL(/\/login\?next=/);
   await page.goto("/account");
   await expect(page).toHaveURL(/\/login\?next=%2Faccount$/);
+  await page.goto("/start");
+  await expect(page).toHaveURL(/\/login\?next=%2Fstart$/);
 });
 
 test("the sign-in form shows a generic error and stays usable", async ({ page }) => {

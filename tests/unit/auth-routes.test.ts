@@ -74,6 +74,26 @@ describe("POST /api/auth/signup", () => {
     expect(auth.signUp).toHaveBeenCalledWith(expect.objectContaining({ email: "new@example.com" }));
   });
 
+  it("points the confirmation link at a safe next path and ignores unsafe ones", async () => {
+    const handler = await load("signup");
+    await call(handler, { email: "a@example.com", password: GOOD_PASSWORD, next: "/start" });
+    expect(auth.signUp).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        options: { emailRedirectTo: "https://app.example/auth/callback?next=%2Fstart" },
+      }),
+    );
+    await call(handler, {
+      email: "a@example.com",
+      password: GOOD_PASSWORD,
+      next: "https://evil.example/phish",
+    });
+    expect(auth.signUp).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        options: { emailRedirectTo: "https://app.example/auth/callback?next=%2Fdashboard" },
+      }),
+    );
+  });
+
   it("answers identically when Supabase hides that the account already exists", async () => {
     const handler = await load("signup");
     const fresh = await call(handler, { email: "a@example.com", password: GOOD_PASSWORD });

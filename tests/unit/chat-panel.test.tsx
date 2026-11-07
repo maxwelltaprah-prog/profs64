@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatPanel } from "@/components/workspace/chat-panel";
 import { createFakeModel, type FakeModelOptions } from "@/lib/ai/fake-model";
 import { createProjectTools, type FileStore } from "@/lib/ai/tools";
+import { readPendingPrompt, savePendingPrompt } from "@/lib/workspace/pending-prompt";
 
 // Runs the real server-side pipeline (fake model, real tools, real UI stream encoding) behind a
 // fake fetch, so the panel is tested against the exact wire format the route produces.
@@ -64,6 +65,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  window.localStorage.clear();
 });
 
 describe("ChatPanel", () => {
@@ -182,5 +184,39 @@ describe("ChatPanel", () => {
     );
     await user.keyboard("{Control>}{Enter}{/Control}");
     expect(impl).not.toHaveBeenCalled();
+  });
+
+  describe("prompt saved on the home page", () => {
+    const PROJECT = "11111111-1111-4111-8111-111111111111";
+
+    it("is sent once into its own project and then forgotten", async () => {
+      savePendingPrompt("Build a coffee shop landing page", PROJECT);
+      const { requests, impl } = installServer(new Map());
+      renderPanel();
+      await waitFor(() => expect(impl).toHaveBeenCalledTimes(1));
+      const first = requests[0] as { message: { parts: Array<{ text: string }> } };
+      expect(first.message.parts[0]?.text).toBe("Build a coffee shop landing page");
+      expect(readPendingPrompt()).toBeNull();
+    });
+
+    it("is not sent into a different project", () => {
+      savePendingPrompt("Build a coffee shop landing page", "22222222-2222-4222-8222-222222222222");
+      const { impl } = installServer(new Map());
+      renderPanel();
+      expect(impl).not.toHaveBeenCalled();
+      expect(readPendingPrompt()?.text).toBe("Build a coffee shop landing page");
+      expect((screen.getByLabelText("Message") as HTMLTextAreaElement).value).toBe("");
+    });
+
+    it("waits in the composer when the assistant cannot run yet", () => {
+      savePendingPrompt("Build a coffee shop landing page", PROJECT);
+      const { impl } = installServer(new Map());
+      renderPanel({ canUseAssistant: false });
+      expect(impl).not.toHaveBeenCalled();
+      expect((screen.getByLabelText("Message") as HTMLTextAreaElement).value).toBe(
+        "Build a coffee shop landing page",
+      );
+      expect(readPendingPrompt()).toBeNull();
+    });
   });
 });

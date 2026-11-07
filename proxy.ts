@@ -8,7 +8,7 @@ import { getRequestId } from "@/lib/security/request-id";
 // nonce, refreshes the Supabase session and does optimistic redirects. It is not an
 // authorization layer: every page and route re-verifies the user itself.
 
-const PROTECTED_PREFIXES = ["/dashboard", "/project", "/account"];
+const PROTECTED_PREFIXES = ["/dashboard", "/project", "/account", "/start"];
 const GUEST_ONLY = ["/login", "/signup", "/forgot-password"];
 
 const matches = (pathname: string, prefixes: string[]) =>

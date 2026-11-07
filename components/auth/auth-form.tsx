@@ -23,6 +23,10 @@ interface AuthFormProps {
   redirectTo?: string;
   successTitle?: string;
   successMessage?: string;
+  /** Extra fields sent with the form values, such as a post-confirmation path. */
+  extraBody?: Readonly<Record<string, string>>;
+  /** Called after a successful response when there is no redirectTo. */
+  onSuccess?: () => void;
 }
 
 const NETWORK_ERROR = "Could not reach the server. Check your connection and try again.";
@@ -34,6 +38,8 @@ export function AuthForm({
   redirectTo,
   successTitle,
   successMessage,
+  extraBody,
+  onSuccess,
 }: AuthFormProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +65,7 @@ export function AuthForm({
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...extraBody, ...values }),
       });
       if (response.ok) {
         if (redirectTo) {
@@ -68,6 +74,7 @@ export function AuthForm({
           return;
         }
         setDone(true);
+        onSuccess?.();
         return;
       }
       const body = (await response.json().catch(() => null)) as {

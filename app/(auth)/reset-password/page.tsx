@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { getOptionalUser } from "@/lib/db/auth";
-import { PASSWORD_MIN } from "@/lib/security/schemas";
+import { PASSWORD_MIN } from "@/lib/security/limits";
 
 import type { Metadata } from "next";
 

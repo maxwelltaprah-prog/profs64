@@ -17,7 +17,7 @@ Browser ──(cookie session)──▶ proxy.ts ──▶ pages / route handler
 
 ## Request path
 
-1. `proxy.ts` runs first on every request. It sets a per-request CSP nonce and security headers, refreshes the Supabase session cookie, and redirects signed-out visitors away from `/dashboard`, `/project` and `/account` (and signed-in visitors away from the sign-in pages). These redirects are an optimisation: every page and route re-verifies the user itself.
+1. `proxy.ts` runs first on every request. It sets a per-request CSP nonce and security headers, refreshes the Supabase session cookie, and redirects signed-out visitors away from `/dashboard`, `/project`, `/account` and `/start` (and signed-in visitors away from the sign-in pages). These redirects are an optimisation: every page and route re-verifies the user itself.
 2. Pages are server components rendered per request (the root layout awaits `connection()`), which is what lets the nonce be applied to every script.
 3. Route handlers are wrapped by `withApi` (`lib/security/api.ts`): request ID, same-origin check on state-changing methods, uniform JSON errors, one structured log line. They validate bodies with Zod and a byte cap (`lib/security/request.ts`).
 
@@ -52,6 +52,10 @@ Cost: `lib/ai/models.ts` holds prices, `lib/credits/math.ts` converts dollars to
 - `components/workspace/*`: split pane (keyboard and pointer resizable, size remembered per user and project), file tree, read-only code viewer, chat panel using `useChat`. Model text is rendered as text nodes only.
 - The file tree is refreshed from the server as each file-changing tool call completes. The credit balance refreshes when a turn ends.
 - UI primitives in `components/ui/*` use CSS variable tokens (`app/globals.css`). No inline `style` attributes are used anywhere, because the production CSP forbids them.
+
+### Prompt-first entry
+
+The home page leads with a prompt box (`components/landing/prompt-box.tsx`). Submitting it saves the text in `localStorage` (`lib/workspace/pending-prompt.ts`, 24-hour expiry) and either goes to `/start` or, when signed out, opens a native `<dialog>` with the sign-up and sign-in forms. Sign-up sends `next: "/start"` so the confirmation link lands there; sign-in redirects there directly. `/start` (`components/start/start-project.tsx`) creates a project named from the prompt's first line, records the project id alongside the prompt, and opens the workspace. The chat panel sends the prompt once, only when the stored project id matches the open project and the assistant can run; otherwise it is placed in the composer. Browser storage is the right place for this: it is a per-visitor convenience, nothing else reads it, and the server validates the text like any other message.
 
 ## Testing layers
 

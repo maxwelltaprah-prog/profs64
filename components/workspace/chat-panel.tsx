@@ -15,6 +15,7 @@ import {
   friendlyChatError,
   type ToolLine,
 } from "@/lib/workspace/chat-lines";
+import { clearPendingPrompt, readPendingPrompt } from "@/lib/workspace/pending-prompt";
 
 const MAX_CHARS = 8000;
 
@@ -104,6 +105,27 @@ export function ChatPanel({
 
   const busy = status === "submitted" || status === "streaming";
   const enabled = canUseAssistant && hasCredits;
+
+  // A prompt typed on the home page before signing in is sent once, only into the project it
+  // was saved for, and only when the assistant can actually run. Otherwise it stays in the box
+  // so the person can send it themselves once they have confirmed their email or topped up.
+  const autoSent = useRef(false);
+  useEffect(() => {
+    if (autoSent.current) return;
+    const pending = readPendingPrompt();
+    if (!pending || pending.projectId !== projectId) return;
+    autoSent.current = true;
+    clearPendingPrompt();
+    if (enabled && initialMessages.length === 0) {
+      stick.current = true;
+      void sendMessage({ text: pending.text });
+    } else {
+      // Client-only state: the prompt lives in localStorage, so it cannot be an initial value
+      // without a hydration mismatch. One extra render on mount is the cost.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInput(pending.text);
+    }
+  }, [enabled, initialMessages.length, projectId, sendMessage]);
 
   // Refresh the file tree as soon as each file-changing tool call completes.
   useEffect(() => {

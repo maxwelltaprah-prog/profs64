@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { PromptBox } from "@/components/landing/prompt-box";
 import { getOptionalUser } from "@/lib/db/auth";
+import { PASSWORD_MIN } from "@/lib/security/limits";
 
 const buttonBase =
   "transition-ui inline-flex h-9 items-center rounded-md px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2";
@@ -55,16 +57,8 @@ export default async function Home() {
             Buildr is a workspace where you chat with an assistant that writes a Vite, React and
             Tailwind project for you. New accounts start with 20 credits.
           </p>
-          <div className="mt-6 flex items-center gap-3">
-            <Link
-              href={user ? "/dashboard" : "/signup"}
-              className={`${buttonBase} bg-accent text-accent-fg hover:bg-accent-hover`}
-            >
-              {user ? "Open projects" : "Create account"}
-            </Link>
-            <Link href="/privacy" className="text-muted hover:text-text text-[13px]">
-              Privacy notice
-            </Link>
+          <div className="mt-8">
+            <PromptBox signedIn={Boolean(user)} passwordMin={PASSWORD_MIN} />
           </div>
         </section>
 

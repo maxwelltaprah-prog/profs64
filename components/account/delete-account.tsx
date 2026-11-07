@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { DELETE_CONFIRMATION } from "@/lib/security/schemas";
+import { DELETE_CONFIRMATION } from "@/lib/security/limits";
 
 export function DeleteAccount() {
   const router = useRouter();
