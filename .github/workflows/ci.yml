@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3.2.0
       - run: npm ci
       - run: supabase start
       - name: Export local Supabase credentials
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: google/osv-scanner-action/osv-scanner-action@v2
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
         with:
           scan-args: |-
             --lockfile=package-lock.json
