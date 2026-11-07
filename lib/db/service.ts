@@ -84,3 +84,17 @@ export async function insertAssistantMessage(input: {
     .insert({ project_id: input.projectId, role: "assistant", parts: input.parts });
   if (error) throw new Error(`assistant message write failed: ${error.code ?? "unknown"}`);
 }
+
+// Everything held about one account, as a single JSON document (data export).
+export async function exportUserData(userId: string): Promise<unknown> {
+  const { data, error } = await serviceClient().rpc("export_user_data", { p_user_id: userId });
+  if (error) throw new Error(`export failed: ${error.code ?? "unknown"}`);
+  return data;
+}
+
+// Deletes the sign-in account. Projects, files and messages cascade; the credit ledger and audit
+// log are kept but anonymised by the database (see the init migration).
+export async function deleteAuthUser(userId: string): Promise<void> {
+  const { error } = await serviceClient().auth.admin.deleteUser(userId);
+  if (error) throw new Error(`account deletion failed: ${error.code ?? error.status ?? "unknown"}`);
+}

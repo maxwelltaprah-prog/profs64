@@ -67,6 +67,12 @@ export function AppHeader({
           applyTheme(nextTheme(current));
         },
       },
+      {
+        id: "account",
+        label: "Account and data",
+        keywords: "export delete settings",
+        run: () => router.push("/account"),
+      },
       { id: "signout", label: "Sign out", keywords: "log out logout", run: () => void signOut() },
     ],
     // signOut only closes over stable values (toast), so it is safe to omit.

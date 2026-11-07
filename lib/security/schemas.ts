@@ -47,3 +47,9 @@ export const chatBodySchema = z.strictObject({
   }),
 });
 export type ChatBody = z.infer<typeof chatBodySchema>;
+
+export const DELETE_CONFIRMATION = "delete my account";
+export const deleteAccountSchema = z.strictObject({
+  password: z.string().min(1).max(PASSWORD_MAX),
+  confirm: z.literal(DELETE_CONFIRMATION),
+});

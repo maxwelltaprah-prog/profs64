@@ -155,3 +155,33 @@ describe("concurrency", () => {
     }
   });
 });
+
+describe("operator refunds and adjustments (documented in docs/RUNBOOK.md)", () => {
+  const change = (user: string, delta: number, reason: string) =>
+    asService(
+      (c) =>
+        c.query("select * from public.record_credit_change($1, $2, $3)", [user, delta, reason]),
+      { commit: true },
+    );
+
+  it("a refund adds credits and writes one ledger row whose balance_after matches", async () => {
+    const user = await createUser("refund");
+    const before = await balanceOf(user);
+    const result = await change(user, 5, "refund");
+    expect(Number(result.rows[0]?.balance_after)).toBe(before + 5);
+    expect(await balanceOf(user)).toBe(before + 5);
+    const rows = await pool.query(
+      "select delta, reason, balance_after from credit_ledger where user_id = $1 and reason = 'refund'",
+      [user],
+    );
+    expect(rows.rows).toHaveLength(1);
+    expect(Number(rows.rows[0]?.delta)).toBe(5);
+    expect(Number(rows.rows[0]?.balance_after)).toBe(before + 5);
+  });
+
+  it("rejects an unknown reason and a zero change", async () => {
+    const user = await createUser("badreason");
+    expect(await sqlState(change(user, 5, "bonus"))).not.toBe("ok");
+    expect(await sqlState(change(user, 0, "refund"))).not.toBe("ok");
+  });
+});

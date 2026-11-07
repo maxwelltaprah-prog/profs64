@@ -120,8 +120,8 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-hairline text-muted border-t px-6 py-5 text-xs">
-        <div className="mx-auto flex max-w-5xl gap-4">
+      <footer className="border-hairline text-muted border-t py-5 text-xs">
+        <div className="mx-auto flex max-w-5xl gap-4 px-6">
           <Link href="/terms" className="hover:text-text">
             Terms
           </Link>

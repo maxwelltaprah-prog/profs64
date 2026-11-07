@@ -142,4 +142,13 @@ test.describe("chat API without a session", () => {
     });
     expect(created.status()).toBe(401);
   });
+
+  test("account export and deletion need a session", async ({ request }) => {
+    expect((await request.get("/api/account/export")).status()).toBe(401);
+    const response = await request.post("/api/account/delete", {
+      headers,
+      data: Buffer.from(JSON.stringify({ password: "x", confirm: "delete my account" })),
+    });
+    expect(response.status()).toBe(401);
+  });
 });
