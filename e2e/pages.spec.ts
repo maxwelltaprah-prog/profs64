@@ -25,6 +25,9 @@ for (const theme of ["light", "dark"] as const) {
       page.on("console", (message) => {
         if (/content security policy/i.test(message.text())) blocked.push(message.text());
       });
+      // Audit the settled page: with reduced motion the entrance and the demo replay show
+      // their final state at once, so axe does not sample text mid-fade.
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       expect(await page.locator("html").getAttribute("data-theme")).toBe(theme);

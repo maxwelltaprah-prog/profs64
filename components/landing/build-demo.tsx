@@ -53,11 +53,17 @@ const CODE = `export function Menu() {
 }`;
 
 const FINAL_STEP = 6;
-const STEP_MS = [900, 1100, 1300, 1100, 1100, 1200, 5000] as const;
+// Step 1 is the prompt being typed; its length sets how long that step lasts.
+const TYPE_MS = 22;
+const STEP_MS = [700, PROMPT.length * TYPE_MS + 500, 1100, 900, 900, 1200, 6000] as const;
+const START_BALANCE = 20;
+const END_BALANCE = 19.74;
 
 export function BuildDemo() {
   const [step, setStep] = useState(0);
   const [animated, setAnimated] = useState(false);
+  const [typed, setTyped] = useState(0);
+  const [balance, setBalance] = useState(END_BALANCE);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -71,6 +77,7 @@ export function BuildDemo() {
     let timer: ReturnType<typeof setTimeout>;
     const advance = () => {
       current = current >= FINAL_STEP ? 0 : current + 1;
+      if (current === 1) setTyped(0);
       setStep(current);
       timer = setTimeout(advance, STEP_MS[current] ?? 1000);
     };
@@ -78,13 +85,44 @@ export function BuildDemo() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Typewriter for the prompt while step 1 runs. State is only written from the interval.
+  useEffect(() => {
+    if (!animated || step !== 1) return;
+    let count = 0;
+    const interval = setInterval(() => {
+      count += 1;
+      setTyped(count);
+      if (count >= PROMPT.length) clearInterval(interval);
+    }, TYPE_MS);
+    return () => clearInterval(interval);
+  }, [animated, step]);
+
+  // The balance counts down over a short beat when the charge lands.
+  useEffect(() => {
+    if (!animated || step < FINAL_STEP) return;
+    const duration = 240;
+    const startedAt = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - (1 - t) * (1 - t);
+      setBalance(START_BALANCE + (END_BALANCE - START_BALANCE) * eased);
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [animated, step]);
+
+  // What is on screen is derived from the step; the animated values only apply mid-step.
+  const typedNow = !animated ? PROMPT.length : step === 0 ? 0 : step === 1 ? typed : PROMPT.length;
+  const balanceNow = !animated || step >= FINAL_STEP ? balance : START_BALANCE;
+
   const shown = (at: number) => step >= at;
   const reveal = (at: number) =>
     cn(
-      animated && "transition-opacity duration-300 ease-out",
-      shown(at) ? "opacity-100" : "opacity-0",
+      animated && "transition-[opacity,transform] duration-250 ease-out",
+      shown(at) ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0",
     );
-  const balance = shown(6) ? "19.74" : "20.00";
 
   return (
     <figure
@@ -98,7 +136,7 @@ export function BuildDemo() {
         </div>
         <div className="flex items-center gap-1.5 tabular-nums">
           <span className={cn("font-medium", shown(6) && animated && "text-ink-accent")}>
-            {balance}
+            {balanceNow.toFixed(2)}
           </span>
           <span className="text-ink-muted">credits</span>
         </div>
@@ -108,7 +146,16 @@ export function BuildDemo() {
         <div className="border-ink-border flex min-h-[22rem] flex-col gap-4 border-b p-5 text-[13px] leading-6 md:border-r md:border-b-0">
           <div className={reveal(1)}>
             <p className="text-ink-muted">You</p>
-            <p>{PROMPT}</p>
+            <p>
+              <span className="sr-only">{PROMPT}</span>
+              <span aria-hidden="true">{PROMPT.slice(0, typedNow)}</span>
+              {animated && step === 1 && typedNow < PROMPT.length ? (
+                <span
+                  aria-hidden="true"
+                  className="bg-ink-text ml-px inline-block h-[1em] w-[2px] translate-y-[2px]"
+                />
+              ) : null}
+            </p>
           </div>
           <div className={reveal(2)}>
             <p className="text-ink-muted">Assistant</p>

@@ -99,7 +99,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
         <label htmlFor={textareaId} className="sr-only">
           Describe the app you want to build
         </label>
-        <div className="border-hairline-strong bg-surface focus-within:border-accent rounded-lg border shadow-md">
+        <div className="lift border-hairline-strong bg-surface focus-within:border-accent rounded-lg border shadow-sm focus-within:shadow-md">
           <textarea
             id={textareaId}
             value={text}
@@ -153,7 +153,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
                   setError(null);
                   document.getElementById(textareaId)?.focus();
                 }}
-                className="transition-ui border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-text rounded-full border px-3 py-1 text-xs"
+                className="press border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-text rounded-full border px-3 py-1 text-xs"
               >
                 {example}
               </button>

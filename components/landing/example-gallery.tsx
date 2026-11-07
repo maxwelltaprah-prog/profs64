@@ -105,7 +105,7 @@ export function ExampleGallery() {
           <button
             type="button"
             onClick={() => pick(example.prompt)}
-            className="transition-ui border-hairline bg-surface hover:border-hairline-strong hover:bg-surface-2 group block w-full rounded-lg border p-3 text-left"
+            className="lift border-hairline bg-surface hover:border-hairline-strong group block w-full rounded-lg border p-3 text-left"
           >
             <Schematic layout={example.layout} />
             <div className="mt-3 flex items-baseline justify-between gap-3 px-1">
@@ -115,7 +115,7 @@ export function ExampleGallery() {
             <p className="text-muted mt-1 line-clamp-2 px-1 text-[13px] leading-5">
               {example.prompt}
             </p>
-            <span className="text-accent mt-3 block px-1 text-[13px] font-medium">
+            <span className="text-accent transition-ui mt-3 block px-1 text-[13px] font-medium underline-offset-4 group-hover:underline">
               Use this description
             </span>
           </button>

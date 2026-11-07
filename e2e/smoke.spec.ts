@@ -9,6 +9,7 @@ test("health endpoint reports ok without caching", async ({ request }) => {
 });
 
 test("landing page has no detectable accessibility violations", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag22aa"])

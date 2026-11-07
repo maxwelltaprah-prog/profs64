@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BuildDemo } from "@/components/landing/build-demo";
 import { ExampleGallery } from "@/components/landing/example-gallery";
 import { PromptBox } from "@/components/landing/prompt-box";
+import { Reveal } from "@/components/landing/reveal";
+import { SiteHeader } from "@/components/landing/site-header";
 import { getOptionalUser } from "@/lib/db/auth";
 import { PASSWORD_MIN } from "@/lib/security/limits";
 
@@ -87,69 +89,49 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
-        <Link href="/" className="text-[15px] font-semibold tracking-tight">
-          Buildr
-        </Link>
-        <nav aria-label="Page" className="text-muted hidden items-center gap-6 text-[13px] md:flex">
-          <a href="#examples" className="hover:text-text">
-            Examples
-          </a>
-          <a href="#how" className="hover:text-text">
-            How it works
-          </a>
-          <a href="#security" className="hover:text-text">
-            Security
-          </a>
-          <a href="#credits" className="hover:text-text">
-            Credits
-          </a>
-          <a href="#faq" className="hover:text-text">
-            Questions
-          </a>
-        </nav>
-        <nav aria-label="Account" className="flex items-center gap-4 text-[13px]">
-          {user ? (
+      <SiteHeader
+        account={
+          user ? (
             <Link
               href="/dashboard"
-              className={`${buttonBase} border-hairline-strong bg-surface hover:bg-surface-2 border`}
+              className={`${buttonBase} press border-hairline-strong bg-surface hover:bg-surface-2 border`}
             >
               Open projects
             </Link>
           ) : (
             <>
-              <Link href="/login" className="text-muted hover:text-text">
+              <Link href="/login" className="text-muted hover:text-text transition-ui">
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className={`${buttonBase} bg-accent text-accent-fg hover:bg-accent-hover`}
+                className={`${buttonBase} press bg-accent text-accent-fg hover:bg-accent-hover`}
               >
                 Get started
               </Link>
             </>
-          )}
-        </nav>
-      </header>
+          )
+        }
+      />
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-6">
         <section className="flex flex-col items-center pt-16 pb-12 text-center md:pt-24">
-          <h1 className="max-w-4xl text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.03em] text-balance md:text-7xl">
+          <h1 className="rise max-w-4xl text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.03em] text-balance md:text-7xl">
             Describe it. Buildr builds it.
           </h1>
-          <p className="text-muted mt-6 max-w-2xl text-lg leading-8 text-balance">
+          <p className="rise rise-1 text-muted mt-6 max-w-2xl text-lg leading-8 text-balance">
             Bring a landing page, an internal tool or a whole product to life from a plain
             description. The files are yours to read, line by line, as they are written.
           </p>
-          <div className="mt-10 w-full max-w-3xl text-left">
+          <div className="rise rise-2 mt-10 w-full max-w-3xl text-left">
             <PromptBox signedIn={Boolean(user)} passwordMin={PASSWORD_MIN} />
           </div>
-          <p className="text-subtle mt-6 text-[13px]">
+          <p className="rise rise-3 text-subtle mt-6 text-[13px]">
             Twenty credits to start. No card. Confirm your email and you are in.
           </p>
         </section>
 
-        <section aria-label="What happens after you press Generate" className="pb-20">
+        <section aria-label="What happens after you press Generate" className="rise rise-4 pb-20">
           <BuildDemo />
           <p className="text-subtle mt-3 text-center text-[13px]">
             A replay of one request. The token counts and the charge are from a real run.
@@ -161,40 +143,44 @@ export default async function Home() {
           aria-labelledby="examples-title"
           className="border-hairline border-t py-20"
         >
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 id="examples-title" className="text-2xl font-semibold tracking-tight">
-              Start from a description that works
-            </h2>
-            <p className="text-muted mt-3 text-[15px] leading-7">
-              Pick one, change the details to match what you need, and generate.
-            </p>
-          </div>
-          <div className="mt-10">
-            <ExampleGallery />
-          </div>
+          <Reveal>
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 id="examples-title" className="text-2xl font-semibold tracking-tight">
+                Start from a description that works
+              </h2>
+              <p className="text-muted mt-3 text-[15px] leading-7">
+                Pick one, change the details to match what you need, and generate.
+              </p>
+            </div>
+            <div className="mt-10">
+              <ExampleGallery />
+            </div>
+          </Reveal>
         </section>
 
         <section id="how" aria-labelledby="how-title" className="border-hairline border-t py-20">
-          <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
-            <div>
-              <h2 id="how-title" className="text-2xl font-semibold tracking-tight">
-                How a request runs
-              </h2>
-              <p className="text-muted mt-3 text-[15px] leading-7">
-                The same four things happen every time, in this order, whether the request is one
-                line or a page.
-              </p>
+          <Reveal>
+            <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+              <div>
+                <h2 id="how-title" className="text-2xl font-semibold tracking-tight">
+                  How a request runs
+                </h2>
+                <p className="text-muted mt-3 text-[15px] leading-7">
+                  The same four things happen every time, in this order, whether the request is one
+                  line or a page.
+                </p>
+              </div>
+              <ol className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
+                {STEPS.map((step, index) => (
+                  <li key={step.title} className="border-hairline border-t pt-4">
+                    <p className="text-subtle font-mono text-xs tabular-nums">{index + 1}</p>
+                    <h3 className="mt-2 text-[15px] font-medium">{step.title}</h3>
+                    <p className="text-muted mt-2 text-[14px] leading-6">{step.body}</p>
+                  </li>
+                ))}
+              </ol>
             </div>
-            <ol className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
-              {STEPS.map((step, index) => (
-                <li key={step.title} className="border-hairline border-t pt-4">
-                  <p className="text-subtle font-mono text-xs tabular-nums">{index + 1}</p>
-                  <h3 className="mt-2 text-[15px] font-medium">{step.title}</h3>
-                  <p className="text-muted mt-2 text-[14px] leading-6">{step.body}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
+          </Reveal>
         </section>
 
         <section
@@ -202,28 +188,30 @@ export default async function Home() {
           aria-labelledby="security-title"
           className="border-hairline border-t py-20"
         >
-          <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
-            <div>
-              <h2 id="security-title" className="text-2xl font-semibold tracking-tight">
-                Built to pass a security review
-              </h2>
-              <p className="text-muted mt-3 text-[15px] leading-7">
-                The controls below are implemented and tested, not planned. The full threat model,
-                what has been verified and what has not, is written down in the security notes.
-              </p>
+          <Reveal>
+            <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+              <div>
+                <h2 id="security-title" className="text-2xl font-semibold tracking-tight">
+                  Built to pass a security review
+                </h2>
+                <p className="text-muted mt-3 text-[15px] leading-7">
+                  The controls below are implemented and tested, not planned. The full threat model,
+                  what has been verified and what has not, is written down in the security notes.
+                </p>
+              </div>
+              <dl className="divide-hairline divide-y">
+                {CONTROLS.map((control) => (
+                  <div
+                    key={control.term}
+                    className="grid gap-2 py-5 sm:grid-cols-[12rem_minmax(0,1fr)]"
+                  >
+                    <dt className="text-[15px] font-medium">{control.term}</dt>
+                    <dd className="text-muted text-[14px] leading-6">{control.detail}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-            <dl className="divide-hairline divide-y">
-              {CONTROLS.map((control) => (
-                <div
-                  key={control.term}
-                  className="grid gap-2 py-5 sm:grid-cols-[12rem_minmax(0,1fr)]"
-                >
-                  <dt className="text-[15px] font-medium">{control.term}</dt>
-                  <dd className="text-muted text-[14px] leading-6">{control.detail}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+          </Reveal>
         </section>
 
         <section
@@ -231,107 +219,113 @@ export default async function Home() {
           aria-labelledby="credits-title"
           className="border-hairline border-t py-20"
         >
-          <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
-            <div>
-              <h2 id="credits-title" className="text-2xl font-semibold tracking-tight">
-                Pay for tokens. See every charge.
-              </h2>
-              <p className="text-muted mt-3 text-[15px] leading-7">
-                There is no subscription and no per-seat price. Each request is priced from the
-                tokens it used, and the ledger on your account page shows the model, the counts and
-                the cost for every one.
-              </p>
+          <Reveal>
+            <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+              <div>
+                <h2 id="credits-title" className="text-2xl font-semibold tracking-tight">
+                  Pay for tokens. See every charge.
+                </h2>
+                <p className="text-muted mt-3 text-[15px] leading-7">
+                  There is no subscription and no per-seat price. Each request is priced from the
+                  tokens it used, and the ledger on your account page shows the model, the counts
+                  and the cost for every one.
+                </p>
+              </div>
+              <div className="border-hairline-strong bg-surface overflow-x-auto rounded-lg border">
+                <table className="w-full min-w-[32rem] text-[13px]">
+                  <caption className="border-hairline text-muted border-b px-4 py-3 text-left">
+                    Ledger, as shown on the account page. Two real rows and the sign-up grant.
+                  </caption>
+                  <thead className="text-subtle text-left text-xs">
+                    <tr className="border-hairline border-b">
+                      <th scope="col" className="px-4 py-2 font-medium">
+                        Reason
+                      </th>
+                      <th scope="col" className="px-4 py-2 font-medium">
+                        Model
+                      </th>
+                      <th scope="col" className="px-4 py-2 text-right font-medium">
+                        In
+                      </th>
+                      <th scope="col" className="px-4 py-2 text-right font-medium">
+                        Out
+                      </th>
+                      <th scope="col" className="px-4 py-2 text-right font-medium">
+                        Cost
+                      </th>
+                      <th scope="col" className="px-4 py-2 text-right font-medium">
+                        Credits
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-hairline [&>tr:hover]:bg-surface-2 divide-y tabular-nums [&>tr]:transition-colors">
+                    <tr>
+                      <td className="px-4 py-2.5">Chat</td>
+                      <td className="px-4 py-2.5 font-mono text-xs">z-ai/glm-5.2</td>
+                      <td className="px-4 py-2.5 text-right">4,236</td>
+                      <td className="px-4 py-2.5 text-right">419</td>
+                      <td className="px-4 py-2.5 text-right">$0.0078</td>
+                      <td className="px-4 py-2.5 text-right">-0.26</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2.5">Chat</td>
+                      <td className="px-4 py-2.5 font-mono text-xs">z-ai/glm-5.2</td>
+                      <td className="px-4 py-2.5 text-right">4,062</td>
+                      <td className="px-4 py-2.5 text-right">219</td>
+                      <td className="px-4 py-2.5 text-right">$0.0067</td>
+                      <td className="px-4 py-2.5 text-right">-0.23</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2.5">Sign-up grant</td>
+                      <td className="text-subtle px-4 py-2.5"></td>
+                      <td className="text-subtle px-4 py-2.5 text-right"></td>
+                      <td className="text-subtle px-4 py-2.5 text-right"></td>
+                      <td className="text-subtle px-4 py-2.5 text-right"></td>
+                      <td className="px-4 py-2.5 text-right">+20.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="border-hairline text-muted border-t px-4 py-3 text-[13px] leading-6">
+                  One credit covers three cents of model usage. Buying more credits is not available
+                  yet; the twenty you start with are enough for roughly seventy requests like these.
+                </p>
+              </div>
             </div>
-            <div className="border-hairline-strong bg-surface overflow-x-auto rounded-lg border">
-              <table className="w-full min-w-[32rem] text-[13px]">
-                <caption className="border-hairline text-muted border-b px-4 py-3 text-left">
-                  Ledger, as shown on the account page. Two real rows and the sign-up grant.
-                </caption>
-                <thead className="text-subtle text-left text-xs">
-                  <tr className="border-hairline border-b">
-                    <th scope="col" className="px-4 py-2 font-medium">
-                      Reason
-                    </th>
-                    <th scope="col" className="px-4 py-2 font-medium">
-                      Model
-                    </th>
-                    <th scope="col" className="px-4 py-2 text-right font-medium">
-                      In
-                    </th>
-                    <th scope="col" className="px-4 py-2 text-right font-medium">
-                      Out
-                    </th>
-                    <th scope="col" className="px-4 py-2 text-right font-medium">
-                      Cost
-                    </th>
-                    <th scope="col" className="px-4 py-2 text-right font-medium">
-                      Credits
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-hairline divide-y tabular-nums">
-                  <tr>
-                    <td className="px-4 py-2.5">Chat</td>
-                    <td className="px-4 py-2.5 font-mono text-xs">z-ai/glm-5.2</td>
-                    <td className="px-4 py-2.5 text-right">4,236</td>
-                    <td className="px-4 py-2.5 text-right">419</td>
-                    <td className="px-4 py-2.5 text-right">$0.0078</td>
-                    <td className="px-4 py-2.5 text-right">-0.26</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2.5">Chat</td>
-                    <td className="px-4 py-2.5 font-mono text-xs">z-ai/glm-5.2</td>
-                    <td className="px-4 py-2.5 text-right">4,062</td>
-                    <td className="px-4 py-2.5 text-right">219</td>
-                    <td className="px-4 py-2.5 text-right">$0.0067</td>
-                    <td className="px-4 py-2.5 text-right">-0.23</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2.5">Sign-up grant</td>
-                    <td className="text-subtle px-4 py-2.5"></td>
-                    <td className="text-subtle px-4 py-2.5 text-right"></td>
-                    <td className="text-subtle px-4 py-2.5 text-right"></td>
-                    <td className="text-subtle px-4 py-2.5 text-right"></td>
-                    <td className="px-4 py-2.5 text-right">+20.00</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p className="border-hairline text-muted border-t px-4 py-3 text-[13px] leading-6">
-                One credit covers three cents of model usage. Buying more credits is not available
-                yet; the twenty you start with are enough for roughly seventy requests like these.
-              </p>
-            </div>
-          </div>
+          </Reveal>
         </section>
 
         <section id="faq" aria-labelledby="faq-title" className="border-hairline border-t py-20">
-          <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
-            <h2 id="faq-title" className="text-2xl font-semibold tracking-tight">
-              Questions teams ask first
-            </h2>
-            <dl className="divide-hairline divide-y">
-              {FAQ.map((item) => (
-                <div key={item.q} className="py-5">
-                  <dt className="text-[15px] font-medium">{item.q}</dt>
-                  <dd className="text-muted mt-2 max-w-2xl text-[14px] leading-6">{item.a}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+          <Reveal>
+            <div className="grid gap-10 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+              <h2 id="faq-title" className="text-2xl font-semibold tracking-tight">
+                Questions teams ask first
+              </h2>
+              <dl className="divide-hairline divide-y">
+                {FAQ.map((item) => (
+                  <div key={item.q} className="py-5">
+                    <dt className="text-[15px] font-medium">{item.q}</dt>
+                    <dd className="text-muted mt-2 max-w-2xl text-[14px] leading-6">{item.a}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </Reveal>
         </section>
 
         <section aria-labelledby="cta-title" className="border-hairline border-t py-20">
-          <h2 id="cta-title" className="text-3xl font-semibold tracking-tight text-balance">
-            Start with the description you already have in your head.
-          </h2>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <a
-              href="#main"
-              className={`${buttonBase} bg-accent text-accent-fg hover:bg-accent-hover`}
-            >
-              Describe an app
-            </a>
-          </div>
+          <Reveal>
+            <h2 id="cta-title" className="text-3xl font-semibold tracking-tight text-balance">
+              Start with the description you already have in your head.
+            </h2>
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <a
+                href="#main"
+                className={`${buttonBase} bg-accent text-accent-fg hover:bg-accent-hover`}
+              >
+                Describe an app
+              </a>
+            </div>
+          </Reveal>
         </section>
       </main>
 

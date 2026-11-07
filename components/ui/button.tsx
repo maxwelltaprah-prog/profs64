@@ -37,7 +37,7 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "transition-ui inline-flex shrink-0 items-center rounded-md font-medium select-none",
+        "press inline-flex shrink-0 items-center rounded-md font-medium select-none",
         "disabled:pointer-events-none disabled:opacity-50",
         variants[variant],
         sizes[size],

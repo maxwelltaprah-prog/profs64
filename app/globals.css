@@ -232,3 +232,144 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Motion. Every duration here is within the 150-250ms budget set in CLAUDE.md; the feeling of
+ * a longer sequence comes from staggering short steps, not from long steps. Reduced motion
+ * removes all of it and shows final states.
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@layer utilities {
+  /* Page-load entrance for the hero: one staggered sequence. */
+  .rise {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: rise var(--duration-slow) var(--ease-out) forwards;
+  }
+  .rise-1 {
+    animation-delay: 70ms;
+  }
+  .rise-2 {
+    animation-delay: 140ms;
+  }
+  .rise-3 {
+    animation-delay: 210ms;
+  }
+  .rise-4 {
+    animation-delay: 280ms;
+  }
+
+  /* Scroll-in for sections below the fold. Applied only by script, so without it nothing hides. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity var(--duration-slow) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Hover lift for cards and other pointer targets. */
+  .lift {
+    transition:
+      transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      border-color var(--duration-base) var(--ease-out),
+      background-color var(--duration-base) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .lift:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-2);
+    }
+  }
+
+  /* Press feedback for buttons. */
+  .press {
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      opacity var(--duration-fast) var(--ease-out);
+  }
+  .press:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  /* Modal entrance. */
+  dialog[open] {
+    animation: dialog-in var(--duration-base) var(--ease-out);
+  }
+  dialog[open]::backdrop {
+    animation: fade-in var(--duration-base) var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rise,
+    .reveal,
+    dialog[open],
+    dialog[open]::backdrop {
+      animation: none;
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .lift:hover,
+    .press:active {
+      transform: none;
+    }
+  }
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
