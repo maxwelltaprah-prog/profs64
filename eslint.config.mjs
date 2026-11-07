@@ -1,16 +1,62 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import importPlugin from "eslint-plugin-import";
+import security from "eslint-plugin-security";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  security.configs.recommended,
+  {
+    plugins: { import: importPlugin },
+    settings: {
+      "import/resolver": {
+        typescript: { alwaysTryTypes: true },
+      },
+    },
+    rules: {
+      "import/no-duplicates": "error",
+      "import/no-cycle": ["error", { maxDepth: 5 }],
+      "import/no-self-import": "error",
+      "import/no-useless-path-segments": "error",
+      "import/first": "error",
+      "import/newline-after-import": "error",
+      "import/order": [
+        "error",
+        {
+          groups: ["builtin", "external", "internal", ["parent", "sibling", "index"], "type"],
+          "newlines-between": "always",
+          alphabetize: { order: "asc", caseInsensitive: true },
+        },
+      ],
+      "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports" }],
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-non-null-assertion": "error",
+      "no-console": "error",
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-new-func": "error",
+      eqeqeq: ["error", "always"],
+      "react/no-danger": "error",
+      "react/jsx-no-target-blank": "error",
+    },
+  },
+  {
+    // Tests build dynamic paths and fixtures on purpose.
+    files: ["tests/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "e2e/**/*.ts"],
+    rules: {
+      "security/detect-object-injection": "off",
+      "security/detect-non-literal-fs-filename": "off",
+    },
+  },
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
     "next-env.d.ts",
   ]),
 ]);

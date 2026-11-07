@@ -1,0 +1,16 @@
+title = "buildr gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented placeholders and generated, git-ignored output"
+paths = [
+  '''package-lock\.json''',
+  '''\.env\.example''',
+  # Build output is git-ignored and never committed; Next.js generates preview-mode
+  # keys here on every build. Staged and CI scans only see tracked files.
+  '''(^|/)\.next/''',
+  '''(^|/)node_modules/''',
+  '''(^|/)(coverage|playwright-report|test-results)/''',
+]

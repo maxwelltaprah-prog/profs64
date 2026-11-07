@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# keep the documented template
+!.env.example
+
+# local tooling
+.claude/settings.local.json
+.supabase/
+supabase/.temp/
