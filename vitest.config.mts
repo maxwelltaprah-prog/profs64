@@ -10,7 +10,7 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["tests/unit/setup.ts"],
     env: { LOG_LEVEL: "silent" },
-    include: ["tests/unit/**/*.test.ts", "lib/**/*.test.ts"],
+    include: ["tests/unit/**/*.test.{ts,tsx}", "lib/**/*.test.ts"],
     exclude: ["tests/integration/**", "e2e/**", "node_modules/**"],
     coverage: {
       provider: "v8",

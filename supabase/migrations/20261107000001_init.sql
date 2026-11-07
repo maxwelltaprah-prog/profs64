@@ -34,14 +34,13 @@ create table public.project_files (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint project_files_unique_path unique (project_id, path),
-  -- Mirrors lib/security path validation as a last line of defense.
+  -- Same allowlist as lib/security/paths.ts, as a last line of defense: segments of letters,
+  -- digits and . _ @ + - that do not start with a dot, at most 8 deep, ending in an allowed
+  -- extension. That excludes "..", backslashes, "%", spaces, NUL and non-ASCII lookalikes.
   constraint project_files_path_safe check (
     char_length(path) between 1 and 255
-    and path !~ '^/'
-    and path !~ '\\'
-    and path !~ '(^|/)\.\.(/|$)'
-    and path !~ '%'
-    and path ~ '\.(ts|tsx|js|jsx|json|css|html|md|svg|txt)$'
+    and path ~ '^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*){0,7}$'
+    and lower(path) ~ '\.(ts|tsx|js|jsx|json|css|html|md|svg|txt)$'
   ),
   constraint project_files_size_cap check (octet_length(content) <= 204800)
 );

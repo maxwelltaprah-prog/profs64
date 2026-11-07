@@ -27,4 +27,12 @@ Every package is pinned exactly. Add a row here in the same change that adds the
 | vitest, @vitest/coverage-v8                             | Unit and integration tests, coverage.                         |
 | @playwright/test, @axe-core/playwright                  | End-to-end tests and automated accessibility checks.          |
 
-Planned for later milestones (to be added with justification): `ai`, `@openrouter/ai-sdk-provider`, `lucide-react`, `geist`.
+Added in Milestone 2:
+
+| Package                                                    | Why                                                                                          |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| lucide-react                                               | The only icon set (design rule). Icons render as inline SVG with no style attributes.        |
+| ai, @ai-sdk/react, @openrouter/ai-sdk-provider             | Vercel AI SDK and OpenRouter provider; installed now, used by the chat route in Milestone 3. |
+| jsdom, @testing-library/react, @testing-library/user-event | Component tests for the split pane, file tree, code viewer and command palette.              |
+
+Planned later: `geist` (fonts), if self-hosting the files is not enough.

@@ -95,11 +95,12 @@ test.describe("auth API abuse", () => {
 
   test("protected pages are never served without a confirmed session", async ({ request }) => {
     const response = await request.get("/dashboard", { maxRedirects: 0 });
-    // Redirect to login when the session backend answers; an error when it is not configured
-    // (as here). Either way the page itself must not be served.
+    // The proxy redirects signed-out visitors to /login; the page itself must not be served.
     expect(response.status()).not.toBe(200);
     if (response.status() === 307) {
-      expect(new URL(response.headers()["location"] ?? "").pathname).toBe("/login");
+      expect(new URL(response.headers()["location"] ?? "", "http://localhost").pathname).toBe(
+        "/login",
+      );
     }
   });
 });

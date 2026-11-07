@@ -20,6 +20,13 @@ export default defineConfig({
     url: `${baseURL}/api/health`,
     reuseExistingServer: !process.env["CI"],
     timeout: 240_000,
-    env: { AI_MODEL_MODE: "fake" },
+    env: {
+      AI_MODEL_MODE: "fake",
+      // Placeholders pointing at a closed local port: pages render signed-out and no request
+      // ever reaches a real Supabase project. Auth round trips are covered by integration tests.
+      NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:9",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-placeholder-placeholder",
+      SUPABASE_SERVICE_ROLE_KEY: "placeholder-placeholder-service",
+    },
   },
 });

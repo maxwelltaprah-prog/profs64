@@ -39,6 +39,8 @@ const eslintConfig = defineConfig([
       "no-new-func": "error",
       eqeqeq: ["error", "always"],
       "react/no-danger": "error",
+      // Inline style attributes are blocked by the CSP. Use classes or CSSOM from an effect.
+      "react/forbid-dom-props": ["error", { forbid: ["style"] }],
       "react/jsx-no-target-blank": "error",
     },
   },
@@ -63,6 +65,13 @@ const eslintConfig = defineConfig([
         },
       ],
     },
+  },
+  {
+    // UI components index small constant maps with typed union props (variant, size, theme).
+    // The keys cannot be user-controlled strings, so this rule is noise there; it stays on in
+    // lib/ and app/ where keys can come from requests.
+    files: ["components/**/*.{ts,tsx}"],
+    rules: { "security/detect-object-injection": "off" },
   },
   {
     // Tests build dynamic paths and fixtures on purpose.

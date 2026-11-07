@@ -12,6 +12,7 @@ import {
   sqlState,
   UNIQUE_VIOLATION,
 } from "./helpers";
+import { INVALID_PATHS, VALID_PATHS } from "../fixtures/path-vectors";
 
 beforeAll(prepareDatabase);
 afterAll(async () => {
@@ -170,30 +171,15 @@ describe("project_files constraints", () => {
       ]),
     );
 
-  it.each([
-    "/etc/passwd.txt",
-    "../secret.ts",
-    "src/../../secret.ts",
-    "src\\evil.ts",
-    "%2e%2e/secret.ts",
-    "src/%2e%2e/x.ts",
-    "src/App.exe",
-    "Makefile",
-    "",
-  ])("rejects unsafe or disallowed path %j", async (filePath) => {
+  it.each(INVALID_PATHS)("rejects unsafe or disallowed path: %s", async (_label, filePath) => {
     const user = await createUser("path");
     const project = await createProject(user);
-    expect(await sqlState(insertFile(user, project, filePath))).toBe(CHECK_VIOLATION);
+    // NUL cannot be sent to Postgres text at all; that is rejection too.
+    const state = await sqlState(insertFile(user, project, filePath));
+    expect(["22021", CHECK_VIOLATION]).toContain(state);
   });
 
-  it.each([
-    "src/App.tsx",
-    "index.html",
-    "src/styles/main.css",
-    "README.md",
-    "public/logo.svg",
-    "notes.txt",
-  ])("accepts %s", async (filePath) => {
+  it.each(VALID_PATHS)("accepts %s", async (filePath) => {
     const user = await createUser("okpath");
     const project = await createProject(user);
     expect(await sqlState(insertFile(user, project, filePath))).toBe("ok");

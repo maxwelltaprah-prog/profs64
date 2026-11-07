@@ -14,3 +14,14 @@ export const forgotPasswordSchema = z.strictObject({ email });
 export const resetPasswordSchema = z.strictObject({ password: newPassword });
 
 export const AUTH_BODY_LIMIT_BYTES = 4 * 1024;
+
+export const createProjectSchema = z.strictObject({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Enter a project name.")
+    .max(80)
+    // No control characters; names are rendered as text only, but keep stored data clean.
+    .regex(/^[^\u0000-\u001f\u007f]+$/),
+});
+export const PROJECT_BODY_LIMIT_BYTES = 2 * 1024;
