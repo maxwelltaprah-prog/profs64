@@ -18,6 +18,8 @@ drop table if exists public.projects;
 drop table if exists public.profiles;
 
 drop function if exists public.audit_project_deleted();
+drop function if exists public.enforce_project_cap();
+drop function if exists public.enforce_message_cap();
 drop function if exists public.forbid_mutation();
 drop function if exists public.enforce_file_cap();
 drop function if exists public.bump_project_on_file_change();

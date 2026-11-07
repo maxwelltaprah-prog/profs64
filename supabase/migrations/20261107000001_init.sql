@@ -140,6 +140,42 @@ $$;
 create trigger project_files_cap before insert on public.project_files
   for each row execute function public.enforce_file_cap();
 
+-- PostgREST exposes these tables to any signed-in user, so row counts are capped in the
+-- database too. Locking the parent row serializes concurrent inserts past the limit.
+create function public.enforce_project_cap() returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform 1 from public.profiles where id = new.owner_id for update;
+  if (select count(*) from public.projects where owner_id = new.owner_id) >= 50 then
+    raise exception 'project limit reached' using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger projects_cap before insert on public.projects
+  for each row execute function public.enforce_project_cap();
+
+create function public.enforce_message_cap() returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform 1 from public.projects where id = new.project_id for update;
+  if (select count(*) from public.messages where project_id = new.project_id) >= 2000 then
+    raise exception 'conversation limit reached' using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger messages_cap before insert on public.messages
+  for each row execute function public.enforce_message_cap();
+
 -- Append-only enforcement for credit_ledger and audit_log. The only allowed UPDATE is
 -- nulling user_id or project_id (anonymization from ON DELETE SET NULL); every other
 -- column must stay identical. DELETE and TRUNCATE are always refused.

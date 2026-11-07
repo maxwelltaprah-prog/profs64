@@ -101,7 +101,6 @@ export async function sqlState(run: Promise<unknown>): Promise<string> {
 }
 
 export const PERMISSION_DENIED = "42501";
-export const RLS_OR_PRIVILEGE_DENIED = PERMISSION_DENIED;
 export const CHECK_VIOLATION = "23514";
 export const UNIQUE_VIOLATION = "23505";
 

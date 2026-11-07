@@ -247,3 +247,60 @@ describe("project_files constraints", () => {
     expect(rows[0]?.n).toBe(100);
   });
 });
+
+describe("row caps", () => {
+  it("caps a user at 50 projects even under concurrent inserts", async () => {
+    const user = await createUser("project-cap");
+    const attempts = await Promise.all(
+      Array.from({ length: 60 }, (_, i) =>
+        sqlState(
+          asUser(
+            user,
+            (c) =>
+              c.query("insert into projects (owner_id, name) values ($1, $2)", [user, `p${i}`]),
+            {
+              commit: true,
+            },
+          ),
+        ),
+      ),
+    );
+    expect(attempts.filter((s) => s === "ok")).toHaveLength(50);
+    expect(attempts.filter((s) => s !== "ok").every((s) => s === CHECK_VIOLATION)).toBe(true);
+  });
+
+  it("caps a conversation at 2000 messages", async () => {
+    const user = await createUser("message-cap");
+    const project = await createProject(user);
+    await pool.query(
+      "insert into messages (project_id, role, parts) select $1, 'user', '[]'::jsonb from generate_series(1, 2000)",
+      [project],
+    );
+    expect(
+      await sqlState(
+        asUser(user, (c) =>
+          c.query("insert into messages (project_id, role, parts) values ($1, 'user', '[]')", [
+            project,
+          ]),
+        ),
+      ),
+    ).toBe(CHECK_VIOLATION);
+  });
+
+  it("rejects oversized message parts and non-array parts", async () => {
+    const user = await createUser("message-shape");
+    const project = await createProject(user);
+    const insert = (parts: string) =>
+      asUser(user, (c) =>
+        c.query("insert into messages (project_id, role, parts) values ($1, 'user', $2::jsonb)", [
+          project,
+          parts,
+        ]),
+      );
+    expect(await sqlState(insert('{"not":"an array"}'))).toBe(CHECK_VIOLATION);
+    expect(
+      await sqlState(insert(JSON.stringify([{ type: "text", text: "x".repeat(1_048_577) }]))),
+    ).toBe(CHECK_VIOLATION);
+    expect(await sqlState(insert('[{"type":"text","text":"ok"}]'))).toBe("ok");
+  });
+});

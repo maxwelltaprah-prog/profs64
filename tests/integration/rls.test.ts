@@ -68,18 +68,34 @@ describe("RLS is on and default deny everywhere", () => {
 
 describe("user A cannot read user B's data", () => {
   it("sees only their own rows in every table", async () => {
-    for (const table of TABLES) {
-      const { rows } = await asUser(bob, (c) => c.query(`select * from public.${table}`));
-      for (const row of rows) {
-        const owner = row.owner_id ?? row.user_id ?? row.id;
-        if (table === "project_files" || table === "messages") continue;
-        expect(owner, `${table} leaked a foreign row`).not.toBe(alice);
-      }
+    const ownerColumn = new Map([
+      ["profiles", "id"],
+      ["projects", "owner_id"],
+      ["credit_ledger", "user_id"],
+      ["audit_log", "user_id"],
+    ]);
+    for (const [table, column] of ownerColumn) {
+      const { rows } = await asUser(bob, (c) =>
+        c.query(`select ${column} as owner from public.${table}`),
+      );
+      expect(rows.length, `${table} should have rows for bob`).toBeGreaterThan(0);
+      expect(
+        rows.every((row) => row.owner === bob),
+        `${table} leaked a foreign row`,
+      ).toBe(true);
     }
-    const files = await asUser(bob, (c) => c.query("select * from project_files"));
-    expect(files.rows.every((r) => r.project_id !== aliceProject)).toBe(true);
-    const messages = await asUser(bob, (c) => c.query("select * from messages"));
-    expect(messages.rows.every((r) => r.project_id !== aliceProject)).toBe(true);
+    // Files and messages have no owner column; they must belong to bob's own projects.
+    const ownProjects = (await asUser(bob, (c) => c.query("select id from projects"))).rows.map(
+      (r) => r.id,
+    );
+    for (const table of ["project_files", "messages"]) {
+      const { rows } = await asUser(bob, (c) => c.query(`select project_id from public.${table}`));
+      expect(rows.length, `${table} should have rows for bob`).toBeGreaterThan(0);
+      expect(
+        rows.every((row) => ownProjects.includes(row.project_id)),
+        `${table} leaked a foreign row`,
+      ).toBe(true);
+    }
   });
 
   it("cannot fetch A's rows by direct id", async () => {

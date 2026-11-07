@@ -17,7 +17,7 @@ function threshold(): number {
 }
 
 export interface LogFields {
-  requestId?: string;
+  requestId?: string | undefined;
   [key: string]: unknown;
 }
 
