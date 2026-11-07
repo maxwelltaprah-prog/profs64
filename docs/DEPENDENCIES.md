@@ -36,3 +36,10 @@ Added in Milestone 2:
 | jsdom, @testing-library/react, @testing-library/user-event | Component tests for the split pane, file tree, code viewer and command palette.              |
 
 Planned later: `geist` (fonts), if self-hosting the files is not enough.
+
+## Added for the live preview
+
+| Package           | Version | Why                                                                                                                                                                                                 | Alternatives considered                                                                                                                                                                                  |
+| ----------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sucrase`         | 3.35.1  | Transpiles TS/TSX to ES modules in the browser without evaluating anything, so the preview works under the app's strict CSP. Small, fast, and does not type-check, which is what a preview wants.   | esbuild-wasm (needs WebAssembly and `wasm-unsafe-eval` in the CSP, 10x larger), Babel standalone (much larger), a server build (needs a build sandbox per project and would not run on Vercel's limits). |
+| `es-module-lexer` | 3.0.4   | Exact import/export positions for rewriting specifiers; replaces a regex that could be made to backtrack on crafted (model-generated) input. The pure-JS build is used so no WebAssembly is needed. | Hand-written regex (rejected: ReDoS surface and false matches in strings and comments).                                                                                                                  |

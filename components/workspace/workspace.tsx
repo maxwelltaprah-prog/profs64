@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils/cn";
 import { ChatPanel } from "./chat-panel";
 import { CodeViewer } from "./code-viewer";
 import { FileTree } from "./file-tree";
+import { PreviewPanel } from "./preview-panel";
 import { SplitPane } from "./split-pane";
 
 type Tab = "code" | "preview";
@@ -32,7 +33,7 @@ export function Workspace({
   canUseAssistant: boolean;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("code");
+  const [tab, setTab] = useState<Tab>("preview");
   const [current, setCurrent] = useState<ProjectFile[]>(files);
   const [selected, setSelected] = useState<string | null>(files[0]?.path ?? null);
   const content = useMemo(
@@ -119,7 +120,7 @@ export function Workspace({
                 aria-controls={`panel-${id}`}
                 onClick={() => setTab(id)}
                 className={cn(
-                  "transition-ui flex items-center gap-1.5 border-b-2 px-3 text-[13px]",
+                  "press flex items-center gap-1.5 border-b-2 px-3 text-[13px]",
                   tab === id
                     ? "border-accent text-text"
                     : "text-muted hover:text-text border-transparent",
@@ -149,19 +150,7 @@ export function Workspace({
               </div>
             </div>
           ) : (
-            <div
-              role="tabpanel"
-              id="panel-preview"
-              aria-labelledby="tab-preview"
-              className="flex flex-1 items-center justify-center p-8"
-            >
-              <div className="max-w-xs text-center">
-                <p className="text-sm font-medium">Preview (coming next)</p>
-                <p className="text-muted mt-1 text-[13px]">
-                  A live preview of the project will appear here in a later release.
-                </p>
-              </div>
-            </div>
+            <PreviewPanel files={current} />
           )}
         </>
       }

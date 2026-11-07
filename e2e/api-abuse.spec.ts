@@ -152,3 +152,18 @@ test.describe("chat API without a session", () => {
     expect(response.status()).toBe(401);
   });
 });
+
+test.describe("preview frame", () => {
+  test("is served with its own policy and only the app may embed it", async ({ request }) => {
+    const response = await request.get("/preview-frame");
+    expect(response.status()).toBe(200);
+    const headers = response.headers();
+    expect(headers["content-security-policy"]).toContain("default-src 'none'");
+    expect(headers["content-security-policy"]).toContain("frame-ancestors 'self'");
+    expect(headers["content-security-policy"]).toContain("connect-src https://esm.sh");
+    expect(headers["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(headers["x-robots-tag"]).toBe("noindex");
+    const html = await response.text();
+    expect(html).not.toContain("_next/");
+  });
+});

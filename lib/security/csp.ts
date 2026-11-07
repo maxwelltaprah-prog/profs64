@@ -46,3 +46,36 @@ export function securityHeaders(csp: string | null): Record<string, string> {
     "Cross-Origin-Resource-Policy": "same-origin",
   };
 }
+
+// The live preview runs generated code inside an iframe that is sandboxed without
+// allow-same-origin, so it has an opaque origin: no cookies, no storage, no access to the app.
+// Its own policy is therefore loose where the app's is strict (inline scripts for the import
+// map, modules from the CDN, runtime Tailwind) and strict where it matters: it can only talk
+// to the CDN, and only the app itself may frame it.
+export const PREVIEW_CDN = "https://esm.sh";
+export const PREVIEW_TAILWIND = "https://cdn.tailwindcss.com";
+
+export function buildPreviewFrameCsp(): string {
+  return [
+    "default-src 'none'",
+    `script-src 'unsafe-inline' blob: ${PREVIEW_CDN} ${PREVIEW_TAILWIND}`,
+    `style-src 'unsafe-inline' ${PREVIEW_CDN}`,
+    `connect-src ${PREVIEW_CDN}`,
+    "img-src https: data: blob:",
+    "font-src https: data:",
+    "media-src https: data: blob:",
+    "worker-src blob:",
+    "frame-ancestors 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
+  ].join("; ");
+}
+
+export function previewFrameHeaders(): Record<string, string> {
+  return {
+    ...securityHeaders(buildPreviewFrameCsp()),
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Robots-Tag": "noindex",
+    "Cache-Control": "no-store",
+  };
+}

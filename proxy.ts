@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { updateSession } from "@/lib/db/supabase-proxy";
-import { buildCsp, newNonce, securityHeaders } from "@/lib/security/csp";
+import { buildCsp, newNonce, previewFrameHeaders, securityHeaders } from "@/lib/security/csp";
 import { getRequestId } from "@/lib/security/request-id";
 
 // Next.js 16 renamed middleware to proxy. It sets security headers and a per-request CSP
 // nonce, refreshes the Supabase session and does optimistic redirects. It is not an
 // authorization layer: every page and route re-verifies the user itself.
 
+export const PREVIEW_FRAME_PATH = "/preview-frame";
 const PROTECTED_PREFIXES = ["/dashboard", "/project", "/account", "/start"];
 const GUEST_ONLY = ["/login", "/signup", "/forgot-password"];
 
@@ -33,6 +34,15 @@ export async function proxy(request: NextRequest) {
     const headers = new Headers(request.headers);
     headers.set("x-request-id", requestId);
     return applyHeaders(NextResponse.next({ request: { headers } }), null, requestId);
+  }
+
+  // The preview frame document carries its own, separate policy (see lib/security/csp.ts).
+  if (pathname === PREVIEW_FRAME_PATH) {
+    const response = NextResponse.next();
+    for (const [name, value] of Object.entries(previewFrameHeaders()))
+      response.headers.set(name, value);
+    response.headers.set("X-Request-Id", requestId);
+    return response;
   }
 
   const nonce = newNonce();

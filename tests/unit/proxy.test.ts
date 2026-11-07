@@ -102,4 +102,28 @@ describe("proxy", () => {
     const response = await proxy(request("/", { "x-request-id": "bad id with spaces" }));
     expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
   });
+
+  it("gives the preview frame its own policy: frameable by the app only, CDN only, no nonce", async () => {
+    signedIn(false);
+    const response = await proxy(request("/preview-frame"));
+    const csp = response.headers.get("content-security-policy") ?? "";
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain("frame-ancestors 'self'");
+    expect(csp).toContain("connect-src https://esm.sh");
+    expect(csp).not.toContain("nonce-");
+    expect(csp).not.toContain("'self'; script-src");
+    expect(response.headers.get("x-frame-options")).toBe("SAMEORIGIN");
+    expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    expect(updateSession).not.toHaveBeenCalled();
+  });
+
+  it("keeps lookalike paths under the strict policy", async () => {
+    signedIn(false);
+    for (const path of ["/preview-frame/x", "/preview-framed", "/api/preview-frame"]) {
+      const response = await proxy(request(path));
+      expect(response.headers.get("content-security-policy") ?? "", path).not.toContain(
+        "frame-ancestors 'self'",
+      );
+    }
+  });
 });

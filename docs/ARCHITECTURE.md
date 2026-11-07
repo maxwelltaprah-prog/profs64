@@ -59,6 +59,16 @@ The landing page (`app/page.tsx`) is a server component with two client islands:
 
 The home page leads with a prompt box (`components/landing/prompt-box.tsx`). Submitting it saves the text in `localStorage` (`lib/workspace/pending-prompt.ts`, 24-hour expiry) and either goes to `/start` or, when signed out, opens a native `<dialog>` with the sign-up and sign-in forms. Sign-up sends `next: "/start"` so the confirmation link lands there; sign-in redirects there directly. `/start` (`components/start/start-project.tsx`) creates a project named from the prompt's first line, records the project id alongside the prompt, and opens the workspace. The chat panel sends the prompt once, only when the stored project id matches the open project and the assistant can run; otherwise it is placed in the composer. Browser storage is the right place for this: it is a per-visitor convenience, nothing else reads it, and the server validates the text like any other message.
 
+## Live preview
+
+The Preview tab runs the project in the browser without a build server.
+
+1. `lib/preview/bundle.ts` walks the module graph from the `<script type="module">` in `index.html`. Each TS/TSX file is transpiled with sucrase (no type-checking, no evaluation, so it runs under the strict CSP) and its imports are rewritten with es-module-lexer: project files become `~/path` entries, `@/` resolves to `src/`, stylesheets are collected, JSON and SVG become modules, and bare package names map to pinned esm.sh URLs (`lib/preview/packages.ts`, versions from the starter template). `react-router-dom` is shimmed so `BrowserRouter` is the in-memory router inside the sandbox.
+2. `components/workspace/preview-panel.tsx` rebuilds 400 ms after files change and reloads the frame only when the output differs. It shows a skeleton while loading, compile problems in place of the frame, and runtime errors and console output under it. Desktop, tablet and phone widths are offered.
+3. `app/preview-frame/route.ts` serves a plain HTML document (no Next runtime) that the panel embeds with `sandbox="allow-scripts allow-forms allow-modals"`, so it has an opaque origin. `proxy.ts` gives that path its own policy (`lib/security/csp.ts`): inline scripts allowed for the import map, scripts and styles from esm.sh and the Tailwind CDN, network only to esm.sh, frameable by the app alone. The parent posts the bundle; the frame turns modules into blob URLs, writes an import map, injects the CSS through runtime Tailwind (`type="text/tailwindcss"`) with the starter's shadcn theme, and imports the entry. It accepts messages only from `window.parent` at the request's own origin.
+
+The starter template (`lib/templates/vite-react-starter.ts`) follows Lovable's `vite_react_shadcn_ts` shape: Vite 5, React 18, Tailwind 3 with shadcn tokens (`lib/templates/shadcn-theme.ts`), react-router, lucide, and Button, Card, Input, Label and Badge in `src/components/ui`. Dependencies are exact pins so the previewed versions are the installed ones.
+
 ## Testing layers
 
 | Layer       | Where               | What it proves                                                                                                |

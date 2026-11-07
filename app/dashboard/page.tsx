@@ -47,8 +47,9 @@ export default async function DashboardPage() {
           <div className="border-hairline-strong mt-8 rounded-lg border border-dashed p-10">
             <h2 className="text-sm font-medium">No projects yet</h2>
             <p className="text-muted mt-1 max-w-md text-[13px]">
-              Name a project above. It starts from a Vite, React and Tailwind template, and the
-              assistant edits those files when you describe what to build.
+              Name a project above. It starts from a Vite, React, Tailwind and shadcn/ui template,
+              and the assistant edits those files when you describe what to build. The preview shows
+              the running app as it changes.
             </p>
           </div>
         ) : (
@@ -57,7 +58,7 @@ export default async function DashboardPage() {
               <li key={project.id}>
                 <Link
                   href={`/project/${project.id}`}
-                  className="transition-ui hover:bg-surface-2 flex items-center justify-between gap-4 px-4 py-3"
+                  className="transition-ui hover:bg-surface-2 flex items-center justify-between gap-4 px-4 py-3 first:rounded-t-lg last:rounded-b-lg"
                 >
                   <span className="truncate text-sm font-medium">{project.name}</span>
                   <span className="text-muted shrink-0 text-xs tabular-nums">
