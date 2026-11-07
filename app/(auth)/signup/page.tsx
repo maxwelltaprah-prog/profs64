@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AuthForm } from "@/components/auth/auth-form";
+import { PASSWORD_MIN } from "@/lib/security/schemas";
 
 import type { Metadata } from "next";
 
@@ -27,6 +28,7 @@ export default function SignupPage() {
             label: "Password",
             type: "password",
             autoComplete: "new-password",
+            minLength: PASSWORD_MIN,
             hint: "At least 12 characters. A short phrase of unrelated words works well.",
           },
         ]}

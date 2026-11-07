@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { getOptionalUser } from "@/lib/db/auth";
+import { PASSWORD_MIN } from "@/lib/security/schemas";
 
 import type { Metadata } from "next";
 
@@ -28,6 +29,7 @@ export default async function ResetPasswordPage() {
             label: "New password",
             type: "password",
             autoComplete: "new-password",
+            minLength: PASSWORD_MIN,
             hint: "At least 12 characters.",
           },
         ]}

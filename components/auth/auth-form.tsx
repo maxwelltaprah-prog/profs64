@@ -11,6 +11,8 @@ export interface AuthFieldConfig {
   type: "email" | "password";
   autoComplete: string;
   hint?: string;
+  /** Checked before submitting so the person gets a specific message instead of a generic one. */
+  minLength?: number;
 }
 
 interface AuthFormProps {
@@ -41,6 +43,17 @@ export function AuthForm({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    for (const field of fields) {
+      const value = values[field.name] ?? "";
+      if (value.trim().length === 0) {
+        setError(`Enter your ${field.label.toLowerCase()}.`);
+        return;
+      }
+      if (field.minLength !== undefined && value.length < field.minLength) {
+        setError(`${field.label} must be at least ${field.minLength} characters.`);
+        return;
+      }
+    }
     setPending(true);
     try {
       const response = await fetch(endpoint, {
@@ -88,6 +101,7 @@ export function AuthForm({
           autoComplete={field.autoComplete}
           required
           {...(field.hint ? { hint: field.hint } : {})}
+          {...(field.minLength !== undefined ? { minLength: field.minLength } : {})}
           value={values[field.name] ?? ""}
           onChange={(event) =>
             setValues((current) => ({ ...current, [field.name]: event.target.value }))
