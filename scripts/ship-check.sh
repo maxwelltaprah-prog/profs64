@@ -30,11 +30,9 @@ run_step "format check" npm run --silent format:check
 run_step "unit tests" npm run --silent test
 
 if ls tests/integration/*.test.ts >/dev/null 2>&1; then
-  if curl -fsS -m 3 "${NEXT_PUBLIC_SUPABASE_URL:-http://127.0.0.1:54321}/auth/v1/health" >/dev/null 2>&1; then
-    run_step "integration tests" npm run --silent test:integration
-  else
-    skip_step "integration tests" "local Supabase not running"
-  fi
+  # Uses TEST_DATABASE_URL when set (CI), otherwise starts a throwaway local Postgres with a
+  # Supabase shim. Fails loudly if neither is possible instead of skipping.
+  run_step "integration tests" npm run --silent test:integration
 else
   skip_step "integration tests" "none written yet"
 fi

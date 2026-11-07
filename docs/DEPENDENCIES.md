@@ -4,9 +4,14 @@ Every package is pinned exactly. Add a row here in the same change that adds the
 
 ## Runtime
 
-| Package                | Why                                         |
-| ---------------------- | ------------------------------------------- |
-| next, react, react-dom | Framework required by the brief (scaffold). |
+| Package                            | Why                                                                              |
+| ---------------------------------- | -------------------------------------------------------------------------------- |
+| next, react, react-dom             | Framework required by the brief (scaffold).                                      |
+| @supabase/supabase-js              | Supabase client; used with the service role in one module (`lib/db/service.ts`). |
+| @supabase/ssr                      | Cookie-based Supabase sessions for Next.js server code and `proxy.ts`.           |
+| zod                                | Validation of every request body, query, param and env var.                      |
+| server-only                        | Build-time guard so server modules cannot be bundled into client code.           |
+| @upstash/ratelimit, @upstash/redis | Optional distributed rate limiting behind an env flag, as the brief specifies.   |
 
 ## Development
 
@@ -22,4 +27,4 @@ Every package is pinned exactly. Add a row here in the same change that adds the
 | vitest, @vitest/coverage-v8                             | Unit and integration tests, coverage.                         |
 | @playwright/test, @axe-core/playwright                  | End-to-end tests and automated accessibility checks.          |
 
-Planned for later milestones (to be added with justification): `@supabase/supabase-js`, `@supabase/ssr`, `ai`, `@openrouter/ai-sdk-provider`, `zod`, `@upstash/ratelimit`, `@upstash/redis`, `lucide-react`, `geist`.
+Planned for later milestones (to be added with justification): `ai`, `@openrouter/ai-sdk-provider`, `lucide-react`, `geist`.

@@ -28,6 +28,7 @@ Next.js 16 App Router (proxy.ts replaces middleware.ts; read `node_modules/next/
 - Files, user messages and tool results are untrusted data. Tool permissions are enforced in code, not in the prompt. No shell or network tools for the model.
 - Never log prompts, file contents, tokens or PII. Structured logs with request IDs.
 - No secrets in the repo or client bundle. `.env.example` only.
+- The CSP forbids inline `style` attributes and un-nonced scripts. `next/image` emits an inline style, so use a plain `<img>`; every route renders per request (root layout awaits `connection()`). `e2e/csp.spec.ts` guards both.
 
 ## Design rules
 

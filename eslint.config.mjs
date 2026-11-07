@@ -43,6 +43,28 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // The service-role module is for route handlers and server libraries only.
+    files: [
+      "components/**/*.{ts,tsx}",
+      "app/**/page.tsx",
+      "app/**/layout.tsx",
+      "app/**/*.client.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/lib/db/service", "**/lib/db/service"],
+              message: "The service-role client must not be imported from UI code.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Tests build dynamic paths and fixtures on purpose.
     files: ["tests/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "e2e/**/*.ts"],
     rules: {

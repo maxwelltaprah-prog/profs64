@@ -1,0 +1,44 @@
+# Local Supabase stack (`supabase start`). Written by hand without the CLI available, so
+# key names follow the documented schema but have not been validated by `supabase start`.
+project_id = "buildr"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["http://127.0.0.1:3000/auth/callback", "http://127.0.0.1:3100/auth/callback"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+minimum_password_length = 12
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Email verification is required before any AI usage; the app also checks email_confirmed_at.
+enable_confirmations = true
+secure_password_change = true
+max_frequency = "60s"
+
+# TOTP is enabled at the provider so MFA can be switched on later without a config change.
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[inbucket]
+enabled = true
+port = 54324
+
+[studio]
+enabled = true
+port = 54323
