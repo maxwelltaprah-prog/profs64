@@ -120,6 +120,8 @@ export const LIMITS = {
   signupIp: { name: "signup-ip", limit: 5, windowSeconds: 3600 },
   resetIp: { name: "reset-ip", limit: 5, windowSeconds: 3600 },
   resetAccount: { name: "reset-account", limit: 3, windowSeconds: 3600 },
+  chatUser: { name: "chat-user", limit: 20, windowSeconds: 600 },
+  chatIp: { name: "chat-ip", limit: 60, windowSeconds: 600 },
   projectCreateUser: { name: "project-create-user", limit: 20, windowSeconds: 3600 },
   passwordChangeUser: { name: "password-change-user", limit: 5, windowSeconds: 3600 },
 } as const satisfies Record<string, LimiterConfig>;

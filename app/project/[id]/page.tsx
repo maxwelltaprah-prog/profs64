@@ -3,6 +3,7 @@ import { notFound as nextNotFound, redirect } from "next/navigation";
 
 import { AppHeader } from "@/components/app-header";
 import { Workspace } from "@/components/workspace/workspace";
+import { toUiMessages } from "@/lib/ai/messages";
 import { getOptionalUser } from "@/lib/db/auth";
 import { getCreditBalance, getProject, listMessages, listProjectFiles } from "@/lib/db/projects";
 import { AppError } from "@/lib/security/errors";
@@ -44,7 +45,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           userId={user.id}
           projectId={id}
           files={files}
-          messages={messages}
+          messages={toUiMessages(messages, 2000)}
+          balance={balance}
           canUseAssistant={Boolean(user.email_confirmed_at)}
         />
       </main>

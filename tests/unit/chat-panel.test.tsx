@@ -1,0 +1,186 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream } from "ai";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { ChatPanel } from "@/components/workspace/chat-panel";
+import { createFakeModel, type FakeModelOptions } from "@/lib/ai/fake-model";
+import { createProjectTools, type FileStore } from "@/lib/ai/tools";
+
+// Runs the real server-side pipeline (fake model, real tools, real UI stream encoding) behind a
+// fake fetch, so the panel is tested against the exact wire format the route produces.
+function installServer(files: Map<string, string>, fake: FakeModelOptions = {}) {
+  const requests: unknown[] = [];
+  const store: FileStore = {
+    list: async () => [...files].map(([path, c]) => ({ path, bytes: c.length })),
+    read: async (p) => files.get(p) ?? null,
+    write: async (p, c) => {
+      const existed = files.has(p);
+      files.set(p, c);
+      return { existed };
+    },
+    remove: async (p) => files.delete(p),
+  };
+  const impl = vi.fn(async (_url: unknown, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body)) as { message: { parts: Array<{ text: string }> } };
+    requests.push(body);
+    const tools = createProjectTools(store);
+    const result = streamText({
+      model: createFakeModel(fake),
+      messages: [{ role: "user", content: body.message.parts[0]?.text ?? "" }],
+      tools,
+      stopWhen: isStepCount(12),
+      ...(init?.signal ? { abortSignal: init.signal } : {}),
+    });
+    return createUIMessageStreamResponse({
+      stream: toUIMessageStream({ stream: result.stream, tools }),
+    });
+  });
+  vi.stubGlobal("fetch", impl);
+  return { requests, impl };
+}
+
+function renderPanel(overrides: Partial<Parameters<typeof ChatPanel>[0]> = {}) {
+  const onFilesChanged = vi.fn();
+  const onFinished = vi.fn();
+  render(
+    <ChatPanel
+      projectId="11111111-1111-4111-8111-111111111111"
+      initialMessages={[]}
+      canUseAssistant
+      hasCredits
+      onFilesChanged={onFilesChanged}
+      onFinished={onFinished}
+      {...overrides}
+    />,
+  );
+  return { onFilesChanged, onFinished };
+}
+
+beforeEach(() => {
+  HTMLElement.prototype.scrollTo = () => undefined;
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+describe("ChatPanel", () => {
+  it("streams a reply, shows friendly file lines, and refreshes the tree", async () => {
+    const files = new Map<string, string>();
+    const { requests } = installServer(files);
+    const { onFilesChanged, onFinished } = renderPanel();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText("Message"), "Build a landing page for a coffee shop");
+    await user.click(screen.getByRole("button", { name: /send/i }));
+
+    await screen.findByText("Created src/components/Hero.tsx");
+    await screen.findByText("Created src/App.tsx");
+    await screen.findByText(/Done\. I updated the project files\./);
+    await waitFor(() => expect(onFinished).toHaveBeenCalled());
+    expect(onFilesChanged).toHaveBeenCalled();
+    expect(files.has("src/components/Hero.tsx")).toBe(true);
+
+    // Only the newest message and the project id are sent; no history, no extra keys.
+    expect(requests).toHaveLength(1);
+    expect(Object.keys(requests[0] as object).sort()).toEqual(["id", "message"]);
+    expect((requests[0] as { message: unknown }).message).toEqual({
+      role: "user",
+      parts: [{ type: "text", text: "Build a landing page for a coffee shop" }],
+    });
+  });
+
+  it("sends with Ctrl+Enter and keeps plain Enter for new lines", async () => {
+    installServer(new Map());
+    renderPanel();
+    const user = userEvent.setup();
+    const box = screen.getByLabelText("Message");
+    await user.type(box, "first line{Enter}second line");
+    expect((box as HTMLTextAreaElement).value).toBe("first line\nsecond line");
+    await user.keyboard("{Control>}{Enter}{/Control}");
+    await screen.findByText(/Tell me what you would like to build/);
+    expect((box as HTMLTextAreaElement).value).toBe("");
+  });
+
+  it("shows a Stop button while streaming and stops", async () => {
+    installServer(new Map(), { chunkDelayMs: 30 });
+    renderPanel();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Message"), "write something long");
+    await user.click(screen.getByRole("button", { name: /send/i }));
+    const stop = await screen.findByRole("button", { name: /stop/i });
+    await user.click(stop);
+    await screen.findByRole("button", { name: /send/i });
+  });
+
+  it("renders model text as text, never as HTML", async () => {
+    const { container } = render(
+      <ChatPanel
+        projectId="p"
+        initialMessages={[
+          {
+            id: "1",
+            role: "assistant",
+            parts: [{ type: "text", text: '<img src=x onerror="alert(1)"><b>bold</b>' }],
+          },
+        ]}
+        canUseAssistant
+        hasCredits
+        onFilesChanged={() => undefined}
+        onFinished={() => undefined}
+      />,
+    );
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector("b")).toBeNull();
+    expect(container.textContent).toContain("<b>bold</b>");
+  });
+
+  it("disables the composer when out of credits and explains why", () => {
+    renderPanel({ hasCredits: false });
+    expect((screen.getByLabelText("Message") as HTMLTextAreaElement).disabled).toBe(true);
+    expect(screen.getByText(/out of credits/i)).toBeTruthy();
+  });
+
+  it("disables the composer until the email is confirmed", () => {
+    renderPanel({ canUseAssistant: false });
+    expect((screen.getByLabelText("Message") as HTMLTextAreaElement).disabled).toBe(true);
+  });
+
+  it("shows the server's message when the request is refused", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              error: {
+                code: "daily_limit",
+                message: "You have reached today's usage limit. Try again tomorrow.",
+                requestId: "r",
+              },
+            }),
+            { status: 429, headers: { "content-type": "application/json" } },
+          ),
+      ),
+    );
+    renderPanel();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Message"), "hello");
+    await user.click(screen.getByRole("button", { name: /send/i }));
+    expect((await screen.findByRole("alert")).textContent).toContain("today's usage limit");
+  });
+
+  it("will not send an empty or whitespace message", async () => {
+    const { impl } = installServer(new Map());
+    renderPanel();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Message"), "   ");
+    expect((screen.getByRole("button", { name: /send/i }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    await user.keyboard("{Control>}{Enter}{/Control}");
+    expect(impl).not.toHaveBeenCalled();
+  });
+});

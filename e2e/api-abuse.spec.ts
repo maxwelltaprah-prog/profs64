@@ -104,3 +104,42 @@ test.describe("auth API abuse", () => {
     }
   });
 });
+
+test.describe("chat API without a session", () => {
+  const body = JSON.stringify({
+    id: "11111111-1111-4111-8111-111111111111",
+    message: { role: "user", parts: [{ type: "text", text: "hello" }] },
+  });
+  const headers = { "content-type": "application/json", origin: "http://127.0.0.1:3100" };
+
+  test("refuses signed-out requests and never starts a stream", async ({ request }) => {
+    const response = await request.post("/api/chat", { headers, data: Buffer.from(body) });
+    expect(response.status()).toBe(401);
+    expect(response.headers()["content-type"]).toContain("application/json");
+    expect(response.headers()["x-vercel-ai-ui-message-stream"]).toBeUndefined();
+  });
+
+  test("refuses cross-site requests", async ({ request }) => {
+    const response = await request.post("/api/chat", {
+      headers: { ...headers, origin: "https://evil.example" },
+      data: Buffer.from(body),
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test("does not answer GET", async ({ request }) => {
+    expect((await request.get("/api/chat")).status()).toBe(405);
+  });
+
+  test("project APIs need a session too", async ({ request }) => {
+    expect((await request.get("/api/projects")).status()).toBe(401);
+    expect(
+      (await request.get("/api/projects/11111111-1111-4111-8111-111111111111/files")).status(),
+    ).toBe(401);
+    const created = await request.post("/api/projects", {
+      headers,
+      data: Buffer.from(JSON.stringify({ name: "x" })),
+    });
+    expect(created.status()).toBe(401);
+  });
+});

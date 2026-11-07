@@ -25,3 +25,25 @@ export const createProjectSchema = z.strictObject({
     .regex(/^[^\u0000-\u001f\u007f]+$/),
 });
 export const PROJECT_BODY_LIMIT_BYTES = 2 * 1024;
+
+export const CHAT_BODY_LIMIT_BYTES = 32 * 1024;
+export const CHAT_TEXT_MAX_CHARS = 8000;
+
+// The client sends only its newest message and a project id. History is loaded from the database,
+// so a client can never supply or rewrite earlier turns.
+export const chatBodySchema = z.strictObject({
+  id: z.uuid(),
+  message: z.object({
+    id: z.string().max(100).optional(),
+    role: z.literal("user"),
+    parts: z
+      .array(
+        z.strictObject({
+          type: z.literal("text"),
+          text: z.string().trim().min(1).max(CHAT_TEXT_MAX_CHARS),
+        }),
+      )
+      .length(1),
+  }),
+});
+export type ChatBody = z.infer<typeof chatBodySchema>;

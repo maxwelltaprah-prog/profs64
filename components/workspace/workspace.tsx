@@ -1,10 +1,12 @@
 "use client";
 
+import { type UIMessage } from "ai";
 import { Code2, MessageSquare, PanelRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { iconProps } from "@/components/ui/icons";
-import { type ProjectFile, type StoredMessage } from "@/lib/db/projects";
+import { type ProjectFile } from "@/lib/db/projects";
 import { cn } from "@/lib/utils/cn";
 
 import { ChatPanel } from "./chat-panel";
@@ -19,20 +21,50 @@ export function Workspace({
   projectId,
   files,
   messages,
+  balance,
   canUseAssistant,
 }: {
   userId: string;
   projectId: string;
   files: ProjectFile[];
-  messages: StoredMessage[];
+  messages: UIMessage[];
+  balance: number;
   canUseAssistant: boolean;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("code");
+  const [current, setCurrent] = useState<ProjectFile[]>(files);
   const [selected, setSelected] = useState<string | null>(files[0]?.path ?? null);
   const content = useMemo(
-    () => files.find((file) => file.path === selected)?.content ?? null,
-    [files, selected],
+    () => current.find((file) => file.path === selected)?.content ?? null,
+    [current, selected],
   );
+
+  // The server is the source of truth for files, so the tree is refreshed from it as the assistant
+  // works. Calls are coalesced and a late response never overwrites a newer one.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef(0);
+  const refreshFiles = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      const ticket = ++latest.current;
+      try {
+        const response = await fetch(`/api/projects/${projectId}/files`, { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { files: ProjectFile[] };
+        if (ticket !== latest.current) return;
+        setCurrent(data.files);
+        setSelected((previous) => previous ?? data.files[0]?.path ?? null);
+      } catch {
+        // The next refresh, or the end-of-turn refresh, will catch up.
+      }
+    }, 150);
+  }, [projectId]);
+
+  const onFinished = useCallback(() => {
+    refreshFiles();
+    router.refresh(); // re-reads the credit balance shown in the header
+  }, [refreshFiles, router]);
 
   const tabs: Array<{ id: Tab; label: string; Icon: typeof Code2 }> = [
     { id: "code", label: "Code", Icon: Code2 },
@@ -49,7 +81,14 @@ export function Workspace({
             <MessageSquare {...iconProps} />
             Chat
           </h2>
-          <ChatPanel messages={messages} canUseAssistant={canUseAssistant} />
+          <ChatPanel
+            projectId={projectId}
+            initialMessages={messages}
+            canUseAssistant={canUseAssistant}
+            hasCredits={balance >= 1}
+            onFilesChanged={refreshFiles}
+            onFinished={onFinished}
+          />
         </>
       }
       second={
@@ -89,7 +128,7 @@ export function Workspace({
             >
               <div className="border-hairline w-48 shrink-0 overflow-y-auto border-r">
                 <FileTree
-                  paths={files.map((file) => file.path)}
+                  paths={current.map((file) => file.path)}
                   selected={selected}
                   onSelect={setSelected}
                 />

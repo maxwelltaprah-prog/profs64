@@ -72,3 +72,20 @@ export const invalidCredentials = () =>
     "invalid_credentials",
     "Email or password is incorrect, or the email address has not been confirmed yet.",
   );
+
+export const insufficientCredits = () =>
+  new AppError(
+    402,
+    "insufficient_credits",
+    "You are out of credits. The assistant needs at least 1 credit to start.",
+  );
+export const dailyLimitReached = () =>
+  new AppError(429, "daily_limit", "You have reached today's usage limit. Try again tomorrow.");
+export const aiUnavailable = () =>
+  new AppError(503, "ai_unavailable", "The assistant is temporarily unavailable. Try again later.");
+export const chatBusy = () =>
+  new AppError(
+    429,
+    "chat_busy",
+    "A response is already being written. Wait for it to finish or press Stop.",
+  );

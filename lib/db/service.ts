@@ -43,7 +43,7 @@ export interface DeductionResult {
 export async function deductCredits(input: {
   userId: string;
   amount: number;
-  projectId: string;
+  projectId: string | null;
   model: string;
   inputTokens: number;
   outputTokens: number;
@@ -71,4 +71,16 @@ export async function creditsSpentToday(userId: string): Promise<number> {
   const { data, error } = await serviceClient().rpc("credits_spent_today", { p_user_id: userId });
   if (error) throw new Error(`spend lookup failed: ${error.code ?? "unknown"}`);
   return Number(data ?? 0);
+}
+
+// Assistant messages are written only here, by the server, after the project has been verified as
+// the caller's. RLS lets users insert only their own "user" messages, so a client cannot forge one.
+export async function insertAssistantMessage(input: {
+  projectId: string;
+  parts: unknown[];
+}): Promise<void> {
+  const { error } = await serviceClient()
+    .from("messages")
+    .insert({ project_id: input.projectId, role: "assistant", parts: input.parts });
+  if (error) throw new Error(`assistant message write failed: ${error.code ?? "unknown"}`);
 }
