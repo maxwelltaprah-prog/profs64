@@ -16,7 +16,11 @@ const EXAMPLES = [
   "A landing page for a coffee shop with a menu and opening hours",
   "A habit tracker with a weekly grid and streak counter",
   "A portfolio site with a projects grid and a contact form",
+  "An internal tool to log expenses with a monthly total",
 ];
+
+// The example gallery further down the page fills the box through this event.
+export const PICK_EXAMPLE_EVENT = "buildr:pick-example";
 
 type Tab = "signup" | "login";
 
@@ -37,6 +41,20 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMac(/mac|iphone|ipad/i.test(navigator.userAgent));
   }, []);
+
+  useEffect(() => {
+    const onPick = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      if (typeof detail !== "string") return;
+      setText(detail);
+      setError(null);
+      const box = document.getElementById(textareaId);
+      box?.scrollIntoView({ block: "center", behavior: "smooth" });
+      box?.focus({ preventScroll: true });
+    };
+    window.addEventListener(PICK_EXAMPLE_EVENT, onPick);
+    return () => window.removeEventListener(PICK_EXAMPLE_EVENT, onPick);
+  }, [textareaId]);
 
   const trimmed = normalisePromptText(text);
   const remaining = CHAT_TEXT_MAX_CHARS - text.length;
@@ -90,7 +108,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
               if (error) setError(null);
             }}
             onKeyDown={onKeyDown}
-            rows={3}
+            rows={4}
             maxLength={CHAT_TEXT_MAX_CHARS + 1}
             placeholder="Describe the app you want to build"
             aria-describedby={error ? `${textareaId}-error` : `${textareaId}-hint`}
@@ -98,11 +116,19 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
             className="text-text placeholder:text-subtle block w-full resize-none bg-transparent px-5 pt-5 pb-2 text-lg leading-7 focus-visible:outline-none"
           />
           <div className="flex items-center justify-between gap-3 px-4 pb-4">
-            <p id={`${textareaId}-hint`} className="text-subtle text-xs tabular-nums">
-              {remaining < 500
-                ? `${remaining} characters left`
-                : `${isMac ? "⌘" : "Ctrl"} Enter to generate`}
-            </p>
+            <div className="flex items-center gap-3">
+              <span className="border-hairline text-muted rounded-md border px-2 py-1 font-mono text-xs">
+                Vite, React, Tailwind
+              </span>
+              <p
+                id={`${textareaId}-hint`}
+                className="text-subtle hidden text-xs tabular-nums sm:block"
+              >
+                {remaining < 500
+                  ? `${remaining} characters left`
+                  : `${isMac ? "⌘" : "Ctrl"} Enter to generate`}
+              </p>
+            </div>
             <Button type="submit" loading={leaving}>
               {signedIn ? "Generate" : "Generate for free"}
             </Button>
@@ -117,7 +143,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
             {error}
           </p>
         ) : null}
-        <ul className="flex flex-wrap gap-2" aria-label="Example prompts">
+        <ul className="flex flex-wrap justify-center gap-2" aria-label="Example prompts">
           {EXAMPLES.map((example) => (
             <li key={example}>
               <button

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { BuildDemo } from "@/components/landing/build-demo";
+import { ExampleGallery } from "@/components/landing/example-gallery";
 import { PromptBox } from "@/components/landing/prompt-box";
 import { getOptionalUser } from "@/lib/db/auth";
 import { PASSWORD_MIN } from "@/lib/security/limits";
@@ -91,6 +92,9 @@ export default async function Home() {
           Buildr
         </Link>
         <nav aria-label="Page" className="text-muted hidden items-center gap-6 text-[13px] md:flex">
+          <a href="#examples" className="hover:text-text">
+            Examples
+          </a>
           <a href="#how" className="hover:text-text">
             How it works
           </a>
@@ -119,9 +123,9 @@ export default async function Home() {
               </Link>
               <Link
                 href="/signup"
-                className={`${buttonBase} border-hairline-strong bg-surface hover:bg-surface-2 border`}
+                className={`${buttonBase} bg-accent text-accent-fg hover:bg-accent-hover`}
               >
-                Create account
+                Get started
               </Link>
             </>
           )}
@@ -129,25 +133,45 @@ export default async function Home() {
       </header>
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-6">
-        <section className="pt-16 pb-12 md:pt-24">
+        <section className="flex flex-col items-center pt-16 pb-12 text-center md:pt-24">
           <h1 className="max-w-4xl text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.03em] text-balance md:text-7xl">
-            Describe the app. Buildr writes the files.
+            Describe it. Buildr builds it.
           </h1>
-          <p className="text-muted mt-6 max-w-2xl text-lg leading-8">
-            A workspace where a model builds a Vite, React and Tailwind project for you through a
-            fixed set of file tools, inside a project only you can reach. Twenty credits to start.
-            No card.
+          <p className="text-muted mt-6 max-w-2xl text-lg leading-8 text-balance">
+            Bring a landing page, an internal tool or a whole product to life from a plain
+            description. The files are yours to read, line by line, as they are written.
           </p>
-          <div className="mt-10 max-w-3xl">
+          <div className="mt-10 w-full max-w-3xl text-left">
             <PromptBox signedIn={Boolean(user)} passwordMin={PASSWORD_MIN} />
           </div>
+          <p className="text-subtle mt-6 text-[13px]">
+            Twenty credits to start. No card. Confirm your email and you are in.
+          </p>
         </section>
 
-        <section aria-label="What happens after you press Generate" className="pb-24">
+        <section aria-label="What happens after you press Generate" className="pb-20">
           <BuildDemo />
-          <p className="text-subtle mt-3 text-[13px]">
+          <p className="text-subtle mt-3 text-center text-[13px]">
             A replay of one request. The token counts and the charge are from a real run.
           </p>
+        </section>
+
+        <section
+          id="examples"
+          aria-labelledby="examples-title"
+          className="border-hairline border-t py-20"
+        >
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 id="examples-title" className="text-2xl font-semibold tracking-tight">
+              Start from a description that works
+            </h2>
+            <p className="text-muted mt-3 text-[15px] leading-7">
+              Pick one, change the details to match what you need, and generate.
+            </p>
+          </div>
+          <div className="mt-10">
+            <ExampleGallery />
+          </div>
         </section>
 
         <section id="how" aria-labelledby="how-title" className="border-hairline border-t py-20">

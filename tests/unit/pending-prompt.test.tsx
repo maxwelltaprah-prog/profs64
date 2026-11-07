@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ExampleGallery } from "@/components/landing/example-gallery";
 import { PromptBox } from "@/components/landing/prompt-box";
 import { StartProject } from "@/components/start/start-project";
 import { CHAT_TEXT_MAX_CHARS } from "@/lib/security/limits";
@@ -146,6 +147,22 @@ describe("PromptBox", () => {
     expect(readPendingPrompt()?.text).toBe("A habit tracker");
     expect(router.push).toHaveBeenCalledWith("/start");
     expect(document.querySelector("dialog")?.hasAttribute("open")).toBe(false);
+  });
+});
+
+describe("ExampleGallery", () => {
+  it("fills the prompt box with the chosen description", async () => {
+    Element.prototype.scrollIntoView = () => undefined;
+    render(
+      <>
+        <PromptBox signedIn={false} passwordMin={12} />
+        <ExampleGallery />
+      </>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Habit tracker/ }));
+    const box = screen.getByLabelText(/describe the app/i) as HTMLTextAreaElement;
+    expect(box.value).toMatch(/^A habit tracker/);
+    expect(document.activeElement).toBe(box);
   });
 });
 
