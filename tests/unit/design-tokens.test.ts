@@ -57,6 +57,10 @@ const TEXT_PAIRS: [string, string][] = [
   ["accent", "accent-subtle"],
   ["danger", "surface"],
   ["danger", "danger-subtle"],
+  ["ink-text", "ink"],
+  ["ink-muted", "ink"],
+  ["ink-muted", "ink-2"],
+  ["ink-accent", "ink"],
   ["success", "surface"],
 ];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
@@ -81,7 +81,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
         <label htmlFor={textareaId} className="sr-only">
           Describe the app you want to build
         </label>
-        <div className="border-hairline-strong bg-surface focus-within:border-accent rounded-lg border shadow-sm">
+        <div className="border-hairline-strong bg-surface focus-within:border-accent rounded-lg border shadow-md">
           <textarea
             id={textareaId}
             value={text}
@@ -90,14 +90,14 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
               if (error) setError(null);
             }}
             onKeyDown={onKeyDown}
-            rows={4}
+            rows={3}
             maxLength={CHAT_TEXT_MAX_CHARS + 1}
             placeholder="Describe the app you want to build"
             aria-describedby={error ? `${textareaId}-error` : `${textareaId}-hint`}
             aria-invalid={error ? true : undefined}
-            className="text-text placeholder:text-subtle block w-full resize-none bg-transparent px-4 pt-4 pb-2 text-base leading-6 focus-visible:outline-none"
+            className="text-text placeholder:text-subtle block w-full resize-none bg-transparent px-5 pt-5 pb-2 text-lg leading-7 focus-visible:outline-none"
           />
-          <div className="flex items-center justify-between gap-3 px-3 pb-3">
+          <div className="flex items-center justify-between gap-3 px-4 pb-4">
             <p id={`${textareaId}-hint`} className="text-subtle text-xs tabular-nums">
               {remaining < 500
                 ? `${remaining} characters left`
@@ -105,7 +105,6 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
             </p>
             <Button type="submit" loading={leaving}>
               {signedIn ? "Generate" : "Generate for free"}
-              <ArrowRight {...iconProps} />
             </Button>
           </div>
         </div>
