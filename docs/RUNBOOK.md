@@ -77,6 +77,10 @@ The refund and rejection behaviour is covered by `tests/integration/credits.test
 2. Rows from requests where the provider reported no usage, or that were stopped mid-step, use estimates (3 characters per token) and log `usage_estimated`. Search logs by the request ID shown in error responses.
 3. `credit_shortfall` in logs means a request cost more than the remaining balance; the charge was clamped to zero balance.
 
+## Sign-ups fail with "could not send the confirmation email"
+
+Supabase's built-in mailer allows only a few messages per hour and is meant for development. Once it is exhausted, sign-up returns 429 `email_send_limited` and the log shows `signup_email_send_limited`. The fix is custom SMTP: in the Supabase dashboard, Authentication, then Emails, then SMTP Settings, enter a provider (Resend, Postmark, SES or similar) and raise the rate limit under Authentication, then Rate Limits. Until then nobody can sign up or reset a password.
+
 ## Deploy checklist
 
 - Environment variables set; `AI_MODEL_MODE` empty.

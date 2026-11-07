@@ -18,8 +18,14 @@ export const POST = withApi("auth.forgot-password", async (request, { requestId 
     email,
     base ? { redirectTo: `${base}/auth/callback?next=/reset-password` } : {},
   );
-  if (error)
-    logger.warn("password_reset_request_failed", { requestId, code: error.code ?? "unknown" });
+  if (error) {
+    const detail = { requestId, code: error.code ?? "unknown" };
+    if (error.code === "over_email_send_rate_limit") {
+      logger.error("password_reset_email_send_limited", detail);
+    } else {
+      logger.warn("password_reset_request_failed", detail);
+    }
+  }
 
   // Identical answer whether or not the address exists, and whether or not sending failed.
   return Response.json({ status: "check_email" }, { status: 202 });

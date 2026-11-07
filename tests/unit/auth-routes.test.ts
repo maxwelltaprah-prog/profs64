@@ -94,6 +94,22 @@ describe("POST /api/auth/signup", () => {
     );
   });
 
+  it("says plainly when the mailer's send limit blocks the confirmation email", async () => {
+    auth.signUp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { code: "over_email_send_rate_limit", message: "email rate limit exceeded" },
+    });
+    const response = await call(await load("signup"), {
+      email: "a@example.com",
+      password: GOOD_PASSWORD,
+    });
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("3600");
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe("email_send_limited");
+    expect(body.error.message).toMatch(/confirmation email/);
+  });
+
   it("answers identically when Supabase hides that the account already exists", async () => {
     const handler = await load("signup");
     const fresh = await call(handler, { email: "a@example.com", password: GOOD_PASSWORD });

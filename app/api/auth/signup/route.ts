@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { withApi } from "@/lib/security/api";
 import { appBaseUrl } from "@/lib/security/app-url";
 import { getClientIp, hashForKey } from "@/lib/security/client-ip";
-import { badRequest } from "@/lib/security/errors";
+import { badRequest, emailSendLimited } from "@/lib/security/errors";
 import { logger } from "@/lib/security/logger";
 import { assertPasswordAcceptable } from "@/lib/security/password-guard";
 import { enforceLimits, LIMITS } from "@/lib/security/rate-limit";
@@ -27,6 +27,10 @@ export const POST = withApi("auth.signup", async (request, { requestId }) => {
   });
 
   if (error) {
+    if (error.code === "over_email_send_rate_limit") {
+      logger.error("signup_email_send_limited", { requestId, code: error.code });
+      throw emailSendLimited();
+    }
     logger.warn("signup_rejected", { requestId, code: error.code ?? "unknown" });
     throw badRequest("We could not create the account. Check your details and try again.");
   }

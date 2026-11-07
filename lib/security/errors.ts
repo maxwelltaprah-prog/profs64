@@ -41,6 +41,16 @@ export const rateLimited = (retryAfterSeconds: number) =>
     },
   );
 
+// Supabase's built-in mailer allows a handful of messages per hour; a project without custom
+// SMTP hits this as soon as a few people sign up. Operators are alerted through the log line.
+export const emailSendLimited = () =>
+  new AppError(
+    429,
+    "email_send_limited",
+    "We could not send the confirmation email right now. Try again in about an hour.",
+    { "Retry-After": "3600" },
+  );
+
 export interface ErrorBody {
   error: { code: string; message: string; requestId: string };
 }
