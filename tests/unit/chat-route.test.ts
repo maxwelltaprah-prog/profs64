@@ -65,6 +65,8 @@ vi.mock("@/lib/db/files", () => ({
     remove: async (p: string) => state.files.delete(p),
   }),
 }));
+const stopRequestedSince = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/db/stop", () => ({ latestStopId: async () => 7, stopRequestedSince }));
 vi.mock("@/lib/ai/model-factory", () => ({ chooseModel }));
 
 type Handler = (request: Request) => Promise<Response>;
@@ -109,6 +111,7 @@ beforeEach(() => {
     insertAssistantMessage,
     insertUserMessage,
     chooseModel,
+    stopRequestedSince,
   ])
     fn.mockReset();
   getVerifiedUser.mockImplementation(async () => state.user);
@@ -122,6 +125,7 @@ beforeEach(() => {
   }));
   insertAssistantMessage.mockResolvedValue(undefined);
   insertUserMessage.mockResolvedValue({ error: null });
+  stopRequestedSince.mockResolvedValue(false);
   chooseModel.mockImplementation(() => ({
     model: createFakeModel(state.fake),
     usedModelId: () => "z-ai/glm-5.2",
@@ -434,6 +438,33 @@ describe("Stop and disconnects", () => {
     expect(charge.inputTokens).toBeGreaterThan(0);
     expect(charge.amount).toBeGreaterThanOrEqual(0.1);
   });
+
+  it("ends the model call when the Stop button's request is noticed, with the browser still connected", async () => {
+    state.fake = { chunkDelayMs: 300 };
+    const count = async () => {
+      const response = await (await load())(post(goodBody("write something long")));
+      const reader = requireBody(response).getReader();
+      let chunks = 0;
+      for (;;) {
+        const { done } = await reader.read();
+        if (done) return chunks;
+        chunks += 1;
+      }
+    };
+    const full = await count();
+    await vi.waitFor(() => expect(deductCredits).toHaveBeenCalledTimes(1));
+    deductCredits.mockClear();
+
+    // The Stop endpoint's event shows up on the first check (1.5 s in); nobody aborts or cancels.
+    stopRequestedSince.mockReset();
+    stopRequestedSince.mockResolvedValue(true);
+    const stopped = await count();
+    expect(stopRequestedSince).toHaveBeenCalledWith(PROJECT, 7, expect.anything());
+    expect(stopped).toBeLessThan(full);
+    await vi.waitFor(() => expect(deductCredits).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(deductCredits).toHaveBeenCalledTimes(1);
+  }, 30000);
 
   it("bills when the client simply goes away without an abort signal", async () => {
     state.fake = { chunkDelayMs: 10 };

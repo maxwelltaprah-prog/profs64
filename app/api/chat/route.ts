@@ -19,6 +19,7 @@ import { buildSnapshot } from "@/lib/ai/context";
 import { characterCount, sanitizeParts, toUiMessages, usagePart } from "@/lib/ai/messages";
 import { chooseModel } from "@/lib/ai/model-factory";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
+import { watchForStop } from "@/lib/ai/stop-watch";
 import { SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
 import { createProjectTools } from "@/lib/ai/tools";
 import { createBiller } from "@/lib/credits/billing";
@@ -33,6 +34,7 @@ import {
   translateDbError,
 } from "@/lib/db/projects";
 import { creditsSpentToday, deductCredits, insertAssistantMessage } from "@/lib/db/service";
+import { latestStopId, stopRequestedSince } from "@/lib/db/stop";
 import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { withApi } from "@/lib/security/api";
 import { getClientIp, hashForKey } from "@/lib/security/client-ip";
@@ -112,6 +114,15 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       deduct: deductCredits,
     });
 
+    // Stop from the browser: the Stop button records an event (see lib/db/stop.ts) that this
+    // request notices, because on Vercel a disconnect alone does not cancel the model call.
+    const stopper = new AbortController();
+    const baseline = await latestStopId(projectId, supabase);
+    const unwatch = watchForStop(
+      () => stopRequestedSince(projectId, baseline, supabase),
+      () => stopper.abort(),
+    );
+
     const result = streamText({
       model: chosen.model,
       instructions: SYSTEM_PROMPT,
@@ -119,7 +130,7 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       tools,
       stopWhen: isStepCount(MAX_STEPS),
       maxOutputTokens: DEFAULT_MODEL.maxOutputTokens,
-      abortSignal: request.signal,
+      abortSignal: AbortSignal.any([request.signal, stopper.signal]),
       timeout: { totalMs: REQUEST_TIMEOUT_MS },
       onStepStart: () => biller.stepStarted(),
       onChunk: ({ chunk }) => {
@@ -183,6 +194,7 @@ export const POST = withApi("chat", async (request, { requestId }) => {
             logger.error("assistant_message_write_failed", { requestId, error });
           }
         } finally {
+          unwatch();
           release();
         }
       },
@@ -203,6 +215,7 @@ export const POST = withApi("chat", async (request, { requestId }) => {
         try {
           await biller.settle("cancel");
         } finally {
+          unwatch();
           release();
         }
         await reader.cancel(reason);

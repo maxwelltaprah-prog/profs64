@@ -268,3 +268,44 @@ describe("GET /api/projects/[id]/outputs", () => {
     });
   });
 });
+
+describe("POST /api/projects/[id]/chat/stop", () => {
+  const stop = async (project = PROJECT, extra: Record<string, string> = {}) => {
+    const { POST } = (await import("@/app/api/projects/[id]/chat/stop/route")) as { POST: Handler };
+    return POST(
+      new Request(`https://app.example/api/projects/${project}/chat/stop`, {
+        method: "POST",
+        headers: { origin: "https://app.example", host: "app.example", ...extra },
+      }),
+      { params: Promise.resolve({ id: project }) } as never,
+    );
+  };
+
+  it("records a stop event for the caller's project, with the project id only", async () => {
+    const response = await stop();
+    expect(response.status).toBe(200);
+    expect(recordAuditEvent).toHaveBeenCalledExactlyOnceWith({
+      userId: "user-1",
+      event: "chat_stop",
+      metadata: { projectId: PROJECT },
+      requestId: expect.any(String),
+    });
+  });
+
+  it("is a 404 for a bad id or someone else's project, and writes nothing", async () => {
+    expect((await stop("../x")).status).toBe(404);
+    getProject.mockRejectedValue((await errors()).notFound());
+    expect((await stop()).status).toBe(404);
+    expect(recordAuditEvent).not.toHaveBeenCalled();
+  });
+
+  it("needs sign-in and same origin, and is rate limited", async () => {
+    getVerifiedUser.mockRejectedValue((await errors()).unauthenticated());
+    expect((await stop()).status).toBe(401);
+    getVerifiedUser.mockResolvedValue({ id: "user-1" });
+    expect((await stop(PROJECT, { origin: "https://evil.example" })).status).toBe(403);
+    enforceLimits.mockRejectedValue((await errors()).rateLimited(30));
+    expect((await stop()).status).toBe(429);
+    expect(recordAuditEvent).not.toHaveBeenCalled();
+  });
+});

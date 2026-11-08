@@ -593,6 +593,14 @@ export function ChatPanel({
     void sendMessage({ text });
   };
 
+  // Stops the local stream at once and also tells the server, which otherwise keeps the model
+  // running (and billing) after the browser lets go. A failed request is ignored: the reply has
+  // already stopped on screen and the server's own limits still apply.
+  const stopReply = () => {
+    void stop();
+    void fetch(`/api/projects/${projectId}/chat/stop`, { method: "POST" }).catch(() => undefined);
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
@@ -854,7 +862,7 @@ export function ChatPanel({
               </p>
             </div>
             {busy ? (
-              <Button type="button" variant="secondary" size="sm" onClick={() => void stop()}>
+              <Button type="button" variant="secondary" size="sm" onClick={stopReply}>
                 <Square {...iconProps} />
                 Stop
               </Button>

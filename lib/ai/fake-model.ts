@@ -69,11 +69,34 @@ export interface FakeModelOptions {
   omitUsage?: boolean;
 }
 
+// A real provider's HTTP stream ends with an error when the request is aborted; the simulated
+// stream does not look at the signal, so this wrapper does, which lets tests press Stop.
+function endWhenAborted<T>(source: ReadableStream<T>, signal: AbortSignal | undefined) {
+  if (!signal) return source;
+  const reader = source.getReader();
+  return new ReadableStream<T>({
+    start(controller) {
+      const fail = () => {
+        controller.error(signal.reason ?? new DOMException("Aborted", "AbortError"));
+        void reader.cancel().catch(() => undefined);
+      };
+      if (signal.aborted) fail();
+      else signal.addEventListener("abort", fail, { once: true });
+    },
+    async pull(controller) {
+      const { done, value } = await reader.read();
+      if (done) controller.close();
+      else controller.enqueue(value);
+    },
+    cancel: (reason) => reader.cancel(reason),
+  });
+}
+
 export function createFakeModel(options: FakeModelOptions = {}) {
   return new MockLanguageModelV4({
     provider: "fake",
     modelId: "fake-model",
-    doStream: async ({ prompt }) => {
+    doStream: async ({ prompt, abortSignal }) => {
       const messages = prompt as Prompt;
       const afterTools = messages[messages.length - 1]?.role === "tool";
       const request = lastUserText(messages);
@@ -146,10 +169,13 @@ export function createFakeModel(options: FakeModelOptions = {}) {
       }
 
       return {
-        stream: simulateReadableStream({
-          chunks: chunks as never[],
-          chunkDelayInMs: options.chunkDelayMs ?? null,
-        }),
+        stream: endWhenAborted(
+          simulateReadableStream({
+            chunks: chunks as never[],
+            chunkDelayInMs: options.chunkDelayMs ?? null,
+          }),
+          abortSignal,
+        ),
       };
     },
   });

@@ -122,7 +122,7 @@ describe("ChatPanel", () => {
   });
 
   it("shows a Stop button while streaming and stops", async () => {
-    installServer(new Map(), { chunkDelayMs: 30 });
+    const { side } = installServer(new Map(), { chunkDelayMs: 30 });
     renderPanel();
     const user = userEvent.setup();
     await user.type(screen.getByLabelText("Message"), "write something long");
@@ -130,6 +130,10 @@ describe("ChatPanel", () => {
     const stop = await screen.findByRole("button", { name: /stop/i });
     await user.click(stop);
     await screen.findByRole("button", { name: /send/i });
+    // The server is told too, because it would otherwise keep the model running after a disconnect.
+    const call = side.mock.calls.find(([url]) => url.endsWith("/chat/stop"));
+    expect(call?.[0]).toMatch(/^\/api\/projects\/[0-9a-f-]{36}\/chat\/stop$/);
+    expect(call?.[1]?.method).toBe("POST");
   });
 
   it("renders model text as text, never as HTML", async () => {

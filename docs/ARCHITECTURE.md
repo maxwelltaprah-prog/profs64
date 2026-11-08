@@ -59,6 +59,10 @@ The landing page (`app/page.tsx`) is a server component with two client islands:
 
 The home page leads with a prompt box (`components/landing/prompt-box.tsx`). Submitting it saves the text in `localStorage` (`lib/workspace/pending-prompt.ts`, 24-hour expiry) and either goes to `/start` or, when signed out, opens a native `<dialog>` with the sign-up and sign-in forms. Sign-up sends `next: "/start"` so the confirmation link lands there; sign-in redirects there directly. `/start` (`components/start/start-project.tsx`) creates a project named from the prompt's first line, records the project id alongside the prompt, and opens the workspace. The chat panel sends the prompt once, only when the stored project id matches the open project and the assistant can run; otherwise it is placed in the composer. Browser storage is the right place for this: it is a per-visitor convenience, nothing else reads it, and the server validates the text like any other message.
 
+### Stop
+
+The Stop button stops the local stream and calls `POST /api/projects/[id]/chat/stop` (auth, ownership by RLS, rate limit 60 per 10 minutes). That records a `chat_stop` audit event with the project id. The chat request reads the newest stop id before it starts and checks for a newer one every 1.5 s (`lib/ai/stop-watch.ts`, `lib/db/stop.ts`); when it sees one it aborts the model call, which settles billing through the existing abort path (tokens used so far, cut-off step estimated). A stop event from before a request started can never cancel it. No schema change.
+
 ### Chat actions, details and hiding the chat
 
 - **Replies collapse to a preview.** A finished assistant reply shows its closing text, a one-line summary of the work (steps, files changed) and a Details toggle. Details reveals earlier narration, each step, buttons that open the changed files, the token and credit line, and View preview. The reply being generated is shown in full.
