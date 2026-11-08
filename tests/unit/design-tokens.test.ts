@@ -112,4 +112,27 @@ describe("theme definitions stay in sync", () => {
     expect(durations).toEqual([150, 200, 250]);
     expect(css).toContain("prefers-reduced-motion: reduce");
   });
+
+  // Rules from the installed design-engineering skills (.claude/skills/emil-design-eng).
+  it("follows the motion rules: strong curves, no transition:all, no ease-in, press 0.97", () => {
+    expect(css).toMatch(/--ease-out:\s*cubic-bezier\(0\.23,\s*1,\s*0\.32,\s*1\)/);
+    expect(css).toMatch(/--ease-in-out:\s*cubic-bezier\(0\.77,\s*0,\s*0\.175,\s*1\)/);
+    expect(css).not.toMatch(/transition(?:-property)?:\s*all/);
+    expect(css).not.toMatch(/ease-in(?!-out)/);
+    expect(css).toMatch(/--duration-press:\s*160ms/);
+    expect(css).toMatch(/\.press:active:not\(:disabled\)\s*\{\s*transform:\s*scale\(0\.97\)/);
+    // Nothing enters from scale(0) and hover motion is gated to precise pointers.
+    expect(css).not.toMatch(/scale\(0\)/);
+    expect(css).toMatch(/@media \(hover: hover\) and \(pointer: fine\)\s*\{\s*\.lift:hover/);
+  });
+
+  it("carries the phone baseline: tap flash off, 16px inputs on touch, no zoom lock", () => {
+    expect(css).toContain("-webkit-tap-highlight-color: transparent");
+    expect(css).toMatch(
+      /@media \(pointer: coarse\)\s*\{\s*input,\s*textarea,\s*select\s*\{\s*font-size: 16px/,
+    );
+    const layout = readFileSync(path.resolve(import.meta.dirname, "../../app/layout.tsx"), "utf8");
+    expect(layout).toContain('viewportFit: "cover"');
+    expect(layout).not.toMatch(/maximumScale|userScalable/);
+  });
 });

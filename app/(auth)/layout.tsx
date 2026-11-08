@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <header className="px-6 py-5">
         <Link href="/" className="text-sm font-semibold tracking-tight">
           Buildr

@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const theme = parseTheme(store.get(THEME_COOKIE)?.value);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <AppHeader balance={balance} theme={theme} />
       <main id="main" className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
         {!user.email_confirmed_at ? (

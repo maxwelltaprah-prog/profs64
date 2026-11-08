@@ -14,7 +14,7 @@ export default async function StartPage() {
   if (!user) redirect("/login?next=/start");
 
   return (
-    <main id="main" className="flex min-h-screen items-center justify-center px-6">
+    <main id="main" className="flex min-h-dvh items-center justify-center px-6">
       <StartProject />
     </main>
   );

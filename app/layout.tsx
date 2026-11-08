@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { ToastProvider } from "@/components/ui/toast";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -14,6 +14,19 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: { default: "Buildr", template: "%s · Buildr" },
   description: "Describe an app and an assistant builds the files for it.",
+};
+
+// Edge-to-edge on phones (safe-area insets pad content back in), a status bar that matches the
+// page in each colour scheme, and no zoom lock: zoom stays available for accessibility.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0b" },
+  ],
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

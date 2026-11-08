@@ -17,7 +17,7 @@ export default async function AccountPage() {
   const [balance, store] = await Promise.all([getCreditBalance(user.id), cookies()]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <AppHeader balance={balance} theme={parseTheme(store.get(THEME_COOKIE)?.value)} />
       <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
         <h1 className="text-xl font-semibold tracking-tight">Account</h1>

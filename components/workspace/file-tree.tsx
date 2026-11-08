@@ -40,7 +40,10 @@ function Node({
         >
           <ChevronRight
             {...iconProps}
-            className={cn("transition-ui shrink-0", open && "rotate-90")}
+            className={cn(
+              "shrink-0 transition-transform duration-200 ease-out",
+              open && "rotate-90",
+            )}
           />
           <Folder {...iconProps} className="shrink-0" />
           <span className="truncate">{node.name}</span>

@@ -71,7 +71,7 @@ export function CommandPalette({ actions }: { actions: readonly RunnableAction[]
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="transition-ui border-hairline-strong bg-surface text-muted hover:bg-surface-2 hover:text-text flex h-8 items-center gap-2 rounded-md border px-2.5 text-[13px]"
+        className="press border-hairline-strong bg-surface text-muted hover:bg-surface-2 hover:text-text flex h-8 items-center gap-2 rounded-md border px-2.5 text-[13px]"
       >
         <Search {...iconProps} />
         <span className="hidden sm:inline">Search</span>
@@ -82,6 +82,7 @@ export function CommandPalette({ actions }: { actions: readonly RunnableAction[]
       <dialog
         ref={dialog}
         aria-label="Command palette"
+        data-instant
         onClose={close}
         onClick={(event) => {
           if (event.target === dialog.current) close();

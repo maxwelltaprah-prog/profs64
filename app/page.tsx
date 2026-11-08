@@ -9,7 +9,7 @@ import { getOptionalUser } from "@/lib/db/auth";
 import { PASSWORD_MIN } from "@/lib/security/limits";
 
 const buttonBase =
-  "transition-ui inline-flex h-9 items-center rounded-md px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2";
+  "press inline-flex h-9 items-center rounded-md px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2";
 
 // Every statement below is checked against the code and docs; the landing page makes no claim
 // the product does not keep.
@@ -88,7 +88,7 @@ export default async function Home() {
   const user = await getOptionalUser();
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader
         account={
           user ? (

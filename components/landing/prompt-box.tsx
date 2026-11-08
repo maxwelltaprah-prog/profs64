@@ -89,7 +89,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
   };
 
   const tabClass = (active: boolean) =>
-    `transition-ui -mb-px border-b-2 px-3 pb-2 text-[13px] font-medium ${
+    `press -mb-px border-b-2 px-3 pb-2 text-[13px] font-medium ${
       active ? "border-accent text-text" : "text-muted hover:text-text border-transparent"
     }`;
 

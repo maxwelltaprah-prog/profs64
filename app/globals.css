@@ -52,7 +52,11 @@
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-slow: 250ms;
-  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-press: 160ms;
+  /* Strong custom curves (built-in CSS easings are too weak to feel intentional). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 :root[data-theme="dark"] {
@@ -167,11 +171,41 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Native-feel baseline for phones: no grey tap flash (every control has its own :active
+       state), no font inflation in landscape, no pull-to-refresh hijacking inner scroll. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
   }
 
   body {
     line-height: 1.5;
     font-size: 14px;
+  }
+
+  /* Large headings read looser than they are; tighten, and balance the wrap. */
+  h1,
+  h2 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Controls respond on press, not release; no double-tap delay; label text is not selectable. */
+  button,
+  a,
+  [role="button"],
+  summary {
+    touch-action: manipulation;
+  }
+  button,
+  [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 
   :focus-visible {
@@ -301,17 +335,17 @@
       border-color var(--duration-base) var(--ease-out),
       background-color var(--duration-base) var(--ease-out);
   }
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     .lift:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-2);
     }
   }
 
-  /* Press feedback for buttons. */
+  /* Press feedback for anything pressable: 160ms, scale 0.97 (range 0.95-0.98). */
   .press {
     transition:
-      transform var(--duration-fast) var(--ease-out),
+      transform var(--duration-press) var(--ease-out),
       color var(--duration-fast) var(--ease-out),
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -319,15 +353,35 @@
       opacity var(--duration-fast) var(--ease-out);
   }
   .press:active:not(:disabled) {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 
-  /* Modal entrance. */
-  dialog[open] {
+  /* Modal entrance. Opened from the keyboard (Cmd+K) it is used hundreds of times a day, so the
+     command palette opts out with data-instant; occasional dialogs keep the entrance. */
+  dialog[open]:not([data-instant]) {
     animation: dialog-in var(--duration-base) var(--ease-out);
   }
-  dialog[open]::backdrop {
+  dialog[open]:not([data-instant])::backdrop {
     animation: fade-in var(--duration-base) var(--ease-out);
+  }
+
+  /* Toasts use transitions with @starting-style so a burst of them retargets mid-flight instead
+     of restarting; they leave faster than they arrive. */
+  .toast-item {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      transform var(--duration-base) var(--ease-out);
+    @starting-style {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+  .toast-item[data-leaving="true"] {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+    transition-duration: 120ms;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -339,6 +393,10 @@
       opacity: 1;
       transform: none;
       transition: none;
+    }
+    .toast-item {
+      transform: none;
+      transition: opacity var(--duration-fast) linear;
     }
     .lift:hover,
     .press:active {
@@ -366,10 +424,22 @@
 @keyframes dialog-in {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.985);
+    transform: translateY(6px) scale(0.96);
   }
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/*
+ * iOS zooms the page when an input under 16px gets focus and does not zoom back. Fix the cause,
+ * never disable zoom. Unlayered on purpose: it must beat the text-sm utility on the controls.
+ */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
   }
 }
