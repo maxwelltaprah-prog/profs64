@@ -125,4 +125,17 @@ describe("friendlyChatError", () => {
     expect(friendlyChatError("weird")).toContain("could not be sent");
     expect(friendlyChatError(new Error("{broken"))).toContain("could not be sent");
   });
+
+  it("words an interrupted write plainly, with or without the path", () => {
+    expect(
+      describeToolPart({
+        type: "tool-write_file",
+        state: "output-error",
+        input: { path: "src/components/Hours.tsx" },
+      })?.text,
+    ).toBe("Stopped while writing src/components/Hours.tsx");
+    expect(describeToolPart({ type: "tool-write_file", state: "output-error" })?.text).toBe(
+      "Stopped while writing a file",
+    );
+  });
 });

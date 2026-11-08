@@ -36,11 +36,11 @@ export function describeToolPart(part: ToolPartLike): ToolLine | null {
   if (!WORKING_VERBS.has(name)) return null;
   const verb = WORKING_VERBS.get(name) ?? "";
 
-  if (part.state === "output-error")
-    return {
-      text: `Could not finish: ${verb.toLowerCase()} ${pathOf(part.input)}`.trim(),
-      state: "failed",
-    };
+  // The input is often incomplete when a write fails midway, so the path may be missing.
+  if (part.state === "output-error") {
+    const target = pathOf(part.input) || (name === "list_files" ? "" : "a file");
+    return { text: `Stopped while ${verb.toLowerCase()} ${target}`.trim(), state: "failed" };
+  }
 
   if (part.state !== "output-available") {
     const target = pathOf(part.input);

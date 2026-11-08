@@ -219,4 +219,80 @@ describe("ChatPanel", () => {
       expect(readPendingPrompt()).toBeNull();
     });
   });
+
+  describe("readability and live feedback", () => {
+    const assistant = (text: string) => [
+      { id: "a", role: "assistant" as const, parts: [{ type: "text" as const, text }] },
+    ];
+
+    it("renders bold, code and lists the assistant writes instead of showing the markers", () => {
+      const { container } = render(
+        <ChatPanel
+          projectId="p"
+          initialMessages={assistant(
+            "Added a **Contact** section in `App.tsx`.\n\n- phone\n- email",
+          )}
+          canUseAssistant
+          hasCredits
+          onFilesChanged={() => undefined}
+          onFinished={() => undefined}
+        />,
+      );
+      expect(container.querySelector("strong")?.textContent).toBe("Contact");
+      expect(container.querySelector("code")?.textContent).toBe("App.tsx");
+      expect(container.querySelectorAll("ul li")).toHaveLength(2);
+      expect(container.textContent).not.toContain("**");
+      expect(container.querySelector("a, img, script")).toBeNull();
+    });
+
+    it("does not animate history that was already there", () => {
+      const { container } = render(
+        <ChatPanel
+          projectId="p"
+          initialMessages={assistant("Hello")}
+          canUseAssistant
+          hasCredits
+          onFilesChanged={() => undefined}
+          onFinished={() => undefined}
+        />,
+      );
+      expect(container.querySelector(".chat-in")).toBeNull();
+    });
+
+    it("shows a caret while text streams and removes it when the reply is done", async () => {
+      installServer(new Map(), { chunkDelayMs: 40 });
+      const { container } = render(
+        <ChatPanel
+          projectId="p"
+          initialMessages={[]}
+          canUseAssistant
+          hasCredits
+          onFilesChanged={() => undefined}
+          onFinished={() => undefined}
+        />,
+      );
+      const user = userEvent.setup();
+      await user.type(screen.getByLabelText("Message"), "Build a page");
+      await user.click(screen.getByRole("button", { name: /send/i }));
+      await waitFor(() => expect(container.querySelector(".stream-caret")).not.toBeNull());
+      await screen.findByRole("button", { name: /send/i }, { timeout: 8000 });
+      expect(container.querySelector(".stream-caret")).toBeNull();
+      expect(container.querySelector(".thinking-dot")).toBeNull();
+    });
+
+    it("groups file steps into one list and fills the composer from a suggestion", async () => {
+      installServer(new Map());
+      renderPanel();
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: /landing page for a coffee shop/i }));
+      expect((screen.getByLabelText("Message") as HTMLTextAreaElement).value).toMatch(
+        /coffee shop/i,
+      );
+      await user.click(screen.getByRole("button", { name: /send/i }));
+      await screen.findByText("Created src/App.tsx");
+      const lists = screen.getAllByRole("list", { name: "File changes" });
+      expect(lists).toHaveLength(1);
+      expect(lists[0]?.querySelectorAll("li").length).toBeGreaterThanOrEqual(2);
+    });
+  });
 });

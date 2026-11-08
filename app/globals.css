@@ -309,6 +309,49 @@
       0 0 0 4px var(--accent-subtle),
       var(--shadow-2);
   }
+  /* Chat: new messages, steps and streamed blocks settle in with a short rise. A transition with
+     @starting-style, so it retargets if more arrive while it plays. Only applied to content that
+     appears after the panel mounted, never to history. */
+  .chat-in {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      transform var(--duration-base) var(--ease-out);
+    @starting-style {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  /* The caret that trails text while it is being generated. */
+  .stream-caret {
+    display: inline-block;
+    width: 0.4rem;
+    height: 1.05em;
+    margin-left: 2px;
+    vertical-align: -0.2em;
+    border-radius: 1px;
+    background: var(--accent);
+    animation: caret-pulse 1s var(--ease-in-out) infinite;
+  }
+
+  /* Three dots for the moments when nothing is streaming yet but work is under way. */
+  .thinking-dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: var(--text-subtle);
+    animation: thinking-dot 1.2s var(--ease-in-out) infinite;
+  }
+  .thinking-dot:nth-child(2) {
+    animation-delay: 150ms;
+  }
+  .thinking-dot:nth-child(3) {
+    animation-delay: 300ms;
+  }
+
   /* Page-load entrance for the hero: one staggered sequence. */
   .rise {
     opacity: 0;
@@ -408,6 +451,10 @@
       transform: none;
       transition: none;
     }
+    .chat-in {
+      transform: none;
+      transition: opacity var(--duration-fast) linear;
+    }
     .toast-item {
       transform: none;
       transition: opacity var(--duration-fast) linear;
@@ -423,6 +470,29 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes caret-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes thinking-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
   }
 }
 
