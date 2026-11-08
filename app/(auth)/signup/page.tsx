@@ -2,14 +2,15 @@ import Link from "next/link";
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { ProviderButtons } from "@/components/auth/provider-buttons";
+import { liveProviders } from "@/lib/db/auth-providers";
 import { PASSWORD_MIN } from "@/lib/security/limits";
-import { enabledProviders } from "@/lib/security/oauth-providers";
 
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Create an account" };
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const providers = await liveProviders();
   return (
     <>
       <div className="rise flex flex-col gap-1.5 text-center">
@@ -19,11 +20,7 @@ export default function SignupPage() {
         <p className="text-muted text-sm">20 free credits to start. No card needed.</p>
       </div>
       <div className="rise rise-1 flex flex-col gap-6">
-        <ProviderButtons
-          providers={enabledProviders(process.env["OAUTH_PROVIDERS"])}
-          next="/dashboard"
-          verb="Sign up with"
-        />
+        <ProviderButtons providers={providers} next="/dashboard" verb="Sign up with" />
         <AuthForm
           endpoint="/api/auth/signup"
           submitLabel="Create account"

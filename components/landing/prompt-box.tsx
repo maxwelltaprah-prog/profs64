@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { AuthForm } from "@/components/auth/auth-form";
+import { ProviderButtons } from "@/components/auth/provider-buttons";
 import { Button } from "@/components/ui/button";
 import { iconProps } from "@/components/ui/icons";
 import { CHAT_TEXT_MAX_CHARS } from "@/lib/security/limits";
+import { type OAuthProvider } from "@/lib/security/oauth-providers";
 import { createProjectForPrompt } from "@/lib/workspace/open-project";
 import { normalisePromptText, savePendingPrompt } from "@/lib/workspace/pending-prompt";
 
@@ -27,10 +29,26 @@ type Tab = "signup" | "login";
 
 // The prompt is the first thing on the page. Signing in is asked for only when the person
 // commits, and the prompt is kept so nothing they typed is lost on the way.
-export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwordMin: number }) {
+export function PromptBox({
+  signedIn,
+  passwordMin,
+  providers = [],
+  inputId,
+  showExamples = true,
+}: {
+  signedIn: boolean;
+  passwordMin: number;
+  /** A fixed id for the text box, so other controls on the page can focus it. */
+  inputId?: string;
+  /** The example chips under the box; the home screen shows its own start cards instead. */
+  showExamples?: boolean;
+  /** External sign-in providers switched on in Supabase; none means email and password only. */
+  providers?: readonly OAuthProvider[];
+}) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
-  const textareaId = useId();
+  const generatedId = useId();
+  const textareaId = inputId ?? generatedId;
   const [text, setText] = useState("");
   const [tab, setTab] = useState<Tab>("signup");
   const [error, setError] = useState<string | null>(null);
@@ -155,23 +173,25 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
             {error}
           </p>
         ) : null}
-        <ul className="flex flex-wrap justify-center gap-2" aria-label="Example prompts">
-          {EXAMPLES.map((example) => (
-            <li key={example}>
-              <button
-                type="button"
-                onClick={() => {
-                  setText(example);
-                  setError(null);
-                  document.getElementById(textareaId)?.focus();
-                }}
-                className="press border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-text rounded-full border px-3 py-1 text-xs"
-              >
-                {example}
-              </button>
-            </li>
-          ))}
-        </ul>
+        {showExamples ? (
+          <ul className="flex flex-wrap justify-center gap-2" aria-label="Example prompts">
+            {EXAMPLES.map((example) => (
+              <li key={example}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setText(example);
+                    setError(null);
+                    document.getElementById(textareaId)?.focus();
+                  }}
+                  className="press border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-text rounded-full border px-3 py-1 text-xs"
+                >
+                  {example}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </form>
 
       <dialog
@@ -221,6 +241,16 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
             </button>
           </div>
 
+          {providers.length > 0 ? (
+            <div className="mt-5 flex flex-col gap-4">
+              {/* Back through /start, which creates the project from the saved description. */}
+              <ProviderButtons
+                providers={providers}
+                next={START_PATH}
+                verb={tab === "signup" ? "Sign up with" : "Continue with"}
+              />
+            </div>
+          ) : null}
           <div className="mt-5">
             {tab === "signup" ? (
               <AuthForm

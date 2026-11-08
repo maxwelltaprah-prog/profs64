@@ -6,6 +6,7 @@ import { PromptBox } from "@/components/landing/prompt-box";
 import { Reveal } from "@/components/landing/reveal";
 import { SiteHeader } from "@/components/landing/site-header";
 import { getOptionalUser } from "@/lib/db/auth";
+import { liveProviders } from "@/lib/db/auth-providers";
 import { PASSWORD_MIN } from "@/lib/security/limits";
 
 const buttonBase =
@@ -124,7 +125,11 @@ export default async function Home() {
             description. The files are yours to read, line by line, as they are written.
           </p>
           <div className="rise rise-2 mt-10 w-full max-w-3xl text-left">
-            <PromptBox signedIn={Boolean(user)} passwordMin={PASSWORD_MIN} />
+            <PromptBox
+              signedIn={Boolean(user)}
+              passwordMin={PASSWORD_MIN}
+              providers={user ? [] : await liveProviders()}
+            />
           </div>
           <p className="rise rise-3 text-subtle mt-6 text-[13px]">
             Twenty credits to start. No card. Confirm your email and you are in.

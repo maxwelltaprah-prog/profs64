@@ -121,6 +121,33 @@ describe("ChatPanel", () => {
     expect((box as HTMLTextAreaElement).value).toBe("");
   });
 
+  it("offers done notifications once, after the first message is sent", async () => {
+    HTMLDialogElement.prototype.showModal ??= function showModal(this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    };
+    HTMLDialogElement.prototype.close ??= function close(this: HTMLDialogElement) {
+      this.removeAttribute("open");
+    };
+    vi.stubGlobal(
+      "Notification",
+      Object.assign(function Notification() {}, {
+        permission: "default",
+        requestPermission: vi.fn(async () => "denied"),
+      }),
+    );
+    window.localStorage.removeItem("buildr:notify-asked");
+    installServer(new Map());
+    renderPanel();
+    const user = userEvent.setup();
+    expect(screen.queryByRole("dialog", { name: /get notified/i })).toBeNull();
+    await user.type(screen.getByLabelText("Message"), "Build a page");
+    await user.click(screen.getByRole("button", { name: /send/i }));
+    const prompt = await screen.findByRole("dialog", { name: /get notified/i });
+    await user.click(screen.getByRole("button", { name: "Not now" }));
+    expect(prompt.hasAttribute("open")).toBe(false);
+    expect(window.localStorage.getItem("buildr:notify-asked")).toBe("1");
+  });
+
   it("shows a Stop button while streaming and stops", async () => {
     const { side } = installServer(new Map(), { chunkDelayMs: 30 });
     renderPanel();

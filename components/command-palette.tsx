@@ -14,7 +14,14 @@ export interface RunnableAction extends PaletteAction {
 
 // Cmd+K or Ctrl+K opens a native <dialog>, which gives focus trapping, Escape-to-close and an
 // inert background without a dependency. Arrow keys move, Enter runs.
-export function CommandPalette({ actions }: { actions: readonly RunnableAction[] }) {
+export function CommandPalette({
+  actions,
+  triggerClassName,
+}: {
+  actions: readonly RunnableAction[];
+  /** Extra classes for the trigger button, such as full width in the sidebar. */
+  triggerClassName?: string;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const listId = useId();
@@ -71,10 +78,14 @@ export function CommandPalette({ actions }: { actions: readonly RunnableAction[]
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="press border-hairline-strong bg-surface text-muted hover:bg-surface-2 hover:text-text flex h-8 items-center gap-2 rounded-md border px-2.5 text-[13px]"
+        className={cn(
+          "press border-hairline-strong bg-surface text-muted hover:bg-surface-2 hover:text-text flex h-8 items-center gap-2 rounded-md border px-2.5 text-[13px] whitespace-nowrap",
+          triggerClassName,
+        )}
       >
         <Search {...iconProps} />
         <span className="hidden sm:inline">Search</span>
+        <span className="flex-1" aria-hidden="true" />
         <Kbd>{isMac ? "⌘K" : "Ctrl K"}</Kbd>
         <span className="sr-only">Open command palette</span>
       </button>

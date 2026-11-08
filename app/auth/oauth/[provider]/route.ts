@@ -1,15 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { liveProviders } from "@/lib/db/auth-providers";
 import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { appBaseUrl } from "@/lib/security/app-url";
 import { getClientIp, hashForKey } from "@/lib/security/client-ip";
 import { logger } from "@/lib/security/logger";
-import { enabledProviders, isKnownProvider } from "@/lib/security/oauth-providers";
+import { isKnownProvider } from "@/lib/security/oauth-providers";
 import { enforceLimits, LIMITS } from "@/lib/security/rate-limit";
 import { safeRedirectPath } from "@/lib/security/redirect";
 
 // Starts a sign-in with an external provider. The provider comes from a fixed allowlist that must
-// also be switched on in OAUTH_PROVIDERS; the return path is checked; the code that comes back is
+// also be switched on in Supabase; the return path is checked; the code that comes back is
 // exchanged by /auth/callback, the same place email links land.
 export async function GET(
   request: NextRequest,
@@ -19,10 +20,7 @@ export async function GET(
   const back = (error: string) =>
     NextResponse.redirect(new URL(`/login?error=${error}`, request.url));
 
-  if (
-    !isKnownProvider(provider) ||
-    !enabledProviders(process.env["OAUTH_PROVIDERS"]).includes(provider)
-  ) {
+  if (!isKnownProvider(provider) || !(await liveProviders()).includes(provider)) {
     return new NextResponse("Not found", { status: 404 });
   }
 

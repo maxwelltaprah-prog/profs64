@@ -80,6 +80,18 @@ The Stop button stops the local stream and calls `POST /api/projects/[id]/chat/s
 - The home-page prompt no longer hops through `/start`: after sign-in in the dialog (or straight away when already signed in) the browser creates the project (`lib/workspace/open-project.ts`) and opens the workspace, while the dialog shows "Opening your workspace". `/start` remains for the email-confirmation link and as the fallback that shows an error with a retry.
 - Sign out answers the click at once (busy button, page dimmed) and leaves with a full navigation so nothing from the session stays in the client router cache. The logout audit row is written with `after()`, after the response.
 
+### Home screen
+
+`/dashboard` is the signed-in home: a left rail (`components/home/home-sidebar.tsx`: search, new project, home, account, recent projects, credits, theme, sign out; a top bar below md) and a page with a greeting, the same prompt box as the landing page (it creates the project and opens the workspace), recent projects as cards with relative times, and "Start from an idea" cards that fill the prompt. The rail only links to pages that exist. The header and the rail share commands and sign out through `useAppActions`.
+
+### Done notifications
+
+After the first message is sent, a dialog offers browser notifications once (`components/workspace/notify-prompt.tsx`). If allowed, a notification is shown when a reply finishes or fails, only while the tab is hidden, with fixed text that never contains the prompt or the reply (`lib/workspace/notify.ts`).
+
+### Sign-in providers
+
+Provider buttons come from Supabase's public `/auth/v1/settings` (`lib/db/auth-providers.ts`, cached 5 minutes, hidden on any failure). `OAUTH_PROVIDERS` is now optional and can only narrow that list.
+
 ## Live preview
 
 The Preview tab runs the project in the browser without a build server.

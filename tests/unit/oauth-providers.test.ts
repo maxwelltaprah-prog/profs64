@@ -1,6 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { enabledProviders, isKnownProvider } from "@/lib/security/oauth-providers";
+import {
+  enabledProviders,
+  isKnownProvider,
+  providersFromSettings,
+} from "@/lib/security/oauth-providers";
+
+describe("providers from Supabase settings", () => {
+  it("offers exactly the providers Supabase has switched on", () => {
+    const settings = { external: { google: true, github: false, apple: true, email: true } };
+    expect(providersFromSettings(settings, undefined)).toEqual(["google", "apple"]);
+    expect(providersFromSettings({ external: { google: false } }, undefined)).toEqual([]);
+  });
+  it("lets OAUTH_PROVIDERS narrow the list but never add to it", () => {
+    const settings = { external: { google: true, github: true } };
+    expect(providersFromSettings(settings, "github")).toEqual(["github"]);
+    expect(providersFromSettings(settings, "apple")).toEqual([]);
+    expect(providersFromSettings(settings, "  ")).toEqual(["google", "github"]);
+  });
+  it("treats anything unexpected as off", () => {
+    for (const bad of [null, "x", {}, { external: null }, { external: { google: "yes" } }])
+      expect(providersFromSettings(bad, undefined)).toEqual([]);
+  });
+});
 
 describe("provider allowlist", () => {
   it("offers only known providers that are switched on, in a fixed order", () => {
@@ -17,6 +39,8 @@ describe("provider allowlist", () => {
 
 const signInWithOAuth = vi.hoisted(() => vi.fn());
 const enforceLimits = vi.hoisted(() => vi.fn());
+const liveProviders = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/db/auth-providers", () => ({ liveProviders }));
 vi.mock("@/lib/db/supabase-server", () => ({
   createSupabaseServerClient: async () => ({ auth: { signInWithOAuth } }),
 }));
@@ -38,7 +62,7 @@ describe("GET /auth/oauth/[provider]", () => {
     vi.resetModules();
     signInWithOAuth.mockReset();
     enforceLimits.mockReset().mockResolvedValue(undefined);
-    vi.stubEnv("OAUTH_PROVIDERS", "google,github");
+    liveProviders.mockReset().mockResolvedValue(["google", "github"]);
     vi.stubEnv("APP_URL", "https://app.example");
     signInWithOAuth.mockResolvedValue({
       data: { url: "https://accounts.example/auth" },

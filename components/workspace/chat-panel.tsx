@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { iconProps } from "@/components/ui/icons";
 import { Kbd } from "@/components/ui/kbd";
 import { MessageText } from "@/components/workspace/message-text";
+import { NotifyPrompt } from "@/components/workspace/notify-prompt";
 import { OutputBar } from "@/components/workspace/output-bar";
 import { useSpeech } from "@/components/workspace/use-speech";
 import { cn } from "@/lib/utils/cn";
@@ -50,6 +51,7 @@ import {
   summariseSteps,
   type ToolLine,
 } from "@/lib/workspace/chat-lines";
+import { notifyDone, shouldOfferNotifications } from "@/lib/workspace/notify";
 import { creditsLabel, type OutputInfo, type Rating } from "@/lib/workspace/outputs";
 import { clearPendingPrompt, readPendingPrompt } from "@/lib/workspace/pending-prompt";
 import { appendDictation } from "@/lib/workspace/speech";
@@ -366,6 +368,7 @@ export function ChatPanel({
 }) {
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [offerNotify, setOfferNotify] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [attachError, setAttachError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -422,8 +425,12 @@ export function ChatPanel({
     id: projectId,
     messages: initialMessages,
     transport,
-    onError: (chatError) => setError(friendlyChatError(chatError)),
+    onError: (chatError) => {
+      setError(friendlyChatError(chatError));
+      notifyDone("error");
+    },
     onFinish: () => {
+      notifyDone("done");
       onFinished();
       void refreshOutputs();
       if (settleTimer.current) clearTimeout(settleTimer.current);
@@ -466,10 +473,13 @@ export function ChatPanel({
     if (enabled && initialMessages.length === 0) {
       stick.current = true;
       void sendMessage({ text: pending.text });
+      // Notification permission is browser-only state, read once after mount like the prompt.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (shouldOfferNotifications()) setOfferNotify(true);
     } else {
       // Client-only state: the prompt lives in localStorage, so it cannot be an initial value
       // without a hydration mismatch. One extra render on mount is the cost.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setInput(pending.text);
     }
   }, [enabled, initialMessages.length, projectId, sendMessage]);
@@ -591,6 +601,7 @@ export function ChatPanel({
     setAttachments([]);
     stick.current = true;
     void sendMessage({ text });
+    if (shouldOfferNotifications()) setOfferNotify(true);
   };
 
   // Stops the local stream at once and also tells the server, which otherwise keeps the model
@@ -894,6 +905,7 @@ export function ChatPanel({
           ) : null}
         </div>
       </form>
+      <NotifyPrompt open={offerNotify} onClose={() => setOfferNotify(false)} />
     </div>
   );
 }

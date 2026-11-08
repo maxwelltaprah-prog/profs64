@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { ProviderButtons } from "@/components/auth/provider-buttons";
-import { enabledProviders } from "@/lib/security/oauth-providers";
+import { liveProviders } from "@/lib/db/auth-providers";
 import { safeRedirectPath } from "@/lib/security/redirect";
 
 import type { Metadata } from "next";
@@ -27,6 +27,7 @@ export default async function LoginPage({
   const next = safeRedirectPath(typeof params["next"] === "string" ? params["next"] : null);
   const errorKey = typeof params["error"] === "string" ? params["error"] : "";
   const notice = NOTICES.get(errorKey);
+  const providers = await liveProviders();
 
   return (
     <>
@@ -43,7 +44,7 @@ export default async function LoginPage({
         </p>
       ) : null}
       <div className="rise rise-1 flex flex-col gap-6">
-        <ProviderButtons providers={enabledProviders(process.env["OAUTH_PROVIDERS"])} next={next} />
+        <ProviderButtons providers={providers} next={next} />
         <AuthForm
           endpoint="/api/auth/login"
           rememberMethod
