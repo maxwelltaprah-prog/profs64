@@ -17,6 +17,7 @@ export interface AuthFieldConfig {
   hint?: string;
   /** Checked before submitting so the person gets a specific message instead of a generic one. */
   minLength?: number;
+  placeholder?: string;
 }
 
 interface AuthFormProps {
@@ -33,6 +34,10 @@ interface AuthFormProps {
   onSuccess?: () => void;
   /** Note this form as the sign-in method used, and mark it next time. */
   rememberMethod?: boolean;
+  /** Button text while the request runs and while the next page loads. */
+  pendingLabel?: string;
+  /** Shown with a progress indicator after success, while onSuccess does more work. */
+  busyAfterSuccess?: boolean;
 }
 
 const NETWORK_ERROR = "Could not reach the server. Check your connection and try again.";
@@ -47,6 +52,8 @@ export function AuthForm({
   extraBody,
   onSuccess,
   rememberMethod = false,
+  pendingLabel = "Working…",
+  busyAfterSuccess = false,
 }: AuthFormProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +82,7 @@ export function AuthForm({
       }
     }
     setPending(true);
+    let leaving = false;
     try {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -84,7 +92,10 @@ export function AuthForm({
       if (response.ok) {
         if (rememberMethod) saveLastAuth("email");
         if (redirectTo) {
-          // Full navigation so the server renders with the freshly set session cookie.
+          // Full navigation so the server renders with the freshly set session cookie. The button
+          // stays in its pending state until the next page replaces this one, so it never flickers
+          // back to its idle label in between.
+          leaving = true;
           window.location.assign(redirectTo);
           return;
         }
@@ -99,15 +110,27 @@ export function AuthForm({
     } catch {
       setError(NETWORK_ERROR);
     } finally {
-      setPending(false);
+      if (!leaving) setPending(false);
     }
   };
 
   if (done) {
     return (
-      <div role="status" className="border-hairline bg-accent-subtle rounded-md border p-4">
-        <p className="text-sm font-medium">{successTitle}</p>
-        <p className="text-muted mt-1 text-[13px]">{successMessage}</p>
+      <div
+        role="status"
+        className="rise border-hairline bg-accent-subtle flex items-start gap-3 rounded-lg border p-4"
+      >
+        {busyAfterSuccess ? (
+          <span aria-hidden="true" className="mt-1.5 flex shrink-0 items-center gap-1">
+            <span className="thinking-dot" />
+            <span className="thinking-dot" />
+            <span className="thinking-dot" />
+          </span>
+        ) : null}
+        <div>
+          <p className="text-sm font-medium">{successTitle}</p>
+          <p className="text-muted mt-1 text-[13px]">{successMessage}</p>
+        </div>
       </div>
     );
   }
@@ -125,6 +148,7 @@ export function AuthForm({
             type={isPassword && visible ? "text" : field.type}
             autoComplete={field.autoComplete}
             required
+            {...(field.placeholder ? { placeholder: field.placeholder } : {})}
             inputClassName="h-11 rounded-lg"
             {...(field.hint ? { hint: field.hint } : {})}
             {...(field.minLength !== undefined ? { minLength: field.minLength } : {})}
@@ -167,7 +191,7 @@ export function AuthForm({
           loading={pending}
           className="w-full justify-center rounded-lg"
         >
-          {pending ? "Working…" : submitLabel}
+          {pending ? pendingLabel : submitLabel}
         </Button>
         {rememberMethod ? <LastUsed method="email" /> : null}
       </div>

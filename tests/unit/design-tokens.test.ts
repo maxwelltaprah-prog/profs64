@@ -61,6 +61,10 @@ const TEXT_PAIRS: [string, string][] = [
   ["ink-muted", "ink"],
   ["ink-muted", "ink-2"],
   ["ink-accent", "ink"],
+  ["ink-text", "ink-2"],
+  ["paper-text", "paper"],
+  ["paper-muted", "paper"],
+  ["paper-accent-fg", "paper-accent"],
   ["success", "surface"],
 ];
 
@@ -101,8 +105,20 @@ describe("theme definitions stay in sync", () => {
 
   it("uses a single accent hue family and no gradients or glows", () => {
     expect(css).not.toMatch(/gradient\(/);
-    expect(css).not.toMatch(/backdrop-filter/);
     expect(css).not.toMatch(/drop-shadow|glow/i);
+  });
+
+  // Owner decision 2026-11-08: subtle glass is allowed, but only through the three glass classes,
+  // each with a solid fallback for unsupported blur and for reduced transparency.
+  it("keeps backdrop blur inside the glass classes, with solid fallbacks", () => {
+    const bare = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    const rules = [...bare.matchAll(/([^{}]+)\{[^{}]*backdrop-filter[^{}]*\}/g)].map((m) =>
+      (m[1] ?? "").trim(),
+    );
+    expect(rules.length).toBeGreaterThan(0);
+    for (const selector of rules) expect(selector).toMatch(/^\.glass(-bar|-ink)?$/);
+    expect(css).toMatch(/@supports not \(\(backdrop-filter: blur\(1px\)\)/);
+    expect(css).toContain("prefers-reduced-transparency: reduce");
   });
 
   it("motion tokens stay in the 150-250ms range and reduced motion is respected", () => {

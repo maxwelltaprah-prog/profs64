@@ -3,7 +3,7 @@
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { applyTheme, ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -31,13 +31,22 @@ export function AppHeader({
   const router = useRouter();
   const toast = useToast();
 
+  const [signingOut, setSigningOut] = useState(false);
+
+  // Feedback is immediate: the button shows progress and the page dims while the session ends.
+  // The page is left with a full navigation so nothing from the signed-in session stays in the
+  // client's memory or router cache. On failure the page comes back and says so.
   const signOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    document.documentElement.dataset["leaving"] = "true";
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       if (!response.ok) throw new Error("logout failed");
-      router.push("/");
-      router.refresh();
+      window.location.replace("/");
     } catch {
+      delete document.documentElement.dataset["leaving"];
+      setSigningOut(false);
       toast("Could not sign out. Check your connection and try again.", "error");
     }
   };
@@ -81,7 +90,7 @@ export function AppHeader({
   );
 
   return (
-    <header className="border-hairline bg-surface flex h-12 shrink-0 items-center justify-between gap-4 border-b px-4">
+    <header className="glass-bar border-hairline sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between gap-4 border-b px-4">
       <div className="flex min-w-0 items-center gap-3">
         <Link href="/dashboard" className="text-sm font-semibold tracking-tight">
           Buildr
@@ -95,8 +104,15 @@ export function AppHeader({
         </p>
         <CommandPalette actions={actions} />
         <ThemeToggle initial={theme} />
-        <Button variant="ghost" size="icon" aria-label="Sign out" onClick={() => void signOut()}>
-          <LogOut {...iconProps} />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={signingOut ? "Signing out" : "Sign out"}
+          title="Sign out"
+          loading={signingOut}
+          onClick={() => void signOut()}
+        >
+          {signingOut ? <span aria-hidden="true" className="spinner" /> : <LogOut {...iconProps} />}
         </Button>
       </div>
     </header>

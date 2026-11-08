@@ -41,6 +41,14 @@
   --ink-text: #ececee;
   --ink-muted: #a3a3ab;
   --ink-accent: #2dd4bf;
+  /* Paper: the light page shown inside the sign-in showcase, as a generated app looks. Same in
+     both themes on purpose, like ink. */
+  --paper: #fbfaf8;
+  --paper-line: #e8e5df;
+  --paper-text: #1c1b19;
+  --paper-muted: #66625c;
+  --paper-accent: #b45309;
+  --paper-accent-fg: #ffffff;
 
   --ring-line: 0 0 0 1px rgb(0 0 0 / 0.08);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.05);
@@ -88,6 +96,14 @@
   --ink-text: #ececee;
   --ink-muted: #a3a3ab;
   --ink-accent: #2dd4bf;
+  /* Paper: the light page shown inside the sign-in showcase, as a generated app looks. Same in
+     both themes on purpose, like ink. */
+  --paper: #fbfaf8;
+  --paper-line: #e8e5df;
+  --paper-text: #1c1b19;
+  --paper-muted: #66625c;
+  --paper-accent: #b45309;
+  --paper-accent-fg: #ffffff;
 
   --ring-line: 0 0 0 1px rgb(255 255 255 / 0.1);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -123,6 +139,14 @@
     --ink-text: #ececee;
     --ink-muted: #a3a3ab;
     --ink-accent: #2dd4bf;
+    /* Paper: the light page shown inside the sign-in showcase, as a generated app looks. Same in
+       both themes on purpose, like ink. */
+    --paper: #fbfaf8;
+    --paper-line: #e8e5df;
+    --paper-text: #1c1b19;
+    --paper-muted: #66625c;
+    --paper-accent: #b45309;
+    --paper-accent-fg: #ffffff;
 
     --ring-line: 0 0 0 1px rgb(255 255 255 / 0.1);
     --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -153,6 +177,12 @@
   --color-ink-text: var(--ink-text);
   --color-ink-muted: var(--ink-muted);
   --color-ink-accent: var(--ink-accent);
+  --color-paper: var(--paper);
+  --color-paper-line: var(--paper-line);
+  --color-paper-text: var(--paper-text);
+  --color-paper-muted: var(--paper-muted);
+  --color-paper-accent: var(--paper-accent);
+  --color-paper-accent-fg: var(--paper-accent-fg);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
@@ -441,7 +471,78 @@
     transition-duration: 120ms;
   }
 
+  .rise-5 {
+    animation-delay: 350ms;
+  }
+  .rise-6 {
+    animation-delay: 420ms;
+  }
+
+  /* Glass: a translucent surface over a backdrop blur. Used only for bars that content scrolls
+     under, overlays, and the sign-in showcase (CLAUDE.md). Text on glass keeps the solid-surface
+     contrast because the tint is mostly opaque; where blur is unsupported or the person asks for
+     less transparency, the surface is solid. */
+  .glass {
+    background-color: color-mix(in oklab, var(--surface) 76%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+  }
+  .glass-bar {
+    background-color: color-mix(in oklab, var(--bg) 80%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+  }
+  .glass-ink {
+    background-color: color-mix(in oklab, var(--ink-2) 68%, transparent);
+    border-color: color-mix(in oklab, var(--ink-text) 12%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background-color: var(--surface);
+    }
+    .glass-bar {
+      background-color: var(--bg);
+    }
+    .glass-ink {
+      background-color: var(--ink-2);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      background-color: var(--surface);
+    }
+    .glass-bar {
+      background-color: var(--bg);
+    }
+    .glass-ink {
+      background-color: var(--ink-2);
+    }
+  }
+
+  /* Small inline spinner for icon buttons that are working. */
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    border: 1.5px solid currentColor;
+    border-right-color: transparent;
+    animation: spin 700ms linear infinite;
+  }
+
+  /* While the session ends the page dims at once, so the click is answered before the network is. */
+  html[data-leaving="true"] main {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .spinner {
+      animation-duration: 1.6s;
+    }
     .rise,
     .reveal,
     dialog[open],
@@ -463,6 +564,12 @@
     .press:active {
       transform: none;
     }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

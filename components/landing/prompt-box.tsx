@@ -8,6 +8,7 @@ import { AuthForm } from "@/components/auth/auth-form";
 import { Button } from "@/components/ui/button";
 import { iconProps } from "@/components/ui/icons";
 import { CHAT_TEXT_MAX_CHARS } from "@/lib/security/limits";
+import { createProjectForPrompt } from "@/lib/workspace/open-project";
 import { normalisePromptText, savePendingPrompt } from "@/lib/workspace/pending-prompt";
 
 const START_PATH = "/start";
@@ -73,13 +74,24 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
     savePendingPrompt(trimmed);
     if (signedIn) {
       setLeaving(true);
-      router.push(START_PATH);
+      void openWorkspace(trimmed);
       return;
     }
     dialog.current?.showModal();
+    // Start in the first field rather than on the close button.
+    dialog.current?.querySelector<HTMLInputElement>("input")?.focus();
   };
 
   const close = () => dialog.current?.close();
+
+  // Straight from the prompt to the workspace: create the project here and open it, rather than
+  // hopping through the /start screen. /start still handles the email-confirmation path and is the
+  // fallback if creation fails here, since it shows the error with a retry.
+  const openWorkspace = async (prompt: string) => {
+    const result = await createProjectForPrompt(prompt);
+    if (result.ok) router.push(`/project/${result.projectId}`);
+    else router.push(START_PATH);
+  };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -168,7 +180,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
         onClick={(event) => {
           if (event.target === dialog.current) close();
         }}
-        className="border-hairline-strong bg-surface text-text m-auto w-[min(420px,calc(100vw-2rem))] rounded-lg border p-0 shadow-md backdrop:bg-black/40"
+        className="glass border-hairline-strong text-text m-auto w-[min(420px,calc(100vw-2rem))] rounded-xl border p-0 shadow-[0_24px_64px_rgb(0_0_0/0.28)] backdrop:bg-black/30"
       >
         <div className="p-6">
           <div className="flex items-start justify-between gap-4">
@@ -215,6 +227,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
                 key="signup"
                 endpoint="/api/auth/signup"
                 submitLabel="Create account"
+                pendingLabel="Creating account…"
                 successTitle="Check your email"
                 successMessage="We sent a confirmation link. Open it on this device and your project will be created from the description you typed."
                 extraBody={{ next: START_PATH }}
@@ -235,7 +248,12 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
                 key="login"
                 endpoint="/api/auth/login"
                 submitLabel="Sign in"
-                redirectTo={START_PATH}
+                pendingLabel="Signing in…"
+                rememberMethod
+                busyAfterSuccess
+                successTitle="Opening your workspace"
+                successMessage="Creating a project from your description."
+                onSuccess={() => void openWorkspace(trimmed)}
                 fields={[
                   { name: "email", label: "Email", type: "email", autoComplete: "email" },
                   {

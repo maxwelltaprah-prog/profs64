@@ -4,11 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import {
-  projectNameFromPrompt,
-  readPendingPrompt,
-  savePendingPrompt,
-} from "@/lib/workspace/pending-prompt";
+import { createProjectForPrompt } from "@/lib/workspace/open-project";
+import { readPendingPrompt } from "@/lib/workspace/pending-prompt";
 
 type State = { kind: "working" } | { kind: "error"; message: string };
 
@@ -35,31 +32,9 @@ export function StartProject() {
     }
 
     const run = async () => {
-      try {
-        const response = await fetch("/api/projects", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ name: projectNameFromPrompt(pending.text) }),
-        });
-        const body = (await response.json().catch(() => null)) as {
-          project?: { id: string };
-          error?: { message?: string };
-        } | null;
-        if (!response.ok || !body?.project?.id) {
-          setState({
-            kind: "error",
-            message: body?.error?.message ?? "Could not create the project. Try again.",
-          });
-          return;
-        }
-        savePendingPrompt(pending.text, body.project.id);
-        router.replace(`/project/${body.project.id}`);
-      } catch {
-        setState({
-          kind: "error",
-          message: "Could not reach the server. Check your connection and try again.",
-        });
-      }
+      const result = await createProjectForPrompt(pending.text);
+      if (result.ok) router.replace(`/project/${result.projectId}`);
+      else setState({ kind: "error", message: result.message });
     };
     void run();
   }, [router]);

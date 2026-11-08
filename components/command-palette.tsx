@@ -87,7 +87,7 @@ export function CommandPalette({ actions }: { actions: readonly RunnableAction[]
         onClick={(event) => {
           if (event.target === dialog.current) close();
         }}
-        className="border-hairline-strong bg-surface text-text m-auto mt-[15vh] w-[min(560px,calc(100vw-2rem))] rounded-lg border p-0 shadow-md backdrop:bg-black/40"
+        className="glass border-hairline-strong text-text m-auto mt-[15vh] w-[min(560px,calc(100vw-2rem))] rounded-xl border p-0 shadow-[0_24px_64px_rgb(0_0_0/0.28)] backdrop:bg-black/30"
       >
         <div className="border-hairline flex items-center gap-2 border-b px-3">
           <Search {...iconProps} className="text-muted" />

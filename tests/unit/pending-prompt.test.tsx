@@ -139,14 +139,52 @@ describe("PromptBox", () => {
     await screen.findByText("Check your email");
   });
 
-  it("goes straight to /start when already signed in", async () => {
+  it("opens a new project's workspace directly when already signed in", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ project: { id: "p-direct" } }), { status: 201 }),
+        ),
+    );
     render(<PromptBox signedIn={true} passwordMin={12} />);
     const user = userEvent.setup();
     await user.type(screen.getByLabelText(/describe the app/i), "A habit tracker");
     await user.click(screen.getByRole("button", { name: "Generate" }));
-    expect(readPendingPrompt()?.text).toBe("A habit tracker");
-    expect(router.push).toHaveBeenCalledWith("/start");
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/project/p-direct"));
+    expect(readPendingPrompt()).toMatchObject({ text: "A habit tracker", projectId: "p-direct" });
     expect(document.querySelector("dialog")?.hasAttribute("open")).toBe(false);
+  });
+
+  it("falls back to /start, which can show the error, when creating the project fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    render(<PromptBox signedIn={true} passwordMin={12} />);
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/describe the app/i), "A habit tracker");
+    await user.click(screen.getByRole("button", { name: "Generate" }));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/start"));
+    expect(readPendingPrompt()?.text).toBe("A habit tracker");
+  });
+
+  it("signs in from the dialog and goes straight to the new project", async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      url === "/api/auth/login"
+        ? Response.json({ status: "ok" })
+        : new Response(JSON.stringify({ project: { id: "p-after-login" } }), { status: 201 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<PromptBox signedIn={false} passwordMin={12} />);
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/describe the app/i), "A habit tracker");
+    await user.click(screen.getByRole("button", { name: /generate/i }));
+    await user.click(screen.getByRole("tab", { name: "Sign in" }));
+    await user.type(screen.getByLabelText("Email"), "person@example.org");
+    await user.type(screen.getByLabelText("Password", { selector: "input" }), "a-long-passphrase");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await screen.findByText("Opening your workspace");
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/project/p-after-login"));
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/api/auth/login", "/api/projects"]);
   });
 });
 

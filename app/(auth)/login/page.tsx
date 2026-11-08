@@ -30,9 +30,9 @@ export default async function LoginPage({
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
-        <p className="text-muted text-sm">Use the email address and password for your account.</p>
+      <div className="rise flex flex-col gap-1.5 text-center">
+        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em]">Log in</h1>
+        <p className="text-muted text-sm">Welcome back. Pick up where you left off.</p>
       </div>
       {notice ? (
         <p
@@ -42,32 +42,43 @@ export default async function LoginPage({
           {notice}
         </p>
       ) : null}
-      <ProviderButtons providers={enabledProviders(process.env["OAUTH_PROVIDERS"])} next={next} />
-      <AuthForm
-        endpoint="/api/auth/login"
-        rememberMethod
-        submitLabel="Sign in"
-        redirectTo={next}
-        fields={[
-          { name: "email", label: "Email", type: "email", autoComplete: "email" },
-          {
-            name: "password",
-            label: "Password",
-            type: "password",
-            autoComplete: "current-password",
-          },
-        ]}
-      />
-      <div className="text-muted flex flex-col gap-1.5 text-center text-sm">
+      <div className="rise rise-1 flex flex-col gap-6">
+        <ProviderButtons providers={enabledProviders(process.env["OAUTH_PROVIDERS"])} next={next} />
+        <AuthForm
+          endpoint="/api/auth/login"
+          rememberMethod
+          submitLabel="Sign in"
+          pendingLabel="Signing in…"
+          redirectTo={next}
+          fields={[
+            {
+              name: "email",
+              label: "Email",
+              type: "email",
+              autoComplete: "email",
+              placeholder: "Enter your email address",
+            },
+            {
+              name: "password",
+              label: "Password",
+              type: "password",
+              autoComplete: "current-password",
+              placeholder: "Enter your password",
+            },
+          ]}
+        />
+      </div>
+      <div className="rise rise-2 text-muted flex flex-col items-center gap-2 text-sm">
+        <Link
+          href="/forgot-password"
+          className="hover:text-text transition-ui underline-offset-4 hover:underline"
+        >
+          Forgot your password?
+        </Link>
         <p>
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-accent underline underline-offset-2">
-            Create an account
-          </Link>
-        </p>
-        <p>
-          <Link href="/forgot-password" className="text-accent underline underline-offset-2">
-            Forgot your password?
+          <Link href="/signup" className="text-text font-medium underline underline-offset-4">
+            Create your account
           </Link>
         </p>
       </div>

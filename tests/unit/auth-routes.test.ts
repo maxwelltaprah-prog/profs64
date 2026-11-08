@@ -13,6 +13,11 @@ const getOptionalUser = vi.hoisted(() => vi.fn());
 const recordAuditEvent = vi.hoisted(() => vi.fn());
 const breach = vi.hoisted(() => vi.fn());
 
+// after() needs a live request context; here it simply runs the callback straight away.
+vi.mock("next/server", async (original) => ({
+  ...(await original()),
+  after: (callback: () => unknown) => void callback(),
+}));
 vi.mock("@/lib/db/supabase-server", () => ({ createSupabaseServerClient: async () => ({ auth }) }));
 vi.mock("@/lib/db/auth", () => ({ getOptionalUser }));
 vi.mock("@/lib/db/service", () => ({ recordAuditEvent }));

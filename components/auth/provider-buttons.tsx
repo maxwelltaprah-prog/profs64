@@ -9,14 +9,16 @@ import { saveLastAuth } from "@/lib/workspace/last-auth";
 export function ProviderButtons({
   providers,
   next,
+  verb = "Continue with",
 }: {
   providers: readonly OAuthProvider[];
   next: string;
+  verb?: "Continue with" | "Sign up with";
 }) {
   if (providers.length === 0) return null;
   return (
     <>
-      <ul className="flex flex-col gap-2.5" aria-label="Continue with">
+      <ul className="flex flex-col gap-2.5" aria-label={verb}>
         {providers.map((provider) => (
           <li key={provider} className="relative">
             <a
@@ -25,7 +27,7 @@ export function ProviderButtons({
               onClick={() => saveLastAuth(provider)}
               className="press border-hairline-strong bg-surface text-text hover:bg-surface-2 flex h-11 w-full items-center justify-center rounded-lg border px-5 text-sm font-medium"
             >
-              Continue with {PROVIDER_LABEL[provider]}
+              {verb} {PROVIDER_LABEL[provider]}
             </a>
             <LastUsed method={provider} />
           </li>

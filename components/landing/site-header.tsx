@@ -14,7 +14,7 @@ const LINKS = [
 ] as const;
 
 // Sticky header that gains a hairline once the page has scrolled, so it reads as part of the
-// hero at the top and as a bar once content runs beneath it. Solid background, no blur.
+// hero at the top and as a bar once content runs beneath it, with a light glass blur.
 export function SiteHeader({ account }: { account: ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
 
@@ -28,7 +28,7 @@ export function SiteHeader({ account }: { account: ReactNode }) {
   return (
     <header
       className={cn(
-        "bg-bg sticky top-0 z-20 border-b transition-[border-color] duration-200",
+        "glass-bar sticky top-0 z-20 border-b transition-[border-color] duration-200",
         scrolled ? "border-hairline" : "border-transparent",
       )}
     >

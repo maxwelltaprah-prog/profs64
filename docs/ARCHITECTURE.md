@@ -74,6 +74,12 @@ The Stop button stops the local stream and calls `POST /api/projects/[id]/chat/s
 - **Suggestions** are follow-up chips computed locally from the project's files and the turn count (`lib/workspace/suggestions.ts`); they are not model calls and cost no credits.
 - **Hide chat.** The chat pane stays mounted while hidden, so a reply keeps streaming and billing settles as usual. The choice is kept per person and project in localStorage; a dot on Show chat means work is in progress.
 
+### Sign-in pages and navigation
+
+- `/login` and `/signup` share one layout: the form on the left, an illustrated product still (`components/auth/auth-showcase.tsx`, hidden from assistive tech and below the lg breakpoint) on the right. The layout stays mounted between the two pages, so only the form changes, with a short staggered entrance.
+- The home-page prompt no longer hops through `/start`: after sign-in in the dialog (or straight away when already signed in) the browser creates the project (`lib/workspace/open-project.ts`) and opens the workspace, while the dialog shows "Opening your workspace". `/start` remains for the email-confirmation link and as the fallback that shows an error with a retry.
+- Sign out answers the click at once (busy button, page dimmed) and leaves with a full navigation so nothing from the session stays in the client router cache. The logout audit row is written with `after()`, after the response.
+
 ## Live preview
 
 The Preview tab runs the project in the browser without a build server.
