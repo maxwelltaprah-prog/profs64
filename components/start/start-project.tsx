@@ -89,8 +89,19 @@ export function StartProject() {
   }
 
   return (
-    <p role="status" aria-live="polite" className="text-muted text-sm">
-      Creating your project…
-    </p>
+    <div className="flex max-w-sm flex-col items-center gap-4 text-center">
+      <span aria-hidden="true" className="flex items-center gap-1.5">
+        <span className="thinking-dot" />
+        <span className="thinking-dot" />
+        <span className="thinking-dot" />
+      </span>
+      <div role="status" aria-live="polite" className="flex flex-col gap-1">
+        <p className="text-base font-semibold tracking-tight">Creating your project</p>
+        <p className="text-muted text-sm">
+          Your description is saved. The workspace opens in a moment and the assistant starts from
+          it.
+        </p>
+      </div>
+    </div>
   );
 }

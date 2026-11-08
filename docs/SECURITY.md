@@ -80,6 +80,12 @@ This document describes what the code does and how each claim was checked. "Chec
 - **Feedback.** Ratings are audit events holding ids and the rating only, never message text. The route checks the message is an assistant reply in a project the caller owns (RLS), validates the body with Zod (256 byte limit) and is rate limited (120 per 10 minutes).
 - **Verified by tests:** route auth, same-origin, UUID, Zod, traversal, binary, oversize and rate-limit cases (`tests/unit/workspace-routes.test.ts`) and the header (`security-basics.test.ts`). **Not verified:** the new paths against a real Supabase with RLS (no integration run for these); done live only.
 
+## External sign-in (optional)
+
+- Off by default. `OAUTH_PROVIDERS` (google, github, apple) lists the providers to offer; each must also be enabled in Supabase. `GET /auth/oauth/[provider]` returns 404 for anything not on the fixed allowlist and enabled, is rate limited with the login limit, checks the return path with `safeRedirectPath`, and sends `redirectTo` only when `APP_URL` is set (never from a Host header). The code comes back through `/auth/callback`, the same PKCE exchange email links use.
+- The sign-in page remembers only a method name ("email", "google"...) in localStorage to mark "Last used". It is not an email address or a token.
+- **Verified:** allowlist, return-path, rate-limit and failure behaviour in unit tests (`tests/unit/oauth-providers.test.ts`). **Not verified:** a real provider round trip; that needs the provider configured in Supabase.
+
 ## Reporting
 
 Report suspected vulnerabilities privately to the operator. Replace this line with a real contact before launch.

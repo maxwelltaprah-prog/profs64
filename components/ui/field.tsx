@@ -19,10 +19,21 @@ interface FieldProps extends Omit<ComponentProps<"input">, "id"> {
   label: string;
   hint?: ReactNode;
   error?: string | undefined;
+  inputClassName?: string;
+  /** Content placed inside the right edge of the control, such as a show-password button. */
+  trailing?: ReactNode;
 }
 
 // Label, control, hint and error wired together with ids so screen readers announce all of them.
-export function Field({ label, hint, error, className, ...input }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  error,
+  className,
+  inputClassName,
+  trailing,
+  ...input
+}: FieldProps) {
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
@@ -33,12 +44,18 @@ export function Field({ label, hint, error, className, ...input }: FieldProps) {
       <label htmlFor={id} className="text-text text-[13px] font-medium">
         {label}
       </label>
-      <Input
-        id={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy || undefined}
-        {...input}
-      />
+      <div className="relative">
+        <Input
+          id={id}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy || undefined}
+          className={cn(trailing ? "pr-11" : undefined, inputClassName)}
+          {...input}
+        />
+        {trailing ? (
+          <div className="absolute inset-y-0 right-1 flex items-center">{trailing}</div>
+        ) : null}
+      </div>
       {hint ? (
         <p id={hintId} className="text-muted text-xs">
           {hint}

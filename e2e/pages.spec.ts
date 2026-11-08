@@ -57,7 +57,7 @@ test("protected pages send signed-out visitors to sign in and keep the destinati
 test("the sign-in form shows a generic error and stays usable", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("nobody@example.com");
-  await page.getByLabel("Password").fill("wrong-password-123");
+  await page.getByLabel("Password", { exact: true }).fill("wrong-password-123");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.locator("form [role=alert]")).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
