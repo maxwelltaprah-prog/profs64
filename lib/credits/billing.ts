@@ -6,6 +6,13 @@ import { creditsForCost, estimateTokensFromChars } from "./math";
 
 export type SettleReason = "finish" | "error" | "abort" | "cancel";
 
+/** What one request was charged, or null when nothing was (no usage, or the charge failed). */
+export interface SettleResult {
+  credits: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export interface DeductInput {
   userId: string;
   amount: number;
@@ -38,7 +45,7 @@ export function createBiller(options: BillerOptions) {
   let outputChars = 0;
   let stepOutputChars = 0;
   let activity = false;
-  let settlement: Promise<void> | null = null;
+  let settlement: Promise<SettleResult | null> | null = null;
 
   return {
     stepStarted() {
@@ -65,8 +72,8 @@ export function createBiller(options: BillerOptions) {
     settle(
       reason: SettleReason,
       reported?: { inputTokens?: number | undefined; outputTokens?: number | undefined },
-    ): Promise<void> {
-      settlement ??= (async () => {
+    ): Promise<SettleResult | null> {
+      settlement ??= (async (): Promise<SettleResult | null> => {
         const authoritative = reported
           ? addUsage({ inputTokens: 0, outputTokens: 0 }, reported)
           : undefined;
@@ -102,7 +109,7 @@ export function createBiller(options: BillerOptions) {
         // A request that never reached the model costs nothing (for example a provider outage).
         if (!hasReportedUsage(counted)) {
           logger.info("billing_skipped_no_usage", { requestId: options.requestId, reason });
-          return;
+          return null;
         }
 
         if (estimated) logger.warn("usage_estimated", { requestId: options.requestId, reason });
@@ -141,7 +148,11 @@ export function createBiller(options: BillerOptions) {
               inputTokens: counted.inputTokens,
               outputTokens: counted.outputTokens,
             });
-            return;
+            return {
+              credits: result.charged,
+              inputTokens: counted.inputTokens,
+              outputTokens: counted.outputTokens,
+            };
           } catch (error) {
             logger.error("credit_deduction_failed", {
               requestId: options.requestId,
@@ -150,6 +161,7 @@ export function createBiller(options: BillerOptions) {
             });
           }
         }
+        return null;
       })();
       return settlement;
     },

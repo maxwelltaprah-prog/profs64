@@ -63,3 +63,42 @@ export function toUiMessages(
 export function characterCount(messages: readonly UIMessage[]): number {
   return messages.reduce((total, message) => total + JSON.stringify(message.parts).length, 0);
 }
+
+// What a reply cost, stored as one extra part on the assistant message. sanitizeParts drops it
+// when history is replayed to the model, so it is never sent anywhere; the workspace reads it to
+// show the credits used on each output. Only the server writes assistant messages, so it cannot
+// be forged from the browser.
+export interface OutputUsage {
+  credits: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export function usagePart(usage: OutputUsage): { type: "data-usage"; data: OutputUsage } {
+  return {
+    type: "data-usage",
+    data: {
+      credits: usage.credits,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    },
+  };
+}
+
+const finite = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0;
+
+export function readUsage(parts: readonly unknown[]): OutputUsage | null {
+  for (const part of parts) {
+    if (!isRecord(part) || part["type"] !== "data-usage" || !isRecord(part["data"])) continue;
+    const data = part["data"];
+    if (finite(data["credits"]) && finite(data["inputTokens"]) && finite(data["outputTokens"])) {
+      return {
+        credits: data["credits"],
+        inputTokens: data["inputTokens"],
+        outputTokens: data["outputTokens"],
+      };
+    }
+  }
+  return null;
+}

@@ -68,6 +68,30 @@ describe("SplitPane", () => {
   });
 });
 
+describe("SplitPane hidden first pane", () => {
+  it("keeps the first pane mounted but hidden, and hides the separator", () => {
+    const { rerender } = render(
+      <SplitPane storageKey="k" firstLabel="Chat" first={<p>one</p>} second={<p>two</p>} />,
+    );
+    const first = screen.getByText("one");
+    expect(first.closest("section")?.hidden).toBe(false);
+    rerender(
+      <SplitPane
+        storageKey="k"
+        firstLabel="Chat"
+        first={<p>one</p>}
+        second={<p>two</p>}
+        firstHidden
+      />,
+    );
+    // Same node: the pane was not unmounted, so a streaming reply inside it keeps running.
+    expect(screen.getByText("one", { selector: "p" })).toBe(first);
+    expect(first.closest("section")?.hidden).toBe(true);
+    expect(screen.queryByRole("separator")).toBeNull();
+    expect(screen.getByText("two").closest("section")).toBeNull();
+  });
+});
+
 describe("FileTree", () => {
   it("selects files, collapses folders and shows an empty state", async () => {
     const picked: string[] = [];

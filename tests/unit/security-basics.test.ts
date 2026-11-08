@@ -195,6 +195,14 @@ describe("content security policy", () => {
     expect(headers["X-Frame-Options"]).toBe("DENY");
     expect(securityHeaders(null)["Content-Security-Policy"]).toBeUndefined();
   });
+
+  it("allows the microphone for this origin only and keeps the other sensors off", () => {
+    const policy = securityHeaders(prod)["Permissions-Policy"] ?? "";
+    expect(policy).toContain("microphone=(self)");
+    expect(policy).toContain("camera=()");
+    expect(policy).toContain("geolocation=()");
+    expect(policy).not.toContain("microphone=*");
+  });
 });
 
 describe("CSRF origin check", () => {

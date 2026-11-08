@@ -16,7 +16,7 @@ import {
   SNAPSHOT_BYTES,
 } from "@/lib/ai/config";
 import { buildSnapshot } from "@/lib/ai/context";
-import { characterCount, sanitizeParts, toUiMessages } from "@/lib/ai/messages";
+import { characterCount, sanitizeParts, toUiMessages, usagePart } from "@/lib/ai/messages";
 import { chooseModel } from "@/lib/ai/model-factory";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
 import { SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
@@ -133,8 +133,12 @@ export const POST = withApi("chat", async (request, { requestId }) => {
         }
       },
       onStepEnd: (step) => biller.stepEnded(step.usage),
-      onEnd: (event) => biller.settle("finish", event.totalUsage),
-      onAbort: () => biller.settle("abort"),
+      onEnd: async (event) => {
+        await biller.settle("finish", event.totalUsage);
+      },
+      onAbort: async () => {
+        await biller.settle("abort");
+      },
       onError: ({ error }) => {
         // Logged without the message text: provider errors can echo prompt content.
         logger.error("model_stream_error", {
@@ -144,9 +148,14 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       },
     });
 
+    // The reply's id is fixed up front so the live message in the browser and the stored row are
+    // the same message: feedback and the credits used attach to it by this id.
+    const assistantId = crypto.randomUUID();
+
     const stream = toUIMessageStream({
       stream: result.stream,
       originalMessages: history,
+      generateMessageId: () => assistantId,
       tools,
       // Provider errors are replaced with a fixed message; raw error text is never sent to the browser.
       onError: () =>
@@ -154,7 +163,7 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       onEnd: async ({ messages, isAborted, isCancelled, outcome }) => {
         // Billing first and unconditionally: whatever ended the stream, settle() runs once.
         try {
-          await biller.settle(
+          const charged = await biller.settle(
             isAborted || isCancelled || outcome.status === "aborted"
               ? "abort"
               : outcome.status === "failed"
@@ -166,8 +175,10 @@ export const POST = withApi("chat", async (request, { requestId }) => {
           if (response?.role !== "assistant") return;
           const parts = sanitizeParts(response.parts);
           if (parts.length === 0) return;
+          // What this reply cost is stored with it, so each output can show its own credits.
+          if (charged) parts.push(usagePart(charged));
           try {
-            await insertAssistantMessage({ projectId, parts });
+            await insertAssistantMessage({ id: assistantId, projectId, parts });
           } catch (error) {
             logger.error("assistant_message_write_failed", { requestId, error });
           }

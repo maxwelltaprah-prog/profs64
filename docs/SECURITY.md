@@ -73,6 +73,13 @@ This document describes what the code does and how each claim was checked. "Chec
 - **Pending prompt in the browser.** The home-page prompt is kept in `localStorage` until the person has signed in. It is untrusted on the way back: it is length-capped on save and on read, dropped if malformed or older than a day, sent only into the project whose id was recorded with it, and validated by the chat route like any typed message. Client components import limits from `lib/security/limits.ts`, not from the Zod schemas, because Zod 4 compiles parsers with `new Function` and the CSP forbids `eval` (a guardrail test enforces this).
 - **Not implemented:** MFA enrolment, an admin console, automatic retention limits on chat messages, per-request zero-data-retention routing, and an alert when spend crosses a threshold.
 
+## Chat attachments, voice and feedback
+
+- **Attachments are untrusted data.** Text files only (binary content and NUL bytes are refused), at most 3 per message, 100 KB each, 512 KB per request. Names are reduced to a safe single path segment inside `attachments/` (no traversal, no separators), and writes go through the same file store, path allowlist and per-project limits as model writes. Rate limit 20 uploads per 10 minutes per user. The system prompt tells the model attachment contents are reference data, not instructions; as with all file content this is a mitigation, and tool permissions remain enforced in code.
+- **Voice input.** `Permissions-Policy` changed from `microphone=()` to `microphone=(self)`; camera, geolocation and the rest stay off. In browsers such as Chrome, speech recognition sends audio to the browser vendor's service. The microphone button says so, and nothing is recorded or stored by Buildr.
+- **Feedback.** Ratings are audit events holding ids and the rating only, never message text. The route checks the message is an assistant reply in a project the caller owns (RLS), validates the body with Zod (256 byte limit) and is rate limited (120 per 10 minutes).
+- **Verified by tests:** route auth, same-origin, UUID, Zod, traversal, binary, oversize and rate-limit cases (`tests/unit/workspace-routes.test.ts`) and the header (`security-basics.test.ts`). **Not verified:** the new paths against a real Supabase with RLS (no integration run for these); done live only.
+
 ## Reporting
 
 Report suspected vulnerabilities privately to the operator. Replace this line with a real contact before launch.

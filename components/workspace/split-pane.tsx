@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { cn } from "@/lib/utils/cn";
 import { clampSize } from "@/lib/workspace/file-tree";
 
 const MIN = 22;
@@ -26,12 +27,15 @@ export function SplitPane({
   first,
   second,
   firstLabel,
+  firstHidden = false,
 }: {
   storageKey: string;
   defaultSize?: number;
   first: ReactNode;
   second: ReactNode;
   firstLabel: string;
+  /** Hides the first pane but keeps it mounted, so work inside it (a streaming reply) continues. */
+  firstHidden?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(defaultSize);
@@ -93,7 +97,11 @@ export function SplitPane({
     <div ref={container} className="flex min-h-0 flex-1 flex-col md:flex-row">
       <section
         aria-label={firstLabel}
-        className="flex min-h-0 min-w-0 flex-1 flex-col md:w-(--split) md:flex-none"
+        hidden={firstHidden}
+        className={cn(
+          "min-h-0 min-w-0 flex-1 flex-col md:w-(--split) md:flex-none",
+          firstHidden ? "hidden" : "flex",
+        )}
       >
         {first}
       </section>
@@ -109,9 +117,18 @@ export function SplitPane({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onKeyDown={onKeyDown}
-        className="transition-ui bg-hairline hover:bg-accent focus-visible:bg-accent hidden w-1 shrink-0 cursor-col-resize touch-none md:block"
+        hidden={firstHidden}
+        className={cn(
+          "transition-ui bg-hairline hover:bg-accent focus-visible:bg-accent hidden w-1 shrink-0 cursor-col-resize touch-none",
+          !firstHidden && "md:block",
+        )}
       />
-      <div className="border-hairline flex min-h-0 min-w-0 flex-1 flex-col border-t md:border-t-0">
+      <div
+        className={cn(
+          "border-hairline flex min-h-0 min-w-0 flex-1 flex-col border-t md:border-t-0",
+          firstHidden && "border-t-0",
+        )}
+      >
         {second}
       </div>
     </div>

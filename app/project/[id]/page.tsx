@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { Workspace } from "@/components/workspace/workspace";
 import { toUiMessages } from "@/lib/ai/messages";
 import { getOptionalUser } from "@/lib/db/auth";
+import { listRatings, outputsFor } from "@/lib/db/outputs";
 import { getCreditBalance, getProject, listMessages, listProjectFiles } from "@/lib/db/projects";
 import { AppError } from "@/lib/security/errors";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
@@ -27,11 +28,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     throw error;
   }
 
-  const [files, messages, balance, store] = await Promise.all([
+  const [files, messages, balance, store, ratings] = await Promise.all([
     listProjectFiles(id),
     listMessages(id),
     getCreditBalance(user.id),
     cookies(),
+    listRatings(id),
   ]);
   const theme = parseTheme(store.get(THEME_COOKIE)?.value);
 
@@ -46,6 +48,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           projectId={id}
           files={files}
           messages={toUiMessages(messages, 2000)}
+          outputs={outputsFor(messages, ratings)}
           balance={balance}
           canUseAssistant={Boolean(user.email_confirmed_at)}
         />

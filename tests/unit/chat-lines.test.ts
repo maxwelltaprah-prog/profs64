@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { changedFiles, describeToolPart, friendlyChatError } from "@/lib/workspace/chat-lines";
+import {
+  changedFiles,
+  changedPaths,
+  describeToolPart,
+  friendlyChatError,
+  summariseSteps,
+  type ToolLine,
+} from "@/lib/workspace/chat-lines";
 
 describe("describeToolPart", () => {
   it("describes finished file changes in plain words", () => {
@@ -11,7 +18,12 @@ describe("describeToolPart", () => {
         input: { path: "src/components/Hero.tsx" },
         output: { ok: true, path: "src/components/Hero.tsx", action: "created" },
       }),
-    ).toEqual({ text: "Created src/components/Hero.tsx", state: "done" });
+    ).toEqual({
+      text: "Created src/components/Hero.tsx",
+      state: "done",
+      action: "created",
+      path: "src/components/Hero.tsx",
+    });
     expect(
       describeToolPart({
         type: "tool-write_file",
@@ -137,5 +149,33 @@ describe("friendlyChatError", () => {
     expect(describeToolPart({ type: "tool-write_file", state: "output-error" })?.text).toBe(
       "Stopped while writing a file",
     );
+  });
+});
+
+describe("summariseSteps and changedPaths", () => {
+  const line = (
+    action: ToolLine["action"],
+    path: string,
+    state: ToolLine["state"] = "done",
+  ): ToolLine => ({ text: `${action} ${path}`, state, ...(action ? { action } : {}), path });
+
+  it("counts each file once and words the result as one short line", () => {
+    const lines = [
+      line("created", "a.tsx"),
+      line("created", "b.tsx"),
+      line("updated", "c.tsx"),
+      line("edited", "c.tsx"),
+      line("read", "d.tsx"),
+    ];
+    expect(summariseSteps(lines)).toBe("Created 2 files, updated 1 file, edited 1 file");
+    expect(changedPaths(lines)).toEqual(["a.tsx", "b.tsx", "c.tsx"]);
+  });
+
+  it("falls back to reads, and says when a step did not finish", () => {
+    expect(summariseSteps([line("read", "a.ts"), line("read", "b.ts")])).toBe("Read 2 files");
+    expect(summariseSteps([line("created", "a.ts"), line(undefined, "b.ts", "failed")])).toBe(
+      "Created 1 file, 1 step did not finish",
+    );
+    expect(summariseSteps([])).toBe("");
   });
 });

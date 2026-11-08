@@ -1,10 +1,12 @@
 import { z } from "zod";
 
 import {
+  ATTACHMENT_BODY_LIMIT_BYTES,
   AUTH_BODY_LIMIT_BYTES,
   CHAT_BODY_LIMIT_BYTES,
   CHAT_TEXT_MAX_CHARS,
   DELETE_CONFIRMATION,
+  FEEDBACK_BODY_LIMIT_BYTES,
   PASSWORD_MAX,
   PASSWORD_MIN,
   PROJECT_BODY_LIMIT_BYTES,
@@ -12,6 +14,8 @@ import {
 
 // Re-exported so server code keeps one import; client code imports from limits.ts directly.
 export {
+  ATTACHMENT_BODY_LIMIT_BYTES,
+  FEEDBACK_BODY_LIMIT_BYTES,
   AUTH_BODY_LIMIT_BYTES,
   CHAT_BODY_LIMIT_BYTES,
   CHAT_TEXT_MAX_CHARS,
@@ -70,3 +74,22 @@ export const deleteAccountSchema = z.strictObject({
   password: z.string().min(1).max(PASSWORD_MAX),
   confirm: z.literal(DELETE_CONFIRMATION),
 });
+
+// Thumbs up, thumbs down, or clearing the choice. Nothing else is accepted.
+export const feedbackBodySchema = z.strictObject({ rating: z.enum(["up", "down", "none"]) });
+export type FeedbackBody = z.infer<typeof feedbackBodySchema>;
+
+// Text files to attach to the next message. Names and contents are checked again by
+// checkAttachment (lib/workspace/attachments.ts) so the same rules apply in the browser.
+export const attachmentsBodySchema = z.strictObject({
+  files: z
+    .array(
+      z.strictObject({
+        name: z.string().min(1).max(200),
+        content: z.string().max(200_000),
+      }),
+    )
+    .min(1)
+    .max(3),
+});
+export type AttachmentsBody = z.infer<typeof attachmentsBodySchema>;

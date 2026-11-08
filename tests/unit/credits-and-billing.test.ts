@@ -177,7 +177,12 @@ describe("createBiller", () => {
     });
     biller.stepStarted();
     biller.stepEnded({ inputTokens: 10, outputTokens: 10 });
-    await biller.settle("finish");
+    // The settled result carries what was charged, so the reply can show its own cost.
+    await expect(biller.settle("finish")).resolves.toEqual({
+      credits: 1,
+      inputTokens: 10,
+      outputTokens: 10,
+    });
     expect(deduct).toHaveBeenCalledTimes(2);
 
     const failing = vi.fn().mockRejectedValue(new Error("db down"));
@@ -191,7 +196,7 @@ describe("createBiller", () => {
     });
     second.stepStarted();
     second.stepEnded({ inputTokens: 10, outputTokens: 10 });
-    await expect(second.settle("finish")).resolves.toBeUndefined();
+    await expect(second.settle("finish")).resolves.toBeNull();
     expect(failing).toHaveBeenCalledTimes(2);
   });
 

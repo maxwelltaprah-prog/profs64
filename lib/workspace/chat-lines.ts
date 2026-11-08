@@ -2,9 +2,14 @@
 // path (already validated by the server) and our own fixed error strings are shown, never raw
 // tool output.
 
+export type ToolAction = "created" | "updated" | "edited" | "deleted" | "read" | "listed";
+
 export interface ToolLine {
   text: string;
   state: "working" | "done" | "failed";
+  /** What a finished step did, and to which file; used for the one-line summary of a reply. */
+  action?: ToolAction;
+  path?: string;
 }
 
 interface ToolPartLike {
@@ -58,19 +63,23 @@ export function describeToolPart(part: ToolPartLike): ToolLine | null {
 
   const path = pathOf(output) || pathOf(part.input);
   switch (name) {
-    case "write_file":
+    case "write_file": {
+      const updated = output["action"] === "updated";
       return {
-        text: `${output["action"] === "updated" ? "Updated" : "Created"} ${path}`,
+        text: `${updated ? "Updated" : "Created"} ${path}`,
         state: "done",
+        action: updated ? "updated" : "created",
+        path,
       };
+    }
     case "edit_file":
-      return { text: `Edited ${path}`, state: "done" };
+      return { text: `Edited ${path}`, state: "done", action: "edited", path };
     case "delete_file":
-      return { text: `Deleted ${path}`, state: "done" };
+      return { text: `Deleted ${path}`, state: "done", action: "deleted", path };
     case "read_file":
-      return { text: `Read ${path}`, state: "done" };
+      return { text: `Read ${path}`, state: "done", action: "read", path };
     default:
-      return { text: "Listed project files", state: "done" };
+      return { text: "Listed project files", state: "done", action: "listed" };
   }
 }
 
@@ -97,4 +106,44 @@ export function friendlyChatError(error: unknown): string {
     // Not JSON: a network failure or a stream error.
   }
   return "The message could not be sent. Check your connection and try again.";
+}
+
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+
+// "Created 3 files, updated 1 file" for the collapsed view of a reply. Reads and listings are not
+// changes, so they are left out unless nothing else happened.
+export function summariseSteps(lines: readonly ToolLine[]): string {
+  const count = (action: ToolAction) =>
+    new Set(lines.filter((line) => line.action === action && line.path).map((line) => line.path))
+      .size;
+  const parts: string[] = [];
+  const created = count("created");
+  const updated = count("updated");
+  const edited = count("edited");
+  const deleted = count("deleted");
+  if (created) parts.push(`Created ${plural(created, "file")}`);
+  if (updated) parts.push(`${parts.length ? "updated" : "Updated"} ${plural(updated, "file")}`);
+  if (edited) parts.push(`${parts.length ? "edited" : "Edited"} ${plural(edited, "file")}`);
+  if (deleted) parts.push(`${parts.length ? "deleted" : "Deleted"} ${plural(deleted, "file")}`);
+  const failed = lines.filter((line) => line.state === "failed").length;
+  if (parts.length === 0) {
+    const read = count("read");
+    if (read) parts.push(`Read ${plural(read, "file")}`);
+  }
+  if (failed) parts.push(`${failed} ${failed === 1 ? "step" : "steps"} did not finish`);
+  return parts.join(", ");
+}
+
+// Files a reply changed, in order and without repeats, for the "open this file" list.
+export function changedPaths(lines: readonly ToolLine[]): string[] {
+  const seen = new Set<string>();
+  for (const line of lines) {
+    if (
+      line.path &&
+      (line.action === "created" || line.action === "updated" || line.action === "edited")
+    ) {
+      seen.add(line.path);
+    }
+  }
+  return [...seen];
 }

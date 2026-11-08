@@ -59,6 +59,17 @@ The landing page (`app/page.tsx`) is a server component with two client islands:
 
 The home page leads with a prompt box (`components/landing/prompt-box.tsx`). Submitting it saves the text in `localStorage` (`lib/workspace/pending-prompt.ts`, 24-hour expiry) and either goes to `/start` or, when signed out, opens a native `<dialog>` with the sign-up and sign-in forms. Sign-up sends `next: "/start"` so the confirmation link lands there; sign-in redirects there directly. `/start` (`components/start/start-project.tsx`) creates a project named from the prompt's first line, records the project id alongside the prompt, and opens the workspace. The chat panel sends the prompt once, only when the stored project id matches the open project and the assistant can run; otherwise it is placed in the composer. Browser storage is the right place for this: it is a per-visitor convenience, nothing else reads it, and the server validates the text like any other message.
 
+### Chat actions, details and hiding the chat
+
+- **Replies collapse to a preview.** A finished assistant reply shows its closing text, a one-line summary of the work (steps, files changed) and a Details toggle. Details reveals earlier narration, each step, buttons that open the changed files, the token and credit line, and View preview. The reply being generated is shown in full.
+- **Per-reply actions.** Copy, Good reply, Bad reply, Share, and the credits used sit under each finished reply. Copy and Share use the clipboard and the share sheet (`navigator.share`, else clipboard); there are no public share links.
+- **Credits per reply.** The chat route fixes the reply's id up front, settles billing, then stores a `data-usage` part (credits, input and output tokens) with the reply. `GET /api/projects/[id]/outputs` returns usage and the caller's rating for each reply. Replies created before this change have no usage and say so. `data-usage` parts are dropped when history is replayed to the model.
+- **Ratings** are `message_feedback` audit events (project id, message id, up, down or none; the newest event wins), written by `PUT /api/projects/[id]/messages/[messageId]/feedback` after an RLS ownership check. No new table.
+- **Attachments** are text files (3 per message, 100 KB each) saved by `POST /api/projects/[id]/files` under `attachments/` with a sanitised name, then referenced in the message as `Attached: name`. The model reads them as ordinary project files, which the system prompt labels untrusted.
+- **Voice input** uses the browser's speech recognition (feature-detected; the button is absent where unsupported). The transcript is appended to the message box for editing; nothing is sent until the person sends.
+- **Suggestions** are follow-up chips computed locally from the project's files and the turn count (`lib/workspace/suggestions.ts`); they are not model calls and cost no credits.
+- **Hide chat.** The chat pane stays mounted while hidden, so a reply keeps streaming and billing settles as usual. The choice is kept per person and project in localStorage; a dot on Show chat means work is in progress.
+
 ## Live preview
 
 The Preview tab runs the project in the browser without a build server.

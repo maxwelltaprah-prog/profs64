@@ -1,13 +1,14 @@
 "use client";
 
 import { type UIMessage } from "ai";
-import { Code2, MessageSquare, PanelRight } from "lucide-react";
+import { Code2, MessageSquare, PanelLeftClose, PanelLeftOpen, PanelRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { iconProps } from "@/components/ui/icons";
 import { type ProjectFile } from "@/lib/db/projects";
 import { cn } from "@/lib/utils/cn";
+import { type OutputInfo } from "@/lib/workspace/outputs";
 
 import { ChatPanel } from "./chat-panel";
 import { CodeViewer } from "./code-viewer";
@@ -22,6 +23,7 @@ export function Workspace({
   projectId,
   files,
   messages,
+  outputs,
   balance,
   canUseAssistant,
 }: {
@@ -29,17 +31,48 @@ export function Workspace({
   projectId: string;
   files: ProjectFile[];
   messages: UIMessage[];
+  outputs: Record<string, OutputInfo>;
   balance: number;
   canUseAssistant: boolean;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("preview");
+  const [chatHidden, setChatHidden] = useState(false);
+  const [chatBusy, setChatBusy] = useState(false);
+  const hiddenKey = `buildr:chat-hidden:${userId}:${projectId}`;
   const [current, setCurrent] = useState<ProjectFile[]>(files);
   const [selected, setSelected] = useState<string | null>(files[0]?.path ?? null);
   const content = useMemo(
     () => current.find((file) => file.path === selected)?.content ?? null,
     [current, selected],
   );
+
+  // Whether the chat was hidden is remembered per person and project, in this browser only.
+  useEffect(() => {
+    try {
+      // Restoring a saved value after mount is the point of this effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (window.localStorage.getItem(hiddenKey) === "1") setChatHidden(true);
+    } catch {
+      // Storage can be unavailable; the chat simply starts visible.
+    }
+  }, [hiddenKey]);
+  const toggleChat = useCallback(
+    (hidden: boolean) => {
+      setChatHidden(hidden);
+      try {
+        window.localStorage.setItem(hiddenKey, hidden ? "1" : "0");
+      } catch {
+        // Ignore: the choice just will not be remembered.
+      }
+    },
+    [hiddenKey],
+  );
+  const openFile = useCallback((path: string) => {
+    setSelected(path);
+    setTab("code");
+  }, []);
+  const openPreview = useCallback(() => setTab("preview"), []);
 
   // The server is the source of truth for files, so the tree is refreshed from it as the assistant
   // works. Calls are coalesced and a late response never overwrites a newer one.
@@ -87,15 +120,32 @@ export function Workspace({
     <SplitPane
       storageKey={`buildr:split:${userId}:${projectId}`}
       firstLabel="Chat"
+      firstHidden={chatHidden}
       first={
         <>
-          <h2 className="border-hairline flex h-9 items-center gap-2 border-b px-4 text-[13px] font-medium">
-            <MessageSquare {...iconProps} />
-            Chat
-          </h2>
+          <div className="border-hairline flex h-9 shrink-0 items-center justify-between border-b pr-1.5 pl-4">
+            <h2 className="flex items-center gap-2 text-[13px] font-medium">
+              <MessageSquare {...iconProps} />
+              Chat
+            </h2>
+            <button
+              type="button"
+              aria-label="Hide chat"
+              title="Hide chat"
+              onClick={() => toggleChat(true)}
+              className="press text-muted hover:text-text hover:bg-surface-2 flex size-7 items-center justify-center rounded-md"
+            >
+              <PanelLeftClose {...iconProps} />
+            </button>
+          </div>
           <ChatPanel
             projectId={projectId}
             initialMessages={messages}
+            initialOutputs={outputs}
+            projectFiles={current}
+            onOpenFile={openFile}
+            onOpenPreview={openPreview}
+            onBusyChange={setChatBusy}
             canUseAssistant={canUseAssistant}
             hasCredits={balance >= 1}
             onFilesChanged={refreshFiles}
@@ -108,8 +158,26 @@ export function Workspace({
           <div
             role="tablist"
             aria-label="Workspace view"
-            className="border-hairline flex h-9 shrink-0 border-b px-2"
+            className="border-hairline flex h-9 shrink-0 items-stretch border-b px-2"
           >
+            {chatHidden ? (
+              <button
+                type="button"
+                aria-label="Show chat"
+                title="Show chat"
+                onClick={() => toggleChat(false)}
+                className="press text-muted hover:text-text relative mr-1 flex items-center gap-1.5 px-2 text-[13px]"
+              >
+                <PanelLeftOpen {...iconProps} />
+                Chat
+                {chatBusy ? (
+                  <span
+                    aria-label="The assistant is working"
+                    className="thinking-dot bg-accent absolute top-2 right-0.5"
+                  />
+                ) : null}
+              </button>
+            ) : null}
             {tabs.map(({ id, label, Icon }) => (
               <button
                 key={id}

@@ -314,10 +314,18 @@ describe("a normal request", () => {
     expect(insertUserMessage).toHaveBeenCalledTimes(1);
     expect(insertAssistantMessage).toHaveBeenCalledTimes(1);
     const stored = insertAssistantMessage.mock.calls[0]?.[0] as {
+      id: string;
       projectId: string;
-      parts: Array<{ type: string }>;
+      parts: Array<{ type: string; data?: Record<string, number> }>;
     };
     expect(stored.projectId).toBe(PROJECT);
+    // The stored row and the live message in the browser share one id, and the reply carries
+    // what it cost so each output can show its credits.
+    expect(stored.id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(body).toContain(stored.id);
+    const usage = stored.parts.find((p) => p.type === "data-usage");
+    expect(usage?.data).toMatchObject({ inputTokens: 3300, outputTokens: 460 });
+    expect(usage?.data?.["credits"]).toBeGreaterThan(0);
     expect(stored.parts.some((p) => p.type === "tool-write_file")).toBe(true);
     expect(stored.parts.some((p) => p.type === "text")).toBe(true);
 

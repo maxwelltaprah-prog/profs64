@@ -11,4 +11,8 @@ export const PROJECT_BODY_LIMIT_BYTES = 2 * 1024;
 export const CHAT_BODY_LIMIT_BYTES = 32 * 1024;
 export const CHAT_TEXT_MAX_CHARS = 8000;
 
+export const FEEDBACK_BODY_LIMIT_BYTES = 256;
+// Three files of up to 100 KB each, plus JSON escaping.
+export const ATTACHMENT_BODY_LIMIT_BYTES = 512 * 1024;
+
 export const DELETE_CONFIRMATION = "delete my account";
