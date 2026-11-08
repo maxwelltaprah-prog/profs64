@@ -42,6 +42,7 @@
   --ink-muted: #a3a3ab;
   --ink-accent: #2dd4bf;
 
+  --ring-line: 0 0 0 1px rgb(0 0 0 / 0.08);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-2: 0 4px 16px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
 
@@ -88,6 +89,7 @@
   --ink-muted: #a3a3ab;
   --ink-accent: #2dd4bf;
 
+  --ring-line: 0 0 0 1px rgb(255 255 255 / 0.1);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
 }
@@ -122,6 +124,7 @@
     --ink-muted: #a3a3ab;
     --ink-accent: #2dd4bf;
 
+    --ring-line: 0 0 0 1px rgb(255 255 255 / 0.1);
     --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
   }
@@ -295,6 +298,17 @@
 }
 
 @layer utilities {
+  /* A 1px edge that is a semi-transparent shadow, not a solid border: it adapts to whatever sits
+     behind the card and does not add 1px to the box. */
+  .ring-line {
+    box-shadow: var(--ring-line);
+  }
+  .ring-line-focus:focus-within {
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 0 0 4px var(--accent-subtle),
+      var(--shadow-2);
+  }
   /* Page-load entrance for the hero: one staggered sequence. */
   .rise {
     opacity: 0;

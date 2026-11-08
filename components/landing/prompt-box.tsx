@@ -99,7 +99,7 @@ export function PromptBox({ signedIn, passwordMin }: { signedIn: boolean; passwo
         <label htmlFor={textareaId} className="sr-only">
           Describe the app you want to build
         </label>
-        <div className="lift border-hairline-strong bg-surface focus-within:border-accent rounded-lg border shadow-sm focus-within:shadow-md">
+        <div className="transition-ui bg-surface ring-line ring-line-focus rounded-xl">
           <textarea
             id={textareaId}
             value={text}

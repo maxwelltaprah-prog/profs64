@@ -53,14 +53,16 @@ export default async function DashboardPage() {
             </p>
           </div>
         ) : (
-          <ul className="divide-hairline border-hairline bg-surface mt-8 divide-y rounded-lg border">
+          <ul className="divide-hairline bg-surface ring-line mt-8 divide-y rounded-lg">
             {projects.map((project) => (
               <li key={project.id}>
                 <Link
                   href={`/project/${project.id}`}
                   className="transition-ui hover:bg-surface-2 flex items-center justify-between gap-4 px-4 py-3 first:rounded-t-lg last:rounded-b-lg"
                 >
-                  <span className="truncate text-sm font-medium">{project.name}</span>
+                  <span className="truncate text-sm font-medium" title={project.name}>
+                    {project.name}
+                  </span>
                   <span className="text-muted shrink-0 text-xs tabular-nums">
                     Updated {dateFormat.format(new Date(project.updatedAt))}
                   </span>

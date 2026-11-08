@@ -105,7 +105,7 @@ export function ExampleGallery() {
           <button
             type="button"
             onClick={() => pick(example.prompt)}
-            className="lift border-hairline bg-surface hover:border-hairline-strong group block w-full rounded-lg border p-3 text-left"
+            className="lift ring-line bg-surface group block w-full rounded-xl p-3 text-left"
           >
             <Schematic layout={example.layout} />
             <div className="mt-3 flex items-baseline justify-between gap-3 px-1">
