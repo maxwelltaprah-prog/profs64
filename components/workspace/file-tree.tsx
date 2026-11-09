@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronRight, File, Folder } from "lucide-react";
+import { ChevronRight, Folder } from "lucide-react";
 import { useState } from "react";
 
 import { iconProps } from "@/components/ui/icons";
+import { FileTypeIcon } from "@/components/workspace/file-icon";
 import { cn } from "@/lib/utils/cn";
 import { buildFileTree, type TreeNode } from "@/lib/workspace/file-tree";
 
@@ -79,7 +80,7 @@ function Node({
         )}
       >
         <span className="size-4 shrink-0" aria-hidden="true" />
-        <File {...iconProps} className="shrink-0" />
+        <FileTypeIcon path={node.path} />
         <span className="truncate">{node.name}</span>
       </button>
     </li>
@@ -90,11 +91,44 @@ export function FileTree({
   paths,
   selected,
   onSelect,
+  query = "",
 }: {
   paths: readonly string[];
   selected: string | null;
   onSelect: (path: string) => void;
+  /** When set, a flat list of the files whose path contains it replaces the tree. */
+  query?: string;
 }) {
+  const needle = query.trim().toLowerCase();
+  if (needle) {
+    const matches = paths.filter((path) => path.toLowerCase().includes(needle));
+    if (matches.length === 0) {
+      return <p className="text-muted p-3 text-[13px]">No files match.</p>;
+    }
+    return (
+      <ul aria-label="Matching files" className="py-1">
+        {matches.map((path) => (
+          <li key={path}>
+            <button
+              type="button"
+              aria-current={selected === path ? "true" : undefined}
+              onClick={() => onSelect(path)}
+              className={cn(
+                "transition-ui hover:bg-surface-2 flex w-full flex-col items-start py-1.5 pr-2 pl-3 text-left",
+                selected === path ? "bg-surface-2 text-text" : "text-muted",
+              )}
+            >
+              <span className="flex items-center gap-1.5 text-[13px]">
+                <FileTypeIcon path={path} />
+                <span className="truncate">{path.split("/").pop()}</span>
+              </span>
+              <span className="text-subtle truncate pl-5 font-mono text-[11px]">{path}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   const tree = buildFileTree(paths);
   if (tree.length === 0) {
     return (

@@ -32,7 +32,7 @@ Next.js 16 App Router (proxy.ts replaces middleware.ts; read `node_modules/next/
 
 ## Design rules
 
-Calm, precise, restrained (Linear, Vercel). Tokens in CSS variables and Tailwind; light and dark both designed. Neutral grays plus one accent. No gradients, glows or emoji icons. Subtle glass is allowed (owner decision 2026-11-08) only through the `.glass`, `.glass-bar` and `.glass-ink` classes: sticky bars, overlays (dialogs, palette) and the sign-in showcase, each with a solid fallback for unsupported blur and reduced transparency; text on glass still meets contrast. `design-tokens.test.ts` guards this. Geist plus mono, tabular numbers for credits, Lucide only. Motion 150-250ms ease-out and respects reduced motion. Plain copy, no exclamation marks or hype words. WCAG 2.2 AA.
+Calm, precise, restrained (Linear, Vercel). Tokens in CSS variables and Tailwind; light and dark both designed. Neutral grays plus one accent. No gradients, glows or emoji icons. Subtle glass is allowed (owner decision 2026-11-08) only through the `.glass`, `.glass-bar` and `.glass-ink` classes: sticky bars, overlays (dialogs, palette) and the sign-in showcase, each with a solid fallback for unsupported blur and reduced transparency; text on glass still meets contrast. `design-tokens.test.ts` guards this. Syntax colours (`--code-*`) are content colours for the code view only. Geist plus mono, tabular numbers for credits, Lucide only. Motion 150-250ms ease-out and respects reduced motion. Plain copy, no exclamation marks or hype words. WCAG 2.2 AA.
 
 ## Testing rules
 

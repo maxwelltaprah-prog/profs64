@@ -18,22 +18,29 @@ export const STARTER_DEPENDENCIES = {
   "@tanstack/react-query": "5.83.0",
   "class-variance-authority": "0.7.1",
   clsx: "2.1.1",
+  // Motion: framer-motion for entrances and lists (last 12.x release, React 18 compatible; its motion-dom range resolves cleanly).
+  "framer-motion": "12.43.0",
   "lucide-react": "0.462.0",
   react: "18.3.1",
   "react-dom": "18.3.1",
-  "react-router-dom": "6.30.1",
+  "react-router-dom": "6.30.6",
+  // From Lovable's template: toasts, and the animate-in/out utilities shadcn components use.
+  sonner: "1.7.4",
   "tailwind-merge": "2.6.0",
+  "tailwindcss-animate": "1.0.7",
 } as const;
 
 export const STARTER_DEV_DEPENDENCIES = {
+  // vite.config.ts uses path and __dirname, so the Node types are needed to typecheck it.
+  "@types/node": "22.16.5",
   "@types/react": "18.3.23",
   "@types/react-dom": "18.3.7",
   "@vitejs/plugin-react-swc": "3.11.0",
   autoprefixer: "10.4.21",
-  postcss: "8.5.6",
+  postcss: "8.5.31",
   tailwindcss: "3.4.17",
   typescript: "5.8.3",
-  vite: "5.4.19",
+  vite: "5.4.21",
 } as const;
 
 const packageJson = {
@@ -110,8 +117,12 @@ export default defineConfig({
   {
     path: "tailwind.config.ts",
     content: `import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
-export default ${JSON.stringify(SHADCN_TAILWIND_CONFIG, null, 2)} satisfies Config;
+export default {
+  ...${JSON.stringify(SHADCN_TAILWIND_CONFIG, null, 2).replace(/\n/g, "\n  ")},
+  plugins: [animate],
+} satisfies Config;
 `,
   },
   {
@@ -157,22 +168,29 @@ createRoot(root).render(<App />);
   {
     path: "src/App.tsx",
     content: `import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MotionConfig } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import { Toaster } from "@/components/ui/sonner";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// MotionConfig makes every framer-motion animation respect the visitor's reduced-motion setting.
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        {/* Add custom routes above the catch-all "*" route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <MotionConfig reducedMotion="user">
+      <Toaster />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          {/* Add custom routes above the catch-all "*" route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </MotionConfig>
   </QueryClientProvider>
 );
 
@@ -181,19 +199,34 @@ export default App;
   },
   {
     path: "src/pages/Index.tsx",
-    content: `import { Button } from "@/components/ui/button";
+    content: `import { motion } from "framer-motion";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { fadeUp, stagger } from "@/lib/motion";
 
 const Index = () => {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background">
-      <div className="max-w-md px-6 text-center">
-        <h1 className="text-4xl font-bold tracking-tight">My app</h1>
-        <p className="mt-4 text-lg text-muted-foreground">
+      <motion.div
+        className="max-w-md px-6 text-center"
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.h1 variants={fadeUp} className="text-4xl font-bold tracking-tight">
+          My app
+        </motion.h1>
+        <motion.p variants={fadeUp} className="mt-4 text-lg text-muted-foreground">
           This is the starting point. Describe what you want to build in the chat and the files
           here will change to match.
-        </p>
-        <Button className="mt-6">Get started</Button>
-      </div>
+        </motion.p>
+        <motion.div variants={fadeUp}>
+          <Button className="mt-6" onClick={() => toast("Describe your app in the chat to begin.")}>
+            Get started
+          </Button>
+        </motion.div>
+      </motion.div>
     </main>
   );
 };
@@ -235,6 +268,64 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+`,
+  },
+  {
+    path: "src/lib/motion.ts",
+    content: `import type { Transition, Variants } from "framer-motion";
+
+// Shared motion presets so every screen moves the same way: quick, subtle, ease-out.
+export const ease: Transition["ease"] = [0.22, 1, 0.36, 1];
+
+export const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease } },
+};
+
+export const fadeIn: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.3, ease } },
+};
+
+export const scaleIn: Variants = {
+  hidden: { opacity: 0, scale: 0.97 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.25, ease } },
+};
+
+// Wrap a list or section; children with their own variants enter one after another.
+export const stagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+};
+
+// For elements that should animate as they scroll into view.
+export const inView = { initial: "hidden", whileInView: "show", viewport: { once: true, amount: 0.2 } } as const;
+`,
+  },
+  {
+    path: "src/components/ui/sonner.tsx",
+    content: `import { Toaster as Sonner } from "sonner";
+
+type ToasterProps = React.ComponentProps<typeof Sonner>;
+
+// Toasts for feedback after an action (saved, copied, failed). Styled with the app's theme colours.
+const Toaster = (props: ToasterProps) => (
+  <Sonner
+    className="toaster group"
+    toastOptions={{
+      classNames: {
+        toast:
+          "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+        description: "group-[.toast]:text-muted-foreground",
+        actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+        cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+      },
+    }}
+    {...props}
+  />
+);
+
+export { Toaster };
 `,
   },
   {

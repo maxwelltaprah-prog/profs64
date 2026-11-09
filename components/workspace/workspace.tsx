@@ -3,7 +3,7 @@
 import { type UIMessage } from "ai";
 import { Code2, MessageSquare, PanelLeftClose, PanelLeftOpen, PanelRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { iconProps } from "@/components/ui/icons";
 import { type ProjectFile } from "@/lib/db/projects";
@@ -11,8 +11,7 @@ import { cn } from "@/lib/utils/cn";
 import { type OutputInfo } from "@/lib/workspace/outputs";
 
 import { ChatPanel } from "./chat-panel";
-import { CodeViewer } from "./code-viewer";
-import { FileTree } from "./file-tree";
+import { CodeWorkspace } from "./code-workspace";
 import { PreviewPanel } from "./preview-panel";
 import { SplitPane } from "./split-pane";
 
@@ -21,6 +20,7 @@ type Tab = "code" | "preview";
 export function Workspace({
   userId,
   projectId,
+  projectName = "project",
   files,
   messages,
   outputs,
@@ -29,6 +29,7 @@ export function Workspace({
 }: {
   userId: string;
   projectId: string;
+  projectName?: string;
   files: ProjectFile[];
   messages: UIMessage[];
   outputs: Record<string, OutputInfo>;
@@ -42,10 +43,6 @@ export function Workspace({
   const hiddenKey = `buildr:chat-hidden:${userId}:${projectId}`;
   const [current, setCurrent] = useState<ProjectFile[]>(files);
   const [selected, setSelected] = useState<string | null>(files[0]?.path ?? null);
-  const content = useMemo(
-    () => current.find((file) => file.path === selected)?.content ?? null,
-    [current, selected],
-  );
 
   // Whether the chat was hidden is remembered per person and project, in this browser only.
   useEffect(() => {
@@ -206,16 +203,12 @@ export function Workspace({
               aria-labelledby="tab-code"
               className="flex min-h-0 flex-1"
             >
-              <div className="border-hairline w-48 shrink-0 overflow-y-auto border-r">
-                <FileTree
-                  paths={current.map((file) => file.path)}
-                  selected={selected}
-                  onSelect={setSelected}
-                />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <CodeViewer path={selected} content={content} />
-              </div>
+              <CodeWorkspace
+                projectName={projectName}
+                files={current}
+                selected={selected}
+                onSelect={setSelected}
+              />
             </div>
           ) : (
             <PreviewPanel files={current} />

@@ -8,6 +8,7 @@ import { iconProps } from "@/components/ui/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type ProjectFile } from "@/lib/db/projects";
 import { buildPreview, type PreviewBundle, type Transpile } from "@/lib/preview/bundle";
+import { ANIMATE_UTILITIES_CSS } from "@/lib/templates/animate-css";
 import { SHADCN_TAILWIND_CONFIG } from "@/lib/templates/shadcn-theme";
 import { cn } from "@/lib/utils/cn";
 
@@ -90,7 +91,15 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
       if (!data || typeof data.type !== "string") return;
       if (data.type === "ready" && bundle) {
         frame.current.contentWindow?.postMessage(
-          { type: "render", bundle: { ...bundle, tailwindConfig: SHADCN_TAILWIND_CONFIG } },
+          {
+            type: "render",
+            bundle: {
+              ...bundle,
+              // tailwindcss-animate as plain CSS: the config sent here cannot carry plugins.
+              css: `${bundle.css}\n${ANIMATE_UTILITIES_CSS}`,
+              tailwindConfig: SHADCN_TAILWIND_CONFIG,
+            },
+          },
           "*",
         );
       } else if (data.type === "rendered") {

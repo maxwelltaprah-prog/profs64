@@ -46,6 +46,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         <Workspace
           userId={user.id}
           projectId={id}
+          projectName={project.name}
           files={files}
           messages={toUiMessages(messages, 2000)}
           outputs={outputsFor(messages, ratings)}

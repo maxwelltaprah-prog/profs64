@@ -32,6 +32,17 @@
   --danger-subtle: #fdeceb;
   --success: #15803d;
   --focus: #0f766e;
+  /* Syntax colours for the code view. Content colour, not UI chrome: scoped to .code-view. */
+  --code-kw: #8250df;
+  --code-str: #116329;
+  --code-fn: #0550ae;
+  --code-num: #953800;
+  --code-type: #9a4800;
+  --code-com: #656d76;
+  --code-tag: #116329;
+  --code-attr: #0550ae;
+  --code-op: #cf222e;
+  --code-punct: #57606a;
 
   /* Ink: the always-dark panel used to show the product as it looks in the workspace. Same in
      both themes on purpose. */
@@ -87,6 +98,17 @@
   --danger-subtle: #2a1514;
   --success: #4ade80;
   --focus: #2dd4bf;
+  /* Syntax colours for the code view. Content colour, not UI chrome: scoped to .code-view. */
+  --code-kw: #d2a8ff;
+  --code-str: #7ee787;
+  --code-fn: #79c0ff;
+  --code-num: #ffa657;
+  --code-type: #ffa657;
+  --code-com: #8b949e;
+  --code-tag: #7ee787;
+  --code-attr: #79c0ff;
+  --code-op: #ff7b72;
+  --code-punct: #a1a7b0;
 
   /* Ink: the always-dark panel used to show the product as it looks in the workspace. Same in
      both themes on purpose. */
@@ -130,6 +152,17 @@
     --danger-subtle: #2a1514;
     --success: #4ade80;
     --focus: #2dd4bf;
+    /* Syntax colours for the code view. Content colour, not UI chrome: scoped to .code-view. */
+    --code-kw: #d2a8ff;
+    --code-str: #7ee787;
+    --code-fn: #79c0ff;
+    --code-num: #ffa657;
+    --code-type: #ffa657;
+    --code-com: #8b949e;
+    --code-tag: #7ee787;
+    --code-attr: #79c0ff;
+    --code-op: #ff7b72;
+    --code-punct: #a1a7b0;
 
     /* Ink: the always-dark panel used to show the product as it looks in the workspace. Same in
      both themes on purpose. */
@@ -519,6 +552,39 @@
     .glass-ink {
       background-color: var(--ink-2);
     }
+  }
+
+  /* Code view token colours (classes from lib/workspace/code-language.ts). */
+  .code-view .tok-kw {
+    color: var(--code-kw);
+  }
+  .code-view .tok-str {
+    color: var(--code-str);
+  }
+  .code-view .tok-fn {
+    color: var(--code-fn);
+  }
+  .code-view .tok-num {
+    color: var(--code-num);
+  }
+  .code-view .tok-type {
+    color: var(--code-type);
+  }
+  .code-view .tok-com {
+    color: var(--code-com);
+    font-style: italic;
+  }
+  .code-view .tok-tag {
+    color: var(--code-tag);
+  }
+  .code-view .tok-attr {
+    color: var(--code-attr);
+  }
+  .code-view .tok-op {
+    color: var(--code-op);
+  }
+  .code-view .tok-punct {
+    color: var(--code-punct);
   }
 
   /* Small inline spinner for icon buttons that are working. */

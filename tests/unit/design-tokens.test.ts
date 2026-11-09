@@ -65,6 +65,16 @@ const TEXT_PAIRS: [string, string][] = [
   ["paper-text", "paper"],
   ["paper-muted", "paper"],
   ["paper-accent-fg", "paper-accent"],
+  ["code-kw", "surface"],
+  ["code-str", "surface"],
+  ["code-fn", "surface"],
+  ["code-num", "surface"],
+  ["code-type", "surface"],
+  ["code-com", "surface"],
+  ["code-tag", "surface"],
+  ["code-attr", "surface"],
+  ["code-op", "surface"],
+  ["code-punct", "surface"],
   ["success", "surface"],
 ];
 

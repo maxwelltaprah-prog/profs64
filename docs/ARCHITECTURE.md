@@ -92,6 +92,14 @@ After the first message is sent, a dialog offers browser notifications once (`co
 
 Provider buttons come from Supabase's public `/auth/v1/settings` (`lib/db/auth-providers.ts`, cached 5 minutes, hidden on any failure). `OAUTH_PROVIDERS` is now optional and can only narrow that list.
 
+### Code view
+
+The Code tab (`components/workspace/code-workspace.tsx`) has a file search, a tree with file-type icons, open-file tabs, Copy and Download for the open file, and "Download codebase" (a zip built in the browser by `lib/workspace/zip.ts`, stored entries, names kept inside one folder). Highlighting is `prism-react-renderer` with token classes from `lib/workspace/code-language.ts`; colours are the `--code-*` tokens, contrast-tested in both themes.
+
+### Motion in generated apps
+
+New projects include framer-motion, sonner and tailwindcss-animate, with `MotionConfig reducedMotion="user"` and a `Toaster` in `App.tsx`, presets in `src/lib/motion.ts`, and accordion, fade-up and scale-in keyframes in the Tailwind theme. The preview cannot run Tailwind plugins (its config is sent by postMessage), so `lib/templates/animate-css.ts` supplies tailwindcss-animate's classes as plain CSS in `@layer utilities`, where variants still apply. The system prompt asks for hover, press and focus states, entrances, toasts, skeletons and reduced motion by default. Existing projects keep their own package.json; the assistant can add these packages to them.
+
 ## Live preview
 
 The Preview tab runs the project in the browser without a build server.
