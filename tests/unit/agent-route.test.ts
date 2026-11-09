@@ -173,6 +173,22 @@ describe("free fallback when credits run out", () => {
     expect(parts.map((part) => part.type)).not.toContain("data-usage");
   });
 
+  it("does not start a free window for a request rejected as busy", async () => {
+    state.balance = 0;
+    chooseFreeModel.mockImplementation(() => ({
+      model: createFakeModel({ chunkDelayMs: 20 }),
+      usedModelId: () => "google/gemma-4-31b-it:free",
+    }));
+    const first = await send("hello there");
+    expect(first.status).toBe(200);
+    const second = await send("hello there");
+    expect(second.status).toBe(429);
+    expect((await second.json()).error.code).toBe("chat_busy");
+    // Only the first request, which actually streamed, opened the window.
+    expect(recordAuditEvent).toHaveBeenCalledTimes(1);
+    await drain(first);
+  });
+
   it("also applies when the daily cap is reached, and reuses an open window", async () => {
     state.spentToday = 1000;
     state.freeStart = new Date(Date.now() - 2 * 3600 * 1000);

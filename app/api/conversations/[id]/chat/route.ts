@@ -71,32 +71,34 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const supabase = await createSupabaseServerClient();
     await getConversation(id, supabase);
 
-    // Paid when there are credits left for today; otherwise the free window, if it is open or can open.
-    const balance = await getCreditBalance(user.id, supabase);
-    const outOfCredits =
-      balance < MIN_BALANCE_TO_START || (await creditsSpentToday(user.id)) >= dailyCreditCap();
-    let freeUntil: Date | null = null;
-    if (outOfCredits) {
-      const window = freeWindow(await latestFreeWindowStart(supabase), new Date());
-      if (window.state === "cooling-down") throw freeUsed(window.availableAt);
-      await enforceLimits([{ config: LIMITS.agentFreeUser, key: user.id }]);
-      if (window.state === "available") {
-        await recordAuditEvent({
-          userId: user.id,
-          event: FREE_WINDOW_EVENT,
-          metadata: {},
-          requestId,
-        });
-        freeUntil = new Date(Date.now() + FREE_WINDOW_MS);
-      } else {
-        freeUntil = window.until;
-      }
-    }
-
+    // One live reply per person. The lease is taken before any billing decision, so a request that
+    // is rejected as busy can never start or extend the free window it would not go on to serve.
     const lease = tryAcquire(user.id);
     if (!lease) throw chatBusy();
     const release: () => void = lease;
+
+    let freeUntil: Date | null = null;
     try {
+      // Paid while credits remain for today; otherwise the free window, if it is open or can open.
+      const balance = await getCreditBalance(user.id, supabase);
+      const outOfCredits =
+        balance < MIN_BALANCE_TO_START || (await creditsSpentToday(user.id)) >= dailyCreditCap();
+      if (outOfCredits) {
+        const window = freeWindow(await latestFreeWindowStart(supabase), new Date());
+        if (window.state === "cooling-down") throw freeUsed(window.availableAt);
+        await enforceLimits([{ config: LIMITS.agentFreeUser, key: user.id }]);
+        if (window.state === "available") {
+          await recordAuditEvent({
+            userId: user.id,
+            event: FREE_WINDOW_EVENT,
+            metadata: {},
+            requestId,
+          });
+          freeUntil = new Date(Date.now() + FREE_WINDOW_MS);
+        } else {
+          freeUntil = window.until;
+        }
+      }
       return await start();
     } catch (error) {
       release();

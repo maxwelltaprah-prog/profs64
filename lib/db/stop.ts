@@ -13,6 +13,14 @@ export const STOP_EVENT = "chat_stop";
 /** Which running work a stop is for: a builder project or an agent conversation. */
 export type StopScope = "projectId" | "conversationId";
 
+// The metadata key each scope filters on, as a fixed allowlist so the filter column is never built
+// from a value that could be influenced from outside this module.
+const SCOPE_COLUMN = new Map<StopScope, string>([
+  ["projectId", "metadata->>projectId"],
+  ["conversationId", "metadata->>conversationId"],
+]);
+const columnFor = (scope: StopScope): string => SCOPE_COLUMN.get(scope) ?? "metadata->>projectId";
+
 export async function latestStopId(
   projectId: string,
   supabase: SupabaseClient,
@@ -22,7 +30,7 @@ export async function latestStopId(
     .from("audit_log")
     .select("id")
     .eq("event", STOP_EVENT)
-    .eq(`metadata->>${scope}`, projectId)
+    .eq(columnFor(scope), projectId)
     .order("id", { ascending: false })
     .limit(1);
   const id = (data as Array<{ id: number }> | null)?.[0]?.id;
@@ -41,7 +49,7 @@ export async function stopRequestedSince(
     .from("audit_log")
     .select("id")
     .eq("event", STOP_EVENT)
-    .eq(`metadata->>${scope}`, projectId)
+    .eq(columnFor(scope), projectId)
     .gt("id", afterId)
     .limit(1);
   return !error && Array.isArray(data) && data.length > 0;

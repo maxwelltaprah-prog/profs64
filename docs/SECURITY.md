@@ -95,3 +95,14 @@ This document describes what the code does and how each claim was checked. "Chec
 ## Reporting
 
 Report suspected vulnerabilities privately to the operator. Replace this line with a real contact before launch.
+
+## Security review 2026-11-09
+
+A focused review of the newer surface (chat agent, documents, OAuth, free window). Confirmed sound: email verification is enforced on both chat routes (`getVerifiedUser`); no `eval`, `new Function`, `dangerouslySetInnerHTML`, shell or `child_process` in app code; document file names are stripped to `[\w\s-]` so no header injection via `content-disposition`; renderers are text-only (no remote fetch, no SSRF); documents are served with `nosniff` and `no-store`; data-* parts are dropped before history is replayed to the model; RLS and append-only ledger unchanged.
+
+Fixed:
+
+- **Free window started before the reply was committed.** The agent recorded the `free_window_started` event (which starts a person's 24-hour free clock) before taking the one-reply lease, so a request later rejected as busy could start or extend a window it never served. The lease is now taken first; a busy request records nothing. Covered by a new test.
+- **Interpolated filter column in `lib/db/stop.ts`.** The stop-scope column was built with a template literal. Although `scope` is a hardcoded typed constant (never user input), it now resolves through a fixed `Map`, so the filter column can never be built from an outside value.
+
+Not run: Strix (usestrix/strix), an autonomous exploitation agent. The build container's network is allowlisted to package registries and GitHub, so it cannot reach the production host, and pointing an autonomous exploit agent at live third-party-backed infrastructure (Supabase, Vercel, OpenRouter) risks real data and trips those providers' abuse protections. The review above was done against the source instead.
