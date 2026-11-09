@@ -3,7 +3,7 @@ import { type LanguageModel } from "ai";
 
 import { modelMode } from "./config";
 import { createFakeModel } from "./fake-model";
-import { DEFAULT_MODEL, FALLBACK_MODEL, type ModelConfig } from "./models";
+import { DEFAULT_MODEL, FALLBACK_MODEL, FREE_MODELS, type ModelConfig } from "./models";
 
 type ModelObject = Extract<LanguageModel, { specificationVersion: "v4" }>;
 type StreamOptions = Parameters<ModelObject["doStream"]>[0];
@@ -59,4 +59,19 @@ export function chooseModel(): ChosenModel {
     DEFAULT_MODEL.id,
     FALLBACK_MODEL.id,
   );
+}
+
+// The free fallback for the chat agent: the first free model, then the second if it fails to start.
+export function chooseFreeModel(): ChosenModel {
+  const [first, second] = FREE_MODELS;
+  if (!first || !second) throw new Error("FREE_MODELS needs two entries");
+  if (modelMode() === "fake") {
+    return { model: createFakeModel() as ModelObject, usedModelId: () => first.id };
+  }
+  const apiKey = process.env["OPENROUTER_API_KEY"];
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not set");
+  const openrouter = createOpenRouter({ apiKey });
+  const make = (config: ModelConfig): ModelObject =>
+    openrouter(config.id, { usage: { include: true } }) as ModelObject;
+  return withFallback(make(first), make(second), first.id, second.id);
 }

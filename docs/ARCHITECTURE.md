@@ -100,6 +100,12 @@ The Code tab (`components/workspace/code-workspace.tsx`) has a file search, a tr
 
 New projects include framer-motion, sonner and tailwindcss-animate, with `MotionConfig reducedMotion="user"` and a `Toaster` in `App.tsx`, presets in `src/lib/motion.ts`, and accordion, fade-up and scale-in keyframes in the Tailwind theme. The preview cannot run Tailwind plugins (its config is sent by postMessage), so `lib/templates/animate-css.ts` supplies tailwindcss-animate's classes as plain CSS in `@layer utilities`, where variants still apply. The system prompt asks for hover, press and focus states, entrances, toasts, skeletons and reduced motion by default. Existing projects keep their own package.json; the assistant can add these packages to them.
 
+### Chat agent
+
+`/chat` is a general assistant alongside the builder: questions, writing, and PowerPoint, Word and PDF documents. Conversations, their messages and documents live in three tables (`supabase/migrations/20261109000001_conversations.sql`) with forced RLS; assistant replies and documents are written only by the server. `POST /api/conversations/[id]/chat` streams like the builder route (same billing, lease, stop and fixed error texts) with one tool, `create_document`, whose input is a bounded outline (`lib/documents/spec.ts`). The outline is stored, not a file; `GET /api/conversations/[id]/documents/[docId]` re-validates it and renders the file (`pptxgenjs`, `docx`, `pdf-lib`). Stored replies keep only a stub of the tool input so history stays small.
+
+Free fallback: when a person's balance is below 1 credit or their daily cap is reached, the agent (not the builder) uses an OpenRouter free model for 24 hours from the first such message, then not again for 24 hours (`lib/agent/free-window.ts`, recorded as a `free_window_started` audit event). Free replies are never billed, are limited to 40 per person per day, and are marked "Free model" in the chat; the response header `x-buildr-mode` tells the browser.
+
 ## Live preview
 
 The Preview tab runs the project in the browser without a build server.

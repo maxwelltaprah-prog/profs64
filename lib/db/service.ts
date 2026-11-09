@@ -105,3 +105,46 @@ export async function deleteAuthUser(userId: string): Promise<void> {
   const { error } = await serviceClient().auth.admin.deleteUser(userId);
   if (error) throw new Error(`account deletion failed: ${error.code ?? error.status ?? "unknown"}`);
 }
+
+// Chat agent writes. Assistant replies and documents are never writable through the API.
+
+export async function insertConversationAssistantMessage(input: {
+  id: string;
+  conversationId: string;
+  parts: unknown[];
+}): Promise<void> {
+  const { error } = await serviceClient().from("conversation_messages").insert({
+    id: input.id,
+    conversation_id: input.conversationId,
+    role: "assistant",
+    parts: input.parts,
+  });
+  if (error) throw new Error(`assistant message write failed: ${error.code ?? "unknown"}`);
+}
+
+export async function insertConversationDocument(input: {
+  conversationId: string;
+  kind: "pptx" | "docx" | "pdf";
+  title: string;
+  spec: unknown;
+}): Promise<{ id: string }> {
+  const { data, error } = await serviceClient()
+    .from("conversation_documents")
+    .insert({
+      conversation_id: input.conversationId,
+      kind: input.kind,
+      title: input.title,
+      spec: input.spec,
+    })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error(`document write failed: ${error?.code ?? "no row"}`);
+  return { id: data.id };
+}
+
+export async function touchConversation(id: string): Promise<void> {
+  await serviceClient()
+    .from("conversations")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", id);
+}

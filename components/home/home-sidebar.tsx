@@ -1,6 +1,6 @@
 "use client";
 
-import { House, Plus, UserRound } from "lucide-react";
+import { House, MessageSquare, Plus, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { formatCredits } from "@/components/app-header";
@@ -25,11 +25,16 @@ export function HomeSidebar({
   theme,
   email,
   recent,
+  chats = [],
+  active = "home",
 }: {
   balance: number;
   theme: ThemeChoice;
   email: string;
   recent: ReadonlyArray<{ id: string; name: string }>;
+  chats?: ReadonlyArray<{ id: string; title: string }>;
+  /** Which page is showing: home, a chat, or a specific conversation (its id). */
+  active?: "home" | "chat" | string;
 }) {
   const { actions, signOut, signingOut } = useAppActions();
 
@@ -49,19 +54,38 @@ export function HomeSidebar({
       </div>
 
       <nav aria-label="Main" className="mt-3 hidden flex-col gap-0.5 md:flex">
-        <button
-          type="button"
-          className={item}
-          onClick={() => {
-            const box = document.getElementById(HOME_PROMPT_ID);
-            box?.scrollIntoView({ block: "center", behavior: "smooth" });
-            box?.focus({ preventScroll: true });
-          }}
+        {active === "home" ? (
+          <button
+            type="button"
+            className={item}
+            onClick={() => {
+              const box = document.getElementById(HOME_PROMPT_ID);
+              box?.scrollIntoView({ block: "center", behavior: "smooth" });
+              box?.focus({ preventScroll: true });
+            }}
+          >
+            <Plus {...iconProps} />
+            New project
+          </button>
+        ) : (
+          <Link href="/dashboard" className={item}>
+            <Plus {...iconProps} />
+            New project
+          </Link>
+        )}
+        <Link
+          href="/chat"
+          aria-current={active === "chat" ? "page" : undefined}
+          className={`${item} ${active === "chat" ? "bg-surface-2 text-text" : ""}`}
         >
-          <Plus {...iconProps} />
-          New project
-        </button>
-        <Link href="/dashboard" aria-current="page" className={`${item} bg-surface-2 text-text`}>
+          <MessageSquare {...iconProps} />
+          New chat
+        </Link>
+        <Link
+          href="/dashboard"
+          aria-current={active === "home" ? "page" : undefined}
+          className={`${item} ${active === "home" ? "bg-surface-2 text-text" : ""}`}
+        >
           <House {...iconProps} />
           Home
         </Link>
@@ -71,24 +95,45 @@ export function HomeSidebar({
         </Link>
       </nav>
 
-      {recent.length > 0 ? (
-        <div className="mt-5 hidden min-h-0 flex-col md:flex">
-          <p className="text-subtle px-2.5 pb-1.5 text-xs font-medium">Recent</p>
-          <ul className="flex min-h-0 flex-col gap-0.5 overflow-y-auto">
-            {recent.map((project) => (
-              <li key={project.id}>
-                <Link
-                  href={`/project/${project.id}`}
-                  title={project.name}
-                  className={`${item} block truncate leading-8`}
-                >
-                  {project.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <div className="mt-5 hidden min-h-0 flex-col gap-4 overflow-y-auto md:flex">
+        {chats.length > 0 ? (
+          <div className="flex flex-col">
+            <p className="text-subtle px-2.5 pb-1.5 text-xs font-medium">Chats</p>
+            <ul className="flex flex-col gap-0.5">
+              {chats.map((chat) => (
+                <li key={chat.id}>
+                  <Link
+                    href={`/chat/${chat.id}`}
+                    title={chat.title}
+                    aria-current={active === chat.id ? "page" : undefined}
+                    className={`${item} block truncate leading-8 ${active === chat.id ? "bg-surface-2 text-text" : ""}`}
+                  >
+                    {chat.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {recent.length > 0 ? (
+          <div className="flex flex-col">
+            <p className="text-subtle px-2.5 pb-1.5 text-xs font-medium">Projects</p>
+            <ul className="flex flex-col gap-0.5">
+              {recent.map((project) => (
+                <li key={project.id}>
+                  <Link
+                    href={`/project/${project.id}`}
+                    title={project.name}
+                    className={`${item} block truncate leading-8`}
+                  >
+                    {project.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
 
       <div className="hidden flex-1 md:block" />
 

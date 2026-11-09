@@ -87,6 +87,10 @@ The provider account (OpenRouter) cannot pay for requests. Logs show `model_stre
 
 To check the key from a shell: `GET https://openrouter.ai/api/v1/credits` with the key as a bearer token shows total credits and usage.
 
+## Apply the chat agent migration (once)
+
+In the Supabase dashboard, open SQL Editor, paste the whole of `supabase/migrations/20261109000001_conversations.sql`, and run it. It creates `conversations`, `conversation_messages` and `conversation_documents` with RLS, and updates `export_user_data`. To undo: run `supabase/down/20261109000001_conversations.down.sql` (deletes all conversations).
+
 ## Deploy checklist
 
 - Environment variables set; `AI_MODEL_MODE` empty.

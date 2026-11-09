@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -7,9 +6,8 @@ import { HOME_PROMPT_ID, HomeSidebar } from "@/components/home/home-sidebar";
 import { StartIdeas } from "@/components/home/start-ideas";
 import { PromptBox } from "@/components/landing/prompt-box";
 import { getOptionalUser } from "@/lib/db/auth";
-import { getCreditBalance, listProjects } from "@/lib/db/projects";
+import { loadShell } from "@/lib/db/shell";
 import { PASSWORD_MIN } from "@/lib/security/limits";
-import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { greetingName, timeAgo } from "@/lib/workspace/home";
 
 import type { Metadata } from "next";
@@ -22,12 +20,7 @@ export default async function DashboardPage() {
   const user = await getOptionalUser();
   if (!user) redirect("/login?next=/dashboard");
 
-  const [projects, balance, store] = await Promise.all([
-    listProjects(),
-    getCreditBalance(user.id),
-    cookies(),
-  ]);
-  const theme = parseTheme(store.get(THEME_COOKIE)?.value);
+  const { projects, balance, theme, chats } = await loadShell(user.id);
   const name = greetingName(user.email);
 
   return (
@@ -39,6 +32,8 @@ export default async function DashboardPage() {
         recent={projects
           .slice(0, RECENT_IN_SIDEBAR)
           .map(({ id, name: title }) => ({ id, name: title }))}
+        chats={chats}
+        active="home"
       />
       <main id="main" className="min-w-0 flex-1 px-6 pt-12 pb-16 md:px-10 md:pt-20">
         <div className="mx-auto w-full max-w-3xl">
@@ -55,7 +50,23 @@ export default async function DashboardPage() {
           <h1 className="rise text-center text-[28px] leading-tight font-semibold tracking-[-0.02em] text-balance md:text-[34px]">
             {name ? `${name}, what are we building today?` : "What are we building today?"}
           </h1>
-          <div className="rise rise-1 mt-7">
+          <nav aria-label="Mode" className="rise rise-1 mt-6 flex justify-center">
+            <div className="border-hairline bg-surface-2 inline-flex rounded-full border p-1 text-[13px] font-medium">
+              <span
+                aria-current="page"
+                className="bg-surface text-text rounded-full px-4 py-1.5 shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
+              >
+                Build an app
+              </span>
+              <Link
+                href="/chat"
+                className="press text-muted hover:text-text rounded-full px-4 py-1.5"
+              >
+                Chat and documents
+              </Link>
+            </div>
+          </nav>
+          <div className="rise rise-1 mt-5">
             <PromptBox
               signedIn
               passwordMin={PASSWORD_MIN}

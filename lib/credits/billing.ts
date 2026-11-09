@@ -25,7 +25,8 @@ export interface DeductInput {
 
 export interface BillerOptions {
   userId: string;
-  projectId: string;
+  /** The project the work was for; null for the chat agent, which has no project. */
+  projectId: string | null;
   requestId: string;
   /** Characters sent to the model on each step; used only if usage is never reported. */
   inputChars: number;

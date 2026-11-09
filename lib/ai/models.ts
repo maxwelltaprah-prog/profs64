@@ -44,3 +44,24 @@ export function costUsd(modelId: string, inputTokens: number, outputTokens: numb
     (outputTokens * model.outputUsdPerMillion) / 1_000_000
   );
 }
+
+// Free models for the chat agent's 24-hour fallback after a person's credits for the day run out.
+// They cost nothing, are never billed, and are shared across all users under OpenRouter's free
+// request limit (50 a day without purchased credits, 1,000 a day after a one-off $10 purchase).
+// Both support tool calls, which document creation needs. Checked on OpenRouter 2026-11-09.
+export const FREE_MODELS: ReadonlyArray<ModelConfig> = [
+  {
+    id: "google/gemma-4-31b-it:free",
+    label: "Gemma 4 31B (free)",
+    inputUsdPerMillion: 0,
+    outputUsdPerMillion: 0,
+    maxOutputTokens: 4000,
+  },
+  {
+    id: "nvidia/nemotron-3-ultra-550b-a55b:free",
+    label: "Nemotron 3 Ultra (free)",
+    inputUsdPerMillion: 0,
+    outputUsdPerMillion: 0,
+    maxOutputTokens: 4000,
+  },
+];

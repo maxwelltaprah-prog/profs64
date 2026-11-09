@@ -86,6 +86,12 @@ This document describes what the code does and how each claim was checked. "Chec
 - The sign-in page remembers only a method name ("email", "google"...) in localStorage to mark "Last used". It is not an email address or a token.
 - **Verified:** allowlist, return-path, rate-limit and failure behaviour in unit tests (`tests/unit/oauth-providers.test.ts`). **Not verified:** a real provider round trip; that needs the provider configured in Supabase.
 
+## Chat agent and documents
+
+- Three new tables, RLS forced, default deny; owners read their own rows; users may insert only their own `user` messages; assistant replies and documents are service-only. The trigger functions are not executable by API roles (an integration test caught this before release). Verified by `tests/integration/conversations.test.ts` against Postgres: isolation between users, no forged replies or documents, no owner change, size and kind checks, cascade on account deletion, and inclusion in the data export.
+- Documents are never model-written files: the model supplies a bounded outline that is validated on write and again before rendering, and the rendered file is served as an attachment with `nosniff`. File names are reduced to safe characters. Slides contain text only, so `pptxgenjs`'s image parsing (and the `image-size` advisories) is never reached.
+- OmniRoute was evaluated and rejected: its free models come from pooling personal logins to coding tools, against those providers' terms, and every prompt would pass through a self-hosted proxy. The free fallback uses OpenRouter's own free models on the existing account.
+
 ## Reporting
 
 Report suspected vulnerabilities privately to the operator. Replace this line with a real contact before launch.

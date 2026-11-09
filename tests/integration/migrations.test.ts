@@ -44,7 +44,7 @@ describe.skipIf(!shimOnly)("migrations are reversible", () => {
             "select count(*)::int as n from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'",
           )
         ).rows[0]?.n;
-      expect(await tables()).toBe(6);
+      expect(await tables()).toBe(9);
 
       for (const sql of sqlFiles("supabase/down", ".down.sql").reverse()) await db.query(sql);
       expect(await tables()).toBe(0);
@@ -55,7 +55,7 @@ describe.skipIf(!shimOnly)("migrations are reversible", () => {
       expect(trigger.rowCount).toBe(0);
 
       for (const sql of sqlFiles("supabase/migrations", ".sql")) await db.query(sql);
-      expect(await tables()).toBe(6);
+      expect(await tables()).toBe(9);
       await db.query(
         "insert into auth.users (id, email) values (gen_random_uuid(), 'x@example.test')",
       );

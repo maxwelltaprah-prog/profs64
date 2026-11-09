@@ -10,12 +10,19 @@ import { type SupabaseClient } from "@supabase/supabase-js";
 
 export const STOP_EVENT = "chat_stop";
 
-export async function latestStopId(projectId: string, supabase: SupabaseClient): Promise<number> {
+/** Which running work a stop is for: a builder project or an agent conversation. */
+export type StopScope = "projectId" | "conversationId";
+
+export async function latestStopId(
+  projectId: string,
+  supabase: SupabaseClient,
+  scope: StopScope = "projectId",
+): Promise<number> {
   const { data, error } = await supabase
     .from("audit_log")
     .select("id")
     .eq("event", STOP_EVENT)
-    .eq("metadata->>projectId", projectId)
+    .eq(`metadata->>${scope}`, projectId)
     .order("id", { ascending: false })
     .limit(1);
   const id = (data as Array<{ id: number }> | null)?.[0]?.id;
@@ -28,12 +35,13 @@ export async function stopRequestedSince(
   projectId: string,
   afterId: number,
   supabase: SupabaseClient,
+  scope: StopScope = "projectId",
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from("audit_log")
     .select("id")
     .eq("event", STOP_EVENT)
-    .eq("metadata->>projectId", projectId)
+    .eq(`metadata->>${scope}`, projectId)
     .gt("id", afterId)
     .limit(1);
   return !error && Array.isArray(data) && data.length > 0;

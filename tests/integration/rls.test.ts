@@ -12,7 +12,17 @@ import {
   sqlState,
 } from "./helpers";
 
-const TABLES = ["profiles", "projects", "project_files", "messages", "credit_ledger", "audit_log"];
+const TABLES = [
+  "profiles",
+  "projects",
+  "project_files",
+  "messages",
+  "credit_ledger",
+  "audit_log",
+  "conversations",
+  "conversation_messages",
+  "conversation_documents",
+];
 
 let alice: string;
 let bob: string;

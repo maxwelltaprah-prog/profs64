@@ -145,6 +145,25 @@ export function createFakeModel(options: FakeModelOptions = {}) {
             usage: reported(1500, 420),
           },
         ];
+      } else if (request.includes("slides")) {
+        // The chat agent's document tool, with a small deck.
+        chunks = [
+          toolCall("d1", "create_document", {
+            kind: "pptx",
+            deck: {
+              title: "Team update",
+              slides: [
+                { title: "What we shipped", bullets: ["Chat agent", "Documents"] },
+                { title: "Next", body: "Free models when credits run out." },
+              ],
+            },
+          }),
+          {
+            type: "finish",
+            finishReason: { unified: "tool-calls", raw: undefined },
+            usage: reported(1200, 160),
+          },
+        ];
       } else if (request.includes("long")) {
         const words = Array.from({ length: 60 }, (_, i) => `word${i} `);
         chunks = [

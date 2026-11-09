@@ -127,6 +127,12 @@ export const LIMITS = {
   projectCreateUser: { name: "project-create-user", limit: 20, windowSeconds: 3600 },
   feedbackUser: { name: "feedback-user", limit: 120, windowSeconds: 600 },
   stopUser: { name: "stop-user", limit: 60, windowSeconds: 600 },
+  agentUser: { name: "agent-user", limit: 30, windowSeconds: 600 },
+  agentIp: { name: "agent-ip", limit: 90, windowSeconds: 600 },
+  // Free-model replies per person per day, so one account cannot use up the shared free quota.
+  agentFreeUser: { name: "agent-free-user", limit: 40, windowSeconds: 86400 },
+  conversationCreateUser: { name: "conversation-create-user", limit: 60, windowSeconds: 3600 },
+  documentDownloadUser: { name: "document-download-user", limit: 120, windowSeconds: 600 },
   attachUser: { name: "attach-user", limit: 20, windowSeconds: 600 },
   passwordChangeUser: { name: "password-change-user", limit: 5, windowSeconds: 3600 },
 } as const satisfies Record<string, LimiterConfig>;

@@ -70,6 +70,14 @@ export const chatBodySchema = z.strictObject({
 });
 export type ChatBody = z.infer<typeof chatBodySchema>;
 
+// The chat agent takes the conversation from the path, so the body is only the new message.
+export const agentChatBodySchema = chatBodySchema.omit({ id: true });
+
+export const conversationCreateSchema = z.strictObject({
+  title: z.string().trim().min(1).max(120),
+});
+export const conversationRenameSchema = conversationCreateSchema;
+
 export const deleteAccountSchema = z.strictObject({
   password: z.string().min(1).max(PASSWORD_MAX),
   confirm: z.literal(DELETE_CONFIRMATION),
