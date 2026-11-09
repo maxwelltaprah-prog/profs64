@@ -78,3 +78,45 @@ export function fileNameFor(title: string, kind: "pptx" | "docx" | "pdf"): strin
     .slice(0, 60);
   return `${base || "document"}.${kind}`;
 }
+
+// What the tool accepts. Weaker models (the free ones in particular) sometimes send the outline as
+// a JSON string, or leave out kind when deck or document already says which it is. The tool's
+// JSON schema still shows the proper object shapes; normaliseDocumentInput then parses, infers
+// and validates strictly, and explains the first problem so the model can correct it.
+const MAX_OUTLINE_STRING = 400_000;
+export const lenientDocumentInputSchema = z.object({
+  kind: z.enum(["pptx", "docx", "pdf"]).optional(),
+  deck: z.union([deckSpecSchema, z.string().max(MAX_OUTLINE_STRING)]).optional(),
+  document: z.union([documentSpecSchema, z.string().max(MAX_OUTLINE_STRING)]).optional(),
+});
+export type LenientDocumentInput = z.infer<typeof lenientDocumentInputSchema>;
+
+function parseMaybe(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}
+
+export function normaliseDocumentInput(
+  raw: unknown,
+): { ok: true; value: CreateDocumentInput } | { ok: false; error: string } {
+  if (typeof raw !== "object" || raw === null)
+    return { ok: false, error: "Send an object with kind and deck or document." };
+  const input = raw as Record<string, unknown>;
+  const deck = parseMaybe(input["deck"]);
+  const document = parseMaybe(input["document"]);
+  const kind =
+    input["kind"] ?? (deck !== undefined ? "pptx" : document !== undefined ? "docx" : undefined);
+  const candidate = kind === "pptx" ? { kind, deck } : { kind, document };
+  const result = createDocumentInputSchema.safeParse(candidate);
+  if (result.success) return { ok: true, value: result.data };
+  const issue = result.error.issues[0];
+  const where = issue?.path.length ? issue.path.join(".") : "the outline";
+  return {
+    ok: false,
+    error: `The outline is not valid at ${where}: ${issue?.message ?? "check its shape"}. Fix it and call create_document again.`,
+  };
+}

@@ -1,8 +1,9 @@
 import { tool } from "ai";
 
 import {
-  createDocumentInputSchema,
+  lenientDocumentInputSchema,
   MAX_SPEC_BYTES,
+  normaliseDocumentInput,
   specOf,
   type CreateDocumentInput,
 } from "@/lib/documents/spec";
@@ -25,9 +26,12 @@ export function createAgentTools(store: DocumentStore) {
   return {
     create_document: tool({
       description:
-        "Create a downloadable PowerPoint deck (kind pptx, with deck), Word document (kind docx, with document) or PDF (kind pdf, with document) from a structured outline.",
-      inputSchema: createDocumentInputSchema,
-      execute: async (input): Promise<DocumentToolOutput> => {
+        "Create a downloadable PowerPoint deck (kind pptx, with deck), Word document (kind docx, with document) or PDF (kind pdf, with document) from a structured outline. Pass deck or document as a JSON object, not a string.",
+      inputSchema: lenientDocumentInputSchema,
+      execute: async (raw): Promise<DocumentToolOutput> => {
+        const normalised = normaliseDocumentInput(raw);
+        if (!normalised.ok) return { ok: false, error: normalised.error };
+        const input = normalised.value;
         const spec = specOf(input);
         if (new TextEncoder().encode(JSON.stringify(spec)).length > MAX_SPEC_BYTES) {
           return { ok: false, error: "The document is too long. Shorten it and try again." };

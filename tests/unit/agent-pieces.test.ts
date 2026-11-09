@@ -85,6 +85,51 @@ describe("document tool", () => {
     });
   });
 
+  it("accepts an outline sent as a JSON string and infers the kind, as free models do", async () => {
+    const saved: unknown[] = [];
+    const tools = createAgentTools({
+      save: async (input) => {
+        saved.push(input);
+        return { id: "doc-2" };
+      },
+    });
+    const run = tools.create_document.execute as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    expect(await run({ deck: JSON.stringify(deck) }, {})).toEqual({
+      ok: true,
+      id: "doc-2",
+      kind: "pptx",
+      title: "Plan",
+    });
+    expect(
+      await run(
+        {
+          kind: "pdf",
+          document: JSON.stringify({ title: "T", blocks: [{ type: "paragraph", text: "x" }] }),
+        },
+        {},
+      ),
+    ).toMatchObject({ ok: true, kind: "pdf" });
+    expect(saved).toHaveLength(2);
+  });
+
+  it("explains exactly what is wrong so the model can fix it, and saves nothing", async () => {
+    const saved: unknown[] = [];
+    const tools = createAgentTools({ save: async (input) => (saved.push(input), { id: "x" }) });
+    const run = tools.create_document.execute as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<{ ok: boolean; error?: string }>;
+    const bad = await run({ kind: "pptx", deck: { title: "T", slides: [] } }, {});
+    expect(bad.ok).toBe(false);
+    expect(bad.error).toContain("deck.slides");
+    expect((await run({ kind: "docx", document: "{not json" }, {})).ok).toBe(false);
+    expect((await run({ kind: "exe", document: "{}" }, {})).ok).toBe(false);
+    expect(saved).toHaveLength(0);
+  });
+
   it("keeps only the kind of a document call when storing a reply", () => {
     const parts = compactAgentParts([
       { type: "text", text: "Here it is" },
