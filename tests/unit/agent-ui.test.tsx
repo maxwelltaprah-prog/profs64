@@ -5,7 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConversationView } from "@/components/chat/conversation-view";
 import { NewChat } from "@/components/chat/new-chat";
-import { documentStep, firstMessageKey, titleFromPrompt } from "@/lib/workspace/agent";
+import {
+  DOCUMENT_FAILED,
+  documentStep,
+  firstMessageKey,
+  titleFromPrompt,
+  visibleDocumentSteps,
+} from "@/lib/workspace/agent";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
@@ -44,6 +50,26 @@ describe("agent helpers", () => {
       state: "working",
     });
     expect(documentStep({ type: "text", text: "x" })).toBeNull();
+  });
+
+  it("never shows the tool's model-facing error text, and hides failed tries when one succeeded", () => {
+    const failed = {
+      type: "tool-create_document",
+      state: "output-available",
+      output: { ok: false, error: "Fix it and call create_document again." },
+    };
+    const errored = { type: "tool-create_document", state: "output-error" };
+    const done = {
+      type: "tool-create_document",
+      state: "output-available",
+      output: { ok: true, id: DOC, kind: "pdf", title: "Plan" },
+    };
+    expect(documentStep(failed)).toEqual({ state: "failed", message: DOCUMENT_FAILED });
+    expect([...visibleDocumentSteps([failed, errored, done, { type: "text", text: "x" }])]).toEqual(
+      [2],
+    );
+    // With no success, only the last failure is shown, once.
+    expect([...visibleDocumentSteps([failed, errored])]).toEqual([1]);
   });
 
   it("makes short titles from the first line", () => {

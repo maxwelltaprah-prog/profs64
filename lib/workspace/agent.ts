@@ -20,6 +20,9 @@ export const KIND_LABEL: Readonly<Record<DocumentKind, string>> = {
   pdf: "PDF",
 };
 
+export const DOCUMENT_FAILED =
+  "The document could not be created. Ask again, or describe it differently.";
+
 /** A document tool part: done with a document, still being written, or failed with a message. */
 export type DocumentStep =
   | { state: "done"; document: AgentDocument }
@@ -49,11 +52,9 @@ export function documentStep(part: unknown): DocumentStep | null {
         },
       };
     }
-    const error = isRecord(output) && typeof output["error"] === "string" ? output["error"] : null;
-    return {
-      state: "failed",
-      message: (error ?? "The document could not be created.").slice(0, 200),
-    };
+    // The tool's own error text is written for the model ("fix it and call again"), so the person
+    // sees a fixed sentence instead.
+    return { state: "failed", message: DOCUMENT_FAILED };
   }
   if (state === "output-error")
     return { state: "failed", message: "The document could not be created." };
@@ -113,3 +114,21 @@ export const AGENT_SUGGESTIONS: ReadonlyArray<{ label: string; prompt: string }>
   },
   { label: "Explain simply", prompt: "Explain this simply, with an example: " },
 ];
+
+// Failed attempts are only worth showing when nothing in the reply succeeded: a model that fixes
+// its own outline on the second try should look like one clean result.
+export function visibleDocumentSteps(parts: readonly unknown[]): Set<number> {
+  const steps = parts.map((part) => documentStep(part));
+  const anyDone = steps.some((step) => step?.state === "done");
+  const lastFailure = steps
+    .map((step, index) => (step?.state === "failed" ? index : -1))
+    .filter((index) => index >= 0)
+    .at(-1);
+  const visible = new Set<number>();
+  steps.forEach((step, index) => {
+    if (!step) return;
+    if (step.state === "failed" && (anyDone || index !== lastFailure)) return;
+    visible.add(index);
+  });
+  return visible;
+}

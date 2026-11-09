@@ -16,6 +16,7 @@ import {
   replyCredits,
   replyIsFree,
   replyText,
+  visibleDocumentSteps,
 } from "@/lib/workspace/agent";
 import { friendlyChatError } from "@/lib/workspace/chat-lines";
 import { creditsLabel } from "@/lib/workspace/outputs";
@@ -61,6 +62,7 @@ function AssistantReply({
   const credits = replyCredits(parts);
   const free = replyIsFree(parts);
   const text = replyText(parts);
+  const shown = visibleDocumentSteps(parts);
   return (
     <div className="chat-in flex flex-col gap-3">
       {parts.map((part, index) => {
@@ -76,7 +78,7 @@ function AssistantReply({
           );
         }
         const step = documentStep(part);
-        if (!step) return null;
+        if (!step || !shown.has(index)) return null;
         if (step.state === "done")
           return (
             <DocumentCard key={index} conversationId={conversationId} document={step.document} />
