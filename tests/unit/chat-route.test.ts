@@ -417,6 +417,31 @@ describe("one response at a time per account", () => {
   });
 });
 
+describe("provider failures", () => {
+  it("tells the person the assistant is unavailable when the provider account is out of credits, and charges nothing", async () => {
+    const { APICallError } = await import("ai");
+    const { MockLanguageModelV4 } = await import("ai/test");
+    chooseModel.mockImplementation(() => ({
+      model: new MockLanguageModelV4({
+        doStream: async () => {
+          throw new APICallError({
+            message: "This request requires more credits, or fewer max_tokens.",
+            url: "https://provider.example/v1/chat",
+            requestBodyValues: {},
+            statusCode: 402,
+            isRetryable: false,
+          });
+        },
+      }),
+      usedModelId: () => "z-ai/glm-5.2",
+    }));
+    const text = await drain(await (await load())(post(goodBody("hello"))));
+    expect(text).toContain("Buildr's AI provider limit was reached");
+    expect(text).not.toContain("max_tokens");
+    expect(deductCredits).not.toHaveBeenCalled();
+  });
+});
+
 describe("Stop and disconnects", () => {
   it("bills the tokens used when the person stops the stream", async () => {
     state.fake = { chunkDelayMs: 10 };

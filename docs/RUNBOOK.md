@@ -81,6 +81,12 @@ The refund and rejection behaviour is covered by `tests/integration/credits.test
 
 Supabase's built-in mailer allows only a few messages per hour and is meant for development. Once it is exhausted, sign-up returns 429 `email_send_limited` and the log shows `signup_email_send_limited`. The fix is custom SMTP: in the Supabase dashboard, Authentication, then Emails, then SMTP Settings, enter a provider (Resend, Postmark, SES or similar) and raise the rate limit under Authentication, then Rate Limits. Until then nobody can sign up or reset a password.
 
+## Every message fails ("Buildr's AI provider limit was reached")
+
+The provider account (OpenRouter) cannot pay for requests. Logs show `model_stream_error` with `providerStatus: 402`. Seen on 2026-11-08: total credits 0, and each request asks for up to 6,000 output tokens, which OpenRouter refuses when the balance cannot cover them (small requests may still work, so it looks intermittent). Fix: add credits at openrouter.ai, Settings, Credits, or set a higher limit on the key. Nothing is charged to users for these failures. `providerStatus: 429` means the provider is rate limiting instead; wait or raise the limit.
+
+To check the key from a shell: `GET https://openrouter.ai/api/v1/credits` with the key as a bearer token shows total credits and usage.
+
 ## Deploy checklist
 
 - Environment variables set; `AI_MODEL_MODE` empty.

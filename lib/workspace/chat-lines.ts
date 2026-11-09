@@ -2,6 +2,8 @@
 // path (already validated by the server) and our own fixed error strings are shown, never raw
 // tool output.
 
+import { isKnownStreamError } from "./stream-errors";
+
 export type ToolAction = "created" | "updated" | "edited" | "deleted" | "read" | "listed";
 
 export interface ToolLine {
@@ -103,8 +105,9 @@ export function friendlyChatError(error: unknown): string {
       return parsed["error"]["message"].slice(0, 200);
     }
   } catch {
-    // Not JSON: a network failure or a stream error.
+    // Not JSON: one of the server's fixed stream errors, or a network failure.
   }
+  if (isKnownStreamError(raw)) return raw;
   return "The message could not be sent. Check your connection and try again.";
 }
 

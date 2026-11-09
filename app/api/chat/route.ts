@@ -20,6 +20,7 @@ import { characterCount, sanitizeParts, toUiMessages, usagePart } from "@/lib/ai
 import { chooseModel } from "@/lib/ai/model-factory";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
 import { watchForStop } from "@/lib/ai/stop-watch";
+import { providerStatus, streamErrorText } from "@/lib/ai/stream-errors";
 import { SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
 import { createProjectTools } from "@/lib/ai/tools";
 import { createBiller } from "@/lib/credits/billing";
@@ -152,9 +153,12 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       },
       onError: ({ error }) => {
         // Logged without the message text: provider errors can echo prompt content.
+        // The status code is the useful part for the operator: 402 means the provider account is
+        // out of credits, 429 that it is rate limited.
         logger.error("model_stream_error", {
           requestId,
           errorName: error instanceof Error ? error.name : "unknown",
+          providerStatus: providerStatus(error) ?? null,
         });
       },
     });
@@ -168,9 +172,8 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       originalMessages: history,
       generateMessageId: () => assistantId,
       tools,
-      // Provider errors are replaced with a fixed message; raw error text is never sent to the browser.
-      onError: () =>
-        "The assistant ran into a problem. Your credits were charged only for what was used. Try again.",
+      // Provider errors are replaced with one of a few fixed messages; raw error text is never sent.
+      onError: (error) => streamErrorText(error),
       onEnd: async ({ messages, isAborted, isCancelled, outcome }) => {
         // Billing first and unconditionally: whatever ended the stream, settle() runs once.
         try {
