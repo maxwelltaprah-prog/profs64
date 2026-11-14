@@ -55,11 +55,33 @@ test("the landing composer uses 16px text and the explainer sections show their 
 
   const prompt = page.getByLabel("Describe the app you want to build");
   expect(await prompt.evaluate((element) => getComputedStyle(element).fontSize)).toBe("16px");
+  expect(
+    await prompt.evaluate((element) => Number.parseFloat(getComputedStyle(element).minHeight)),
+  ).toBeGreaterThanOrEqual(96);
+  expect(
+    await prompt.evaluate((element) => Number.parseFloat(getComputedStyle(element).minHeight)),
+  ).toBeLessThanOrEqual(112);
+  expect(
+    await prompt.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeGreaterThanOrEqual(700);
+  await expect(page.getByRole("heading", { name: "What do you want to build?" })).toHaveCSS(
+    "font-size",
+    "48px",
+  );
+  await expect(page.getByText("A clearer path from idea to project")).toHaveCount(0);
+  await expect(page.getByText("Need a starting point? Try one of these")).toBeVisible();
+  await expect(page.getByText("Ctrl Enter")).toHaveCount(0);
+  const generate = page.getByRole("button", { name: "Generate for free" });
+  await expect(generate).toBeDisabled();
+  await prompt.fill("A coffee shop");
+  await expect(generate).toBeEnabled();
+  await expect(generate).toHaveAttribute("title", "Generate for free");
+  await expect(generate.locator("svg")).toBeVisible();
 
   const how = page.locator("#how");
   const security = page.locator("#security");
   const faq = page.locator("#faq");
-  expect(await how.locator("svg").count()).toBe(4);
+  expect(await how.locator("li.stagger-item svg").count()).toBe(4);
   expect(await security.locator("svg").count()).toBe(6);
   expect(await faq.locator("svg").count()).toBe(4);
   await how.scrollIntoViewIfNeeded();
@@ -97,13 +119,15 @@ test("the project examples show their local preview images", async ({ page }) =>
   }
 });
 
-test("the hand-drawn workflow illustration fits a phone viewport", async ({ page }) => {
+test("the landing page fits a phone viewport without the workflow illustration", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
 
   await expect(
     page.getByRole("img", { name: /example of a coffee shop brief becoming/i }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );

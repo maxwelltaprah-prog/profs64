@@ -20,7 +20,6 @@ import { ExampleGallery } from "@/components/landing/example-gallery";
 import { PromptBox } from "@/components/landing/prompt-box";
 import { Reveal } from "@/components/landing/reveal";
 import { SiteHeader } from "@/components/landing/site-header";
-import { WorkflowIllustration } from "@/components/landing/workflow-illustration";
 import { iconProps } from "@/components/ui/icons";
 import { getOptionalUser } from "@/lib/db/auth";
 import { liveProviders } from "@/lib/db/auth-providers";
@@ -147,33 +146,24 @@ export default async function Home() {
       />
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-6">
-        <section className="pt-14 pb-12 md:pt-20">
-          <div className="grid items-center gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-            <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-              <h1 className="rise max-w-2xl text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.03em] text-balance md:text-6xl">
-                Describe it.
-                <br />
-                Build it your way.
-              </h1>
-              <p className="rise rise-1 text-muted mt-5 max-w-xl text-lg leading-8 text-balance">
-                Turn a plain description into real project files you can read, change and make your
-                own.
-              </p>
-              <div className="rise rise-2 mt-8 w-full max-w-2xl text-left">
-                <PromptBox
-                  signedIn={Boolean(user)}
-                  passwordMin={PASSWORD_MIN}
-                  providers={user ? [] : await liveProviders()}
-                />
-              </div>
-              <p className="rise rise-3 text-subtle mt-5 text-[13px]">
-                Twenty credits to start. No card. Confirm your email and you are in.
-              </p>
-            </div>
-            <div className="rise rise-2 w-full min-w-0 px-2 sm:px-6 lg:px-0">
-              <WorkflowIllustration />
-            </div>
+        <section className="landing-hero relative isolate pt-12 pb-14 text-center md:pt-16 md:pb-20">
+          <h1 className="rise mx-auto max-w-3xl text-[2.25rem] leading-[1.08] font-semibold tracking-[-0.04em] text-balance md:text-5xl">
+            What do you want to build?
+          </h1>
+          <p className="rise rise-1 text-muted mx-auto mt-4 max-w-2xl text-base leading-7 text-balance md:text-lg">
+            Start with a sentence. Buildr turns your idea into project files you can inspect, edit
+            and make your own.
+          </p>
+          <div className="rise rise-2 mx-auto mt-6 w-full max-w-3xl text-left">
+            <PromptBox
+              signedIn={Boolean(user)}
+              passwordMin={PASSWORD_MIN}
+              providers={user ? [] : await liveProviders()}
+            />
           </div>
+          <p className="rise rise-3 text-subtle mt-4 text-[13px]">
+            Twenty credits to start. No card. Confirm your email and you are in.
+          </p>
         </section>
 
         <section aria-label="What happens after you press Generate" className="rise rise-4 pb-20">

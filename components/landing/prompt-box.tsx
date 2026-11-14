@@ -1,6 +1,15 @@
 "use client";
 
-import { ChevronDown, FileText, Folder, ListChecks, Paperclip, Plus, X } from "lucide-react";
+import {
+  ArrowUp,
+  ChevronDown,
+  FileText,
+  Folder,
+  ListChecks,
+  Paperclip,
+  Plus,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   useEffect,
@@ -36,10 +45,10 @@ import {
 const START_PATH = "/start";
 
 const EXAMPLES = [
-  "A landing page for a coffee shop with a menu and opening hours",
-  "A habit tracker with a weekly grid and streak counter",
-  "A portfolio site with a projects grid and a contact form",
-  "An internal tool to log expenses with a monthly total",
+  "A coffee shop with a menu and opening hours",
+  "A habit tracker with a weekly grid and streaks",
+  "A portfolio with projects and a contact form",
+  "An expense log with monthly totals",
 ];
 
 // The example gallery further down the page fills the box through this event.
@@ -85,7 +94,6 @@ export function PromptBox({
   const [tab, setTab] = useState<Tab>("signup");
   const [error, setError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
-  const [isMac, setIsMac] = useState(false);
   const [mode, setMode] = useState<PromptMode>("build");
   const [attachments, setAttachments] = useState<PromptAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -94,12 +102,6 @@ export function PromptBox({
   const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(null);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [projectError, setProjectError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Platform is only known in the browser; render "Ctrl" on the server and switch after mount.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMac(/mac|iphone|ipad/i.test(navigator.userAgent));
-  }, []);
 
   useEffect(() => {
     const onPick = (event: Event) => {
@@ -241,7 +243,7 @@ export function PromptBox({
         <label htmlFor={textareaId} className="sr-only">
           Describe the app you want to build
         </label>
-        <div className="transition-ui border-input bg-surface ring-line-focus rounded-xl border">
+        <div className="transition-ui border-hairline-strong bg-surface ring-line-focus rounded-2xl border shadow-lg">
           {attachments.length > 0 ? (
             <ul aria-label="Files to attach" className="flex flex-wrap gap-2 px-4 pt-4">
               {attachments.map((attachment) => (
@@ -275,14 +277,16 @@ export function PromptBox({
               if (error) setError(null);
             }}
             onKeyDown={onKeyDown}
-            rows={4}
+            rows={3}
             maxLength={CHAT_TEXT_MAX_CHARS + 1}
             placeholder="Describe the app you want to build"
-            aria-describedby={error ? `${textareaId}-error` : `${textareaId}-hint`}
+            aria-describedby={
+              error ? `${textareaId}-error` : remaining < 500 ? `${textareaId}-hint` : undefined
+            }
             aria-invalid={error ? true : undefined}
-            className="text-text placeholder:text-subtle block w-full resize-none bg-transparent px-5 pt-5 pb-2 text-base leading-7 focus-visible:outline-none"
+            className="text-text placeholder:text-subtle block min-h-24 w-full resize-none bg-transparent px-5 pt-4 pb-2 text-base leading-7 focus-visible:outline-none sm:min-h-28"
           />
-          <div className="flex flex-col gap-3 px-3 pb-3">
+          <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <div
                 role="group"
@@ -401,17 +405,22 @@ export function PromptBox({
                 <Paperclip {...iconProps} size={14} />
               </Button>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <p
-                id={`${textareaId}-hint`}
-                className="text-subtle hidden text-xs tabular-nums sm:block"
-              >
-                {remaining < 500 ? `${remaining} characters left` : `${isMac ? "⌘" : "Ctrl"} Enter`}
+            {remaining < 500 ? (
+              <p id={`${textareaId}-hint`} className="text-subtle ml-auto text-xs tabular-nums">
+                {remaining} characters left
               </p>
-              <Button type="submit" loading={leaving} className="ml-auto">
-                {signedIn ? "Generate" : "Generate for free"}
-              </Button>
-            </div>
+            ) : null}
+            <Button
+              type="submit"
+              size="icon"
+              loading={leaving}
+              disabled={!trimmed}
+              aria-label={signedIn ? "Generate" : "Generate for free"}
+              title={signedIn ? "Generate" : "Generate for free"}
+              className="ml-auto size-10 rounded-full"
+            >
+              <ArrowUp {...iconProps} size={19} />
+            </Button>
           </div>
         </div>
         {error ? (
@@ -432,23 +441,26 @@ export function PromptBox({
           </p>
         ) : null}
         {showExamples ? (
-          <ul className="flex flex-wrap justify-center gap-2" aria-label="Example prompts">
-            {EXAMPLES.map((example) => (
-              <li key={example}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setText(example);
-                    setError(null);
-                    document.getElementById(textareaId)?.focus();
-                  }}
-                  className="press border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-text rounded-full border px-3 py-1 text-xs"
-                >
-                  {example}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="flex flex-col items-center gap-2.5">
+            <p className="text-subtle text-xs">Need a starting point? Try one of these</p>
+            <ul className="flex flex-wrap justify-center gap-2" aria-label="Example prompts">
+              {EXAMPLES.map((example) => (
+                <li key={example}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setText(example);
+                      setError(null);
+                      document.getElementById(textareaId)?.focus();
+                    }}
+                    className="press border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-text rounded-full border px-3.5 py-1.5 text-xs"
+                  >
+                    {example}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
       </form>
 

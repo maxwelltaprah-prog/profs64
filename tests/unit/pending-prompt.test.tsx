@@ -105,10 +105,18 @@ describe("pending prompt storage", () => {
 });
 
 describe("PromptBox", () => {
-  it("asks for a description before doing anything", async () => {
+  it("keeps Generate disabled until a non-empty description is entered", async () => {
     render(<PromptBox signedIn={false} passwordMin={12} />);
-    await userEvent.click(screen.getByRole("button", { name: /generate/i }));
-    expect(screen.getByRole("alert").textContent).toBe("Describe the app you want to build.");
+    const user = userEvent.setup();
+    const generate = screen.getByRole("button", { name: "Generate for free" });
+    const prompt = screen.getByLabelText(/describe the app/i);
+
+    expect(generate.matches(":disabled")).toBe(true);
+    await user.type(prompt, "   ");
+    expect(generate.matches(":disabled")).toBe(true);
+    await user.type(prompt, "A coffee shop site");
+    expect(generate.matches(":disabled")).toBe(false);
+
     expect(readPendingPrompt()).toBeNull();
     expect(document.querySelector("dialog")?.hasAttribute("open")).toBe(false);
   });

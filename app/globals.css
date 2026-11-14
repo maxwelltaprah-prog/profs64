@@ -415,6 +415,20 @@
     animation-delay: 300ms;
   }
 
+  .landing-hero::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 auto;
+    height: min(42rem, 100%);
+    background: radial-gradient(
+      ellipse at 50% 20%,
+      color-mix(in srgb, var(--accent) 10%, transparent),
+      transparent 68%
+    );
+    content: "";
+    pointer-events: none;
+  }
+
   /* Page-load entrance for the hero: one staggered sequence. */
   .rise {
     opacity: 0;
