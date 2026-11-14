@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" fill="none">
+  <rect width="640" height="480" fill="#F7F9F8"/>
+  <rect width="640" height="58" fill="#FFFFFF"/>
+  <path d="M0 57.5h640" stroke="#E7ECE9"/>
+  <rect x="26" y="18" width="22" height="22" rx="6" fill="#276B4F"/>
+  <path d="m31 29 4 4 8-9" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+  <text x="58" y="35" fill="#25342B" font-family="Arial,sans-serif" font-size="14" font-weight="700">northstar status</text>
+  <text x="535" y="34" fill="#78877D" font-family="Arial,sans-serif" font-size="10">SUBSCRIBE</text>
+  <text x="42" y="102" fill="#26372D" font-family="Arial,sans-serif" font-size="23" font-weight="700">System status</text>
+  <text x="42" y="121" fill="#87938B" font-family="Arial,sans-serif" font-size="10">A clear view of how everything is running.</text>
+  <rect x="42" y="143" width="556" height="64" rx="10" fill="#E8F4EB"/>
+  <circle cx="73" cy="175" r="14" fill="#CDE8D3"/>
+  <path d="m67 175 4 4 8-9" stroke="#32804D" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+  <text x="100" y="173" fill="#2C6842" font-family="Arial,sans-serif" font-size="13" font-weight="700">All systems operational</text>
+  <text x="100" y="190" fill="#64806C" font-family="Arial,sans-serif" font-size="9">No incidents reported today</text>
+  <text x="42" y="239" fill="#26372D" font-family="Arial,sans-serif" font-size="13" font-weight="700">Services</text>
+  <text x="540" y="239" fill="#87938B" font-family="Arial,sans-serif" font-size="9">LAST 90 DAYS</text>
+  <rect x="42" y="252" width="556" height="150" rx="10" fill="#FFFFFF" stroke="#E6EBE8"/>
+  <path d="M42 289h556M42 326h556M42 363h556" stroke="#EDF1EE"/>
+  <circle cx="66" cy="271" r="4" fill="#43A765"/><text x="80" y="275" fill="#36443B" font-family="Arial,sans-serif" font-size="10">API</text><text x="119" y="275" fill="#8A978E" font-family="Arial,sans-serif" font-size="9">99.99% uptime</text><text x="528" y="275" fill="#39804E" font-family="Arial,sans-serif" font-size="9">Operational</text>
+  <circle cx="66" cy="308" r="4" fill="#43A765"/><text x="80" y="312" fill="#36443B" font-family="Arial,sans-serif" font-size="10">Dashboard</text><text x="143" y="312" fill="#8A978E" font-family="Arial,sans-serif" font-size="9">99.98% uptime</text><text x="528" y="312" fill="#39804E" font-family="Arial,sans-serif" font-size="9">Operational</text>
+  <circle cx="66" cy="345" r="4" fill="#43A765"/><text x="80" y="349" fill="#36443B" font-family="Arial,sans-serif" font-size="10">File storage</text><text x="145" y="349" fill="#8A978E" font-family="Arial,sans-serif" font-size="9">100% uptime</text><text x="528" y="349" fill="#39804E" font-family="Arial,sans-serif" font-size="9">Operational</text>
+  <circle cx="66" cy="382" r="4" fill="#43A765"/><text x="80" y="386" fill="#36443B" font-family="Arial,sans-serif" font-size="10">Notifications</text><text x="151" y="386" fill="#8A978E" font-family="Arial,sans-serif" font-size="9">99.97% uptime</text><text x="528" y="386" fill="#39804E" font-family="Arial,sans-serif" font-size="9">Operational</text>
+  <text x="42" y="433" fill="#26372D" font-family="Arial,sans-serif" font-size="12" font-weight="700">Recent updates</text>
+  <circle cx="49" cy="454" r="4" fill="#43A765"/><text x="62" y="457" fill="#58665D" font-family="Arial,sans-serif" font-size="9">All services operating normally</text><text x="512" y="457" fill="#9AA49D" font-family="Arial,sans-serif" font-size="8">Today, 9:41 AM</text>
+</svg>

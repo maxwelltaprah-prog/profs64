@@ -1,3 +1,18 @@
+import {
+  BrainCircuit,
+  CircleDollarSign,
+  Database,
+  Eye,
+  FileCode2,
+  FolderLock,
+  Gauge,
+  KeyRound,
+  MessageSquareText,
+  Rocket,
+  ShieldCheck,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import { BuildDemo } from "@/components/landing/build-demo";
@@ -5,6 +20,8 @@ import { ExampleGallery } from "@/components/landing/example-gallery";
 import { PromptBox } from "@/components/landing/prompt-box";
 import { Reveal } from "@/components/landing/reveal";
 import { SiteHeader } from "@/components/landing/site-header";
+import { WorkflowIllustration } from "@/components/landing/workflow-illustration";
+import { iconProps } from "@/components/ui/icons";
 import { getOptionalUser } from "@/lib/db/auth";
 import { liveProviders } from "@/lib/db/auth-providers";
 import { PASSWORD_MIN } from "@/lib/security/limits";
@@ -16,18 +33,22 @@ const buttonBase =
 // the product does not keep.
 const STEPS = [
   {
+    icon: MessageSquareText,
     title: "You describe the app",
     body: "One sentence or a page of notes. The description is validated, size-capped and stored with the project as the first message.",
   },
   {
+    icon: BrainCircuit,
     title: "The model reads your files",
     body: "It sees your project through tools only: list, read, write, edit, delete. There is no shell, no network and no access to anyone else's project.",
   },
   {
+    icon: FileCode2,
     title: "Each change is written and shown",
     body: "Every file the model creates or edits appears in the tree as it happens, with the code beside it. Paths are checked in code, not in the prompt.",
   },
   {
+    icon: CircleDollarSign,
     title: "The request is billed from real usage",
     body: "Input and output tokens are priced at the model's rate and written to an append-only ledger. Stop ends the stream and bills what ran.",
   },
@@ -35,31 +56,37 @@ const STEPS = [
 
 const CONTROLS = [
   {
+    icon: FolderLock,
     term: "Project isolation",
     detail:
       "Row-level security on every table, default deny, with ownership re-checked in every server route. Another account gets a 404, not a permission error.",
   },
   {
+    icon: Wrench,
     term: "No model side effects",
     detail:
       "The assistant can only call five file tools, each with a path allowlist and size caps enforced in code. File contents are passed to the model as untrusted data, never as instructions.",
   },
   {
+    icon: ShieldCheck,
     term: "Strict content security policy",
     detail:
       "Per-request script nonces, no inline styles, no eval. Model output is rendered as text, never as HTML.",
   },
   {
+    icon: Gauge,
     term: "Spending limits",
     detail:
       "A per-step output cap, a step cap, a request timeout, a daily credit cap per account and a kill switch for the whole assistant.",
   },
   {
+    icon: Database,
     term: "Your data, on request",
     detail:
       "Export everything as JSON from the account page. Delete the account and its projects, files and messages are removed; ledger and audit rows are kept without the account id.",
   },
   {
+    icon: KeyRound,
     term: "Abuse resistance",
     detail:
       "Rate limits per account and per address on sign-in, sign-up, project creation and chat. Passwords are checked against known breaches before they are accepted.",
@@ -68,18 +95,22 @@ const CONTROLS = [
 
 const FAQ = [
   {
+    icon: Eye,
     q: "Who can see what I type?",
     a: "Your messages and files are stored in the project database and sent to the model provider through OpenRouter for each request. The subprocessors are listed in the security notes. Buildr staff do not read prompts; prompts and file contents are kept out of logs.",
   },
   {
+    icon: CircleDollarSign,
     q: "What does a credit cost?",
     a: "One credit covers three cents of model usage at the provider's published rate. Each request is rounded up to the cent, with a minimum of a tenth of a credit once the model has run. New accounts start with twenty.",
   },
   {
+    icon: Rocket,
     q: "Can I run or deploy what it builds?",
     a: "Not from Buildr yet. You can read every file in the workspace. Live preview, export to GitHub, deployment and buying more credits are on the roadmap and are not available today.",
   },
   {
+    icon: KeyRound,
     q: "Is there single sign-on or two-factor authentication?",
     a: "Not yet. Accounts use email and password with confirmation. Both are on the list for team plans.",
   },
@@ -116,24 +147,33 @@ export default async function Home() {
       />
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-6">
-        <section className="flex flex-col items-center pt-16 pb-12 text-center md:pt-24">
-          <h1 className="rise max-w-4xl text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.03em] text-balance md:text-7xl">
-            Describe it. Buildr builds it.
-          </h1>
-          <p className="rise rise-1 text-muted mt-6 max-w-2xl text-lg leading-8 text-balance">
-            Bring a landing page, an internal tool or a whole product to life from a plain
-            description. The files are yours to read, line by line, as they are written.
-          </p>
-          <div className="rise rise-2 mt-10 w-full max-w-3xl text-left">
-            <PromptBox
-              signedIn={Boolean(user)}
-              passwordMin={PASSWORD_MIN}
-              providers={user ? [] : await liveProviders()}
-            />
+        <section className="pt-14 pb-12 md:pt-20">
+          <div className="grid items-center gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+            <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+              <h1 className="rise max-w-2xl text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.03em] text-balance md:text-6xl">
+                Describe it.
+                <br />
+                Build it your way.
+              </h1>
+              <p className="rise rise-1 text-muted mt-5 max-w-xl text-lg leading-8 text-balance">
+                Turn a plain description into real project files you can read, change and make your
+                own.
+              </p>
+              <div className="rise rise-2 mt-8 w-full max-w-2xl text-left">
+                <PromptBox
+                  signedIn={Boolean(user)}
+                  passwordMin={PASSWORD_MIN}
+                  providers={user ? [] : await liveProviders()}
+                />
+              </div>
+              <p className="rise rise-3 text-subtle mt-5 text-[13px]">
+                Twenty credits to start. No card. Confirm your email and you are in.
+              </p>
+            </div>
+            <div className="rise rise-2 w-full min-w-0 px-2 sm:px-6 lg:px-0">
+              <WorkflowIllustration />
+            </div>
           </div>
-          <p className="rise rise-3 text-subtle mt-6 text-[13px]">
-            Twenty credits to start. No card. Confirm your email and you are in.
-          </p>
         </section>
 
         <section aria-label="What happens after you press Generate" className="rise rise-4 pb-20">
@@ -175,14 +215,27 @@ export default async function Home() {
                   line or a page.
                 </p>
               </div>
-              <ol className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
-                {STEPS.map((step, index) => (
-                  <li key={step.title} className="border-hairline border-t pt-4">
-                    <p className="text-subtle font-mono text-xs tabular-nums">{index + 1}</p>
-                    <h3 className="mt-2 text-[15px] font-medium">{step.title}</h3>
-                    <p className="text-muted mt-2 text-[14px] leading-6">{step.body}</p>
-                  </li>
-                ))}
+              <ol className="grid gap-3 sm:grid-cols-2">
+                {STEPS.map((step, index) => {
+                  const Icon: LucideIcon = step.icon;
+                  return (
+                    <li
+                      key={step.title}
+                      className="stagger-item border-hairline bg-surface lift rounded-xl border p-4 sm:p-5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="section-icon bg-accent-subtle text-accent flex size-10 items-center justify-center rounded-lg">
+                          <Icon {...iconProps} size={19} />
+                        </span>
+                        <span className="text-subtle font-mono text-xs tabular-nums">
+                          0{index + 1}
+                        </span>
+                      </div>
+                      <h3 className="mt-4 text-[15px] font-medium">{step.title}</h3>
+                      <p className="text-muted mt-2 text-[14px] leading-6">{step.body}</p>
+                    </li>
+                  );
+                })}
               </ol>
             </div>
           </Reveal>
@@ -204,16 +257,26 @@ export default async function Home() {
                   what has been verified and what has not, is written down in the security notes.
                 </p>
               </div>
-              <dl className="divide-hairline divide-y">
-                {CONTROLS.map((control) => (
-                  <div
-                    key={control.term}
-                    className="grid gap-2 py-5 sm:grid-cols-[12rem_minmax(0,1fr)]"
-                  >
-                    <dt className="text-[15px] font-medium">{control.term}</dt>
-                    <dd className="text-muted text-[14px] leading-6">{control.detail}</dd>
-                  </div>
-                ))}
+              <dl className="grid gap-3 sm:grid-cols-2">
+                {CONTROLS.map((control) => {
+                  const Icon: LucideIcon = control.icon;
+                  return (
+                    <div
+                      key={control.term}
+                      className="stagger-item border-hairline bg-surface rounded-xl border p-4"
+                    >
+                      <dt className="flex items-center gap-3 text-[15px] font-medium">
+                        <span className="section-icon bg-accent-subtle text-accent mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg">
+                          <Icon {...iconProps} size={17} />
+                        </span>
+                        {control.term}
+                      </dt>
+                      <dd className="text-muted mt-1.5 ml-12 text-[14px] leading-6">
+                        {control.detail}
+                      </dd>
+                    </div>
+                  );
+                })}
               </dl>
             </div>
           </Reveal>
@@ -306,12 +369,22 @@ export default async function Home() {
                 Questions teams ask first
               </h2>
               <dl className="divide-hairline divide-y">
-                {FAQ.map((item) => (
-                  <div key={item.q} className="py-5">
-                    <dt className="text-[15px] font-medium">{item.q}</dt>
-                    <dd className="text-muted mt-2 max-w-2xl text-[14px] leading-6">{item.a}</dd>
-                  </div>
-                ))}
+                {FAQ.map((item) => {
+                  const Icon: LucideIcon = item.icon;
+                  return (
+                    <div key={item.q} className="stagger-item py-5">
+                      <dt className="flex items-start gap-3 text-[15px] font-medium">
+                        <span className="section-icon bg-surface-2 text-muted mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg">
+                          <Icon {...iconProps} size={17} />
+                        </span>
+                        {item.q}
+                      </dt>
+                      <dd className="text-muted mt-2 ml-12 max-w-2xl text-[14px] leading-6">
+                        {item.a}
+                      </dd>
+                    </div>
+                  );
+                })}
               </dl>
             </div>
           </Reveal>

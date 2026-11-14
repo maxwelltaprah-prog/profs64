@@ -59,6 +59,21 @@ describe("pending prompt storage", () => {
     expect(entry?.projectId).toBe("p1");
   });
 
+  it("keeps plan mode and validated attachments with the pending prompt", () => {
+    savePendingPrompt(
+      "Build a coffee shop site",
+      "p1",
+      [{ name: "menu.md", content: "# Menu" }],
+      "plan",
+    );
+    expect(readPendingPrompt()).toMatchObject({
+      text: "Build a coffee shop site",
+      projectId: "p1",
+      mode: "plan",
+      attachments: [{ name: "menu.md", content: "# Menu" }],
+    });
+  });
+
   it("ignores tampered storage instead of throwing", () => {
     window.localStorage.setItem(PENDING_PROMPT_KEY, "{not json");
     expect(readPendingPrompt()).toBeNull();
@@ -115,6 +130,41 @@ describe("PromptBox", () => {
     expect(screen.getByRole("button", { name: "Sign in" })).toBeDefined();
   });
 
+  it("shows enabled Google sign-in in the account dialog", async () => {
+    render(<PromptBox signedIn={false} passwordMin={12} providers={["google"]} />);
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/describe the app/i), "A coffee shop site");
+    await user.click(screen.getByRole("button", { name: "Generate for free" }));
+    expect(await screen.findByRole("link", { name: "Sign up with Google" })).toBeDefined();
+  });
+
+  it("removes the framework badge and offers build, plan and file attachments", async () => {
+    render(<PromptBox signedIn={false} passwordMin={12} />);
+    expect(screen.queryByText("Vite, React, Tailwind")).toBeNull();
+    expect(screen.getByRole("group", { name: "Generation mode" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Plan" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Attach files" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "New project" })).toBeDefined();
+  });
+
+  it("preserves planning mode and attached text files through the sign-up handoff", async () => {
+    render(<PromptBox signedIn={false} passwordMin={12} />);
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/describe the app/i), "A coffee shop site");
+    await user.click(screen.getByRole("button", { name: "Plan" }));
+    await user.upload(
+      document.querySelector('input[type="file"]') as HTMLInputElement,
+      new File(["# Menu"], "menu.md", { type: "text/markdown" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Generate for free" }));
+
+    expect(readPendingPrompt()).toMatchObject({
+      text: "A coffee shop site",
+      mode: "plan",
+      attachments: [{ name: "menu.md", content: "# Menu" }],
+    });
+  });
+
   it("sends the signup with the start path so the email link lands there", async () => {
     const fetchMock = vi
       .fn()
@@ -155,6 +205,28 @@ describe("PromptBox", () => {
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/project/p-direct"));
     expect(readPendingPrompt()).toMatchObject({ text: "A habit tracker", projectId: "p-direct" });
     expect(document.querySelector("dialog")?.hasAttribute("open")).toBe(false);
+  });
+
+  it("lists existing projects and sends a new prompt to the selected project", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        projects: [{ id: "p-existing", name: "Coffee shop" }],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<PromptBox signedIn={true} passwordMin={12} />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "New project" }));
+    await user.click(await screen.findByRole("button", { name: "Coffee shop" }));
+    await user.type(screen.getByLabelText(/describe the app/i), "Add a seasonal menu");
+    await user.click(screen.getByRole("button", { name: "Generate" }));
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/project/p-existing"));
+    expect(readPendingPrompt()).toMatchObject({
+      text: "Add a seasonal menu",
+      projectId: "p-existing",
+    });
   });
 
   it("falls back to /start, which can show the error, when creating the project fails", async () => {

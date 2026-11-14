@@ -41,4 +41,21 @@ describe("liveProviders", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 503 })));
     expect(await liveProviders(10 + 6 * 60 * 1000)).toEqual(["apple"]);
   });
+
+  it("uses the configured provider if Supabase settings cannot be reached", async () => {
+    vi.stubEnv("OAUTH_PROVIDERS", "google");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    expect(await liveProviders(1_000)).toEqual(["google"]);
+  });
+
+  it("refreshes an empty provider list promptly after a provider is enabled", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ external: { google: false } }))
+      .mockResolvedValueOnce(Response.json({ external: { google: true } }));
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await liveProviders(1_000)).toEqual([]);
+    expect(await liveProviders(17_000)).toEqual(["google"]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });

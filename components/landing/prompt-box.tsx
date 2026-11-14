@@ -1,8 +1,16 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ChevronDown, FileText, Folder, ListChecks, Paperclip, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { ProviderButtons } from "@/components/auth/provider-buttons";
@@ -10,8 +18,20 @@ import { Button } from "@/components/ui/button";
 import { iconProps } from "@/components/ui/icons";
 import { CHAT_TEXT_MAX_CHARS } from "@/lib/security/limits";
 import { type OAuthProvider } from "@/lib/security/oauth-providers";
+import {
+  ATTACHMENT_PROBLEM_TEXT,
+  checkAttachment,
+  MAX_ATTACHMENT_BYTES,
+  MAX_ATTACHMENTS_PER_MESSAGE,
+} from "@/lib/workspace/attachments";
 import { createProjectForPrompt } from "@/lib/workspace/open-project";
-import { normalisePromptText, savePendingPrompt } from "@/lib/workspace/pending-prompt";
+import {
+  normalisePromptText,
+  PLAN_DIRECTIVE,
+  savePendingPrompt,
+  type PendingAttachment,
+  type PromptMode,
+} from "@/lib/workspace/pending-prompt";
 
 const START_PATH = "/start";
 
@@ -26,6 +46,17 @@ const EXAMPLES = [
 export const PICK_EXAMPLE_EVENT = "buildr:pick-example";
 
 type Tab = "signup" | "login";
+type ProjectOption = { id: string; name: string };
+type PromptAttachment = PendingAttachment & { bytes: number };
+
+function readTextFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.readAsText(file);
+  });
+}
 
 // The prompt is the first thing on the page. Signing in is asked for only when the person
 // commits, and the prompt is kept so nothing they typed is lost on the way.
@@ -47,6 +78,7 @@ export function PromptBox({
 }) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
+  const filePicker = useRef<HTMLInputElement>(null);
   const generatedId = useId();
   const textareaId = inputId ?? generatedId;
   const [text, setText] = useState("");
@@ -54,6 +86,14 @@ export function PromptBox({
   const [error, setError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [isMac, setIsMac] = useState(false);
+  const [mode, setMode] = useState<PromptMode>("build");
+  const [attachments, setAttachments] = useState<PromptAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [projectMenuOpen, setProjectMenuOpen] = useState(false);
+  const [projects, setProjects] = useState<ProjectOption[] | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(null);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [projectError, setProjectError] = useState<string | null>(null);
 
   useEffect(() => {
     // Platform is only known in the browser; render "Ctrl" on the server and switch after mount.
@@ -78,6 +118,59 @@ export function PromptBox({
   const trimmed = normalisePromptText(text);
   const remaining = CHAT_TEXT_MAX_CHARS - text.length;
 
+  const loadProjects = async () => {
+    if (!signedIn || projects !== null || loadingProjects) return;
+    setLoadingProjects(true);
+    setProjectError(null);
+    try {
+      const response = await fetch("/api/projects", { cache: "no-store" });
+      if (!response.ok) {
+        setProjectError("Could not load your projects. Try again.");
+        return;
+      }
+      const data = (await response.json()) as { projects?: ProjectOption[] };
+      setProjects(Array.isArray(data.projects) ? data.projects : []);
+    } catch {
+      setProjectError("Could not load your projects. Check your connection and try again.");
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const addFiles = async (event: ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (picked.length === 0) return;
+    setAttachmentError(null);
+    const next = [...attachments];
+    for (const file of picked) {
+      if (next.length >= MAX_ATTACHMENTS_PER_MESSAGE) {
+        setAttachmentError(ATTACHMENT_PROBLEM_TEXT.too_many);
+        break;
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        setAttachmentError(`${file.name}: ${ATTACHMENT_PROBLEM_TEXT.too_large}`);
+        continue;
+      }
+      try {
+        const content = await readTextFile(file);
+        const checked = checkAttachment(file.name, content);
+        if (!checked.ok) {
+          setAttachmentError(`${file.name}: ${ATTACHMENT_PROBLEM_TEXT[checked.problem]}`);
+          continue;
+        }
+        if (next.some((attachment) => attachment.name === file.name)) {
+          setAttachmentError(`${file.name}: remove the duplicate file before attaching it again.`);
+          continue;
+        }
+        next.push({ name: file.name, content, bytes: file.size });
+      } catch {
+        setAttachmentError(`${file.name}: it could not be read.`);
+      }
+    }
+    setAttachments(next);
+  };
+
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
     if (trimmed.length === 0) {
@@ -88,11 +181,16 @@ export function PromptBox({
       setError(`Keep the description under ${CHAT_TEXT_MAX_CHARS.toLocaleString()} characters.`);
       return;
     }
+    if (mode === "plan" && text.length + PLAN_DIRECTIVE.length > CHAT_TEXT_MAX_CHARS) {
+      setError("Shorten the description a little to use Plan mode.");
+      return;
+    }
     setError(null);
-    savePendingPrompt(trimmed);
+    const pendingAttachments = attachments.map(({ name, content }) => ({ name, content }));
+    savePendingPrompt(trimmed, selectedProject?.id, pendingAttachments, mode);
     if (signedIn) {
       setLeaving(true);
-      void openWorkspace(trimmed);
+      void openWorkspace(trimmed, pendingAttachments, selectedProject, mode);
       return;
     }
     dialog.current?.showModal();
@@ -100,13 +198,27 @@ export function PromptBox({
     dialog.current?.querySelector<HTMLInputElement>("input")?.focus();
   };
 
-  const close = () => dialog.current?.close();
+  const close = () => {
+    const element = dialog.current;
+    if (!element?.open || element.dataset.closing) return;
+    element.close();
+  };
 
   // Straight from the prompt to the workspace: create the project here and open it, rather than
   // hopping through the /start screen. /start still handles the email-confirmation path and is the
   // fallback if creation fails here, since it shows the error with a retry.
-  const openWorkspace = async (prompt: string) => {
-    const result = await createProjectForPrompt(prompt);
+  const openWorkspace = async (
+    prompt: string,
+    pendingAttachments: readonly PendingAttachment[] = [],
+    project: ProjectOption | null = null,
+    promptMode: PromptMode = "build",
+  ) => {
+    if (project) {
+      savePendingPrompt(prompt, project.id, pendingAttachments, promptMode);
+      router.push(`/project/${project.id}`);
+      return;
+    }
+    const result = await createProjectForPrompt(prompt, pendingAttachments, promptMode);
     if (result.ok) router.push(`/project/${result.projectId}`);
     else router.push(START_PATH);
   };
@@ -130,6 +242,31 @@ export function PromptBox({
           Describe the app you want to build
         </label>
         <div className="transition-ui border-input bg-surface ring-line-focus rounded-xl border">
+          {attachments.length > 0 ? (
+            <ul aria-label="Files to attach" className="flex flex-wrap gap-2 px-4 pt-4">
+              {attachments.map((attachment) => (
+                <li
+                  key={attachment.name}
+                  className="bg-surface-2 text-muted flex max-w-full items-center gap-1.5 rounded-md px-2 py-1 text-xs"
+                >
+                  <FileText {...iconProps} size={14} className="shrink-0" />
+                  <span className="max-w-48 truncate" title={attachment.name}>
+                    {attachment.name}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${attachment.name}`}
+                    onClick={() =>
+                      setAttachments((current) => current.filter((item) => item !== attachment))
+                    }
+                    className="press text-muted hover:text-text flex size-5 shrink-0 items-center justify-center rounded"
+                  >
+                    <X {...iconProps} size={13} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <textarea
             id={textareaId}
             value={text}
@@ -143,25 +280,138 @@ export function PromptBox({
             placeholder="Describe the app you want to build"
             aria-describedby={error ? `${textareaId}-error` : `${textareaId}-hint`}
             aria-invalid={error ? true : undefined}
-            className="text-text placeholder:text-subtle block w-full resize-none bg-transparent px-5 pt-5 pb-2 text-lg leading-7 focus-visible:outline-none"
+            className="text-text placeholder:text-subtle block w-full resize-none bg-transparent px-5 pt-5 pb-2 text-base leading-7 focus-visible:outline-none"
           />
-          <div className="flex items-center justify-between gap-3 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <span className="border-hairline text-muted rounded-md border px-2 py-1 font-mono text-xs">
-                Vite, React, Tailwind
-              </span>
+          <div className="flex flex-col gap-3 px-3 pb-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <div
+                role="group"
+                aria-label="Generation mode"
+                className="bg-surface-2 flex rounded-lg p-0.5"
+              >
+                <button
+                  type="button"
+                  aria-pressed={mode === "build"}
+                  onClick={() => setMode("build")}
+                  className={`press rounded-md px-2.5 py-1.5 text-xs font-medium ${
+                    mode === "build"
+                      ? "bg-surface text-text shadow-sm"
+                      : "text-muted hover:text-text"
+                  }`}
+                >
+                  Build
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={mode === "plan"}
+                  onClick={() => setMode("plan")}
+                  className={`press inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium ${
+                    mode === "plan"
+                      ? "bg-surface text-text shadow-sm"
+                      : "text-muted hover:text-text"
+                  }`}
+                >
+                  <ListChecks {...iconProps} size={14} />
+                  Plan
+                </button>
+              </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-expanded={projectMenuOpen}
+                  aria-controls={`${textareaId}-project-options`}
+                  onClick={() => {
+                    setProjectMenuOpen((open) => !open);
+                    void loadProjects();
+                  }}
+                  className="press border-hairline text-muted hover:text-text inline-flex h-8 max-w-48 items-center gap-1.5 rounded-lg border px-2.5 text-xs"
+                >
+                  <Folder {...iconProps} size={14} className="shrink-0" />
+                  <span className="truncate">{selectedProject?.name ?? "New project"}</span>
+                  <ChevronDown {...iconProps} size={13} className="shrink-0" />
+                </button>
+                <div
+                  id={`${textareaId}-project-options`}
+                  hidden={!projectMenuOpen}
+                  className="glass border-hairline-strong absolute bottom-full left-0 z-20 mb-2 w-64 max-w-[calc(100vw-4rem)] rounded-lg border p-1.5 shadow-lg"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedProject(null);
+                      setProjectMenuOpen(false);
+                    }}
+                    className="text-text hover:bg-surface-2 flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs"
+                  >
+                    <Plus {...iconProps} size={14} />
+                    New project
+                  </button>
+                  {loadingProjects ? (
+                    <p role="status" className="text-muted px-2.5 py-2 text-xs">
+                      Loading projects…
+                    </p>
+                  ) : null}
+                  {projects?.map((project) => (
+                    <button
+                      key={project.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedProject(project);
+                        setProjectMenuOpen(false);
+                      }}
+                      className="text-muted hover:bg-surface-2 hover:text-text flex w-full items-center rounded-md px-2.5 py-2 text-left text-xs"
+                    >
+                      <span className="truncate">{project.name}</span>
+                    </button>
+                  ))}
+                  {signedIn && projects?.length === 0 ? (
+                    <p className="text-subtle px-2.5 py-2 text-xs">No existing projects yet.</p>
+                  ) : null}
+                  {!signedIn ? (
+                    <p className="text-subtle px-2.5 py-2 text-xs">
+                      Sign in to choose an existing project.
+                    </p>
+                  ) : null}
+                  {projectError ? (
+                    <p role="alert" className="text-danger px-2.5 py-2 text-xs">
+                      {projectError}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+              <input
+                ref={filePicker}
+                type="file"
+                multiple
+                tabIndex={-1}
+                aria-hidden="true"
+                className="hidden"
+                accept=".txt,.md,.csv,.json,.css,.html,.ts,.tsx,.js,.jsx,.svg,.xml,.yaml,.yml,.log,text/*"
+                onChange={(event) => void addFiles(event)}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Attach files"
+                title={`Attach up to ${MAX_ATTACHMENTS_PER_MESSAGE} text files, ${MAX_ATTACHMENT_BYTES / 1024} KB each`}
+                disabled={attachments.length >= MAX_ATTACHMENTS_PER_MESSAGE}
+                onClick={() => filePicker.current?.click()}
+              >
+                <Paperclip {...iconProps} size={14} />
+              </Button>
+            </div>
+            <div className="flex items-center justify-between gap-3">
               <p
                 id={`${textareaId}-hint`}
                 className="text-subtle hidden text-xs tabular-nums sm:block"
               >
-                {remaining < 500
-                  ? `${remaining} characters left`
-                  : `${isMac ? "⌘" : "Ctrl"} Enter to generate`}
+                {remaining < 500 ? `${remaining} characters left` : `${isMac ? "⌘" : "Ctrl"} Enter`}
               </p>
+              <Button type="submit" loading={leaving} className="ml-auto">
+                {signedIn ? "Generate" : "Generate for free"}
+              </Button>
             </div>
-            <Button type="submit" loading={leaving}>
-              {signedIn ? "Generate" : "Generate for free"}
-            </Button>
           </div>
         </div>
         {error ? (
@@ -171,6 +421,14 @@ export function PromptBox({
             className="border-danger bg-danger-subtle text-text rounded-md border px-3 py-2 text-[13px]"
           >
             {error}
+          </p>
+        ) : null}
+        {attachmentError ? (
+          <p
+            role="alert"
+            className="border-danger bg-danger-subtle text-text rounded-md border px-3 py-2 text-[13px]"
+          >
+            {attachmentError}
           </p>
         ) : null}
         {showExamples ? (
@@ -197,6 +455,10 @@ export function PromptBox({
       <dialog
         ref={dialog}
         aria-labelledby={`${textareaId}-dialog-title`}
+        onCancel={(event) => {
+          event.preventDefault();
+          close();
+        }}
         onClick={(event) => {
           if (event.target === dialog.current) close();
         }}
@@ -283,7 +545,14 @@ export function PromptBox({
                 busyAfterSuccess
                 successTitle="Opening your workspace"
                 successMessage="Creating a project from your description."
-                onSuccess={() => void openWorkspace(trimmed)}
+                onSuccess={() =>
+                  void openWorkspace(
+                    trimmed,
+                    attachments.map(({ name, content }) => ({ name, content })),
+                    null,
+                    mode,
+                  )
+                }
                 fields={[
                   { name: "email", label: "Email", type: "email", autoComplete: "email" },
                   {

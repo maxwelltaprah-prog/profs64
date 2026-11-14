@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" fill="none">
+  <rect width="640" height="480" fill="#F5EEE4"/>
+  <path d="M0 0h640v62H0z" fill="#FBF8F3"/>
+  <circle cx="53" cy="31" r="15" fill="#7B4429"/>
+  <path d="M48 27c4-5 10 0 7 6-2 4-7 6-9 5-2-2-2-7 2-11Z" fill="#F4D6AE"/>
+  <text x="78" y="37" fill="#382619" font-family="Arial,sans-serif" font-size="18" font-weight="700">BEAN THERE</text>
+  <text x="393" y="36" fill="#6F665C" font-family="Arial,sans-serif" font-size="11">OUR MENU</text>
+  <text x="485" y="36" fill="#6F665C" font-family="Arial,sans-serif" font-size="11">FIND US</text>
+  <rect x="559" y="17" width="57" height="29" rx="14.5" fill="#6D3D28"/>
+  <text x="573" y="36" fill="#FFF9F1" font-family="Arial,sans-serif" font-size="10" font-weight="700">VISIT US</text>
+  <text x="39" y="113" fill="#A15D38" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="2">A LITTLE CUP OF GOOD</text>
+  <text x="36" y="168" fill="#382619" font-family="Georgia,serif" font-size="48" font-weight="700">Your daily</text>
+  <text x="36" y="220" fill="#382619" font-family="Georgia,serif" font-size="48" font-weight="700">little ritual.</text>
+  <text x="39" y="251" fill="#75695E" font-family="Arial,sans-serif" font-size="13">Good coffee, warm company, and a seat by the window.</text>
+  <text x="39" y="270" fill="#75695E" font-family="Arial,sans-serif" font-size="13">Made fresh in the heart of the neighbourhood.</text>
+  <rect x="39" y="293" width="120" height="38" rx="19" fill="#6D3D28"/>
+  <text x="57" y="317" fill="#FFF9F1" font-family="Arial,sans-serif" font-size="12" font-weight="700">SEE THE MENU</text>
+  <circle cx="492" cy="208" r="128" fill="#E8D5BD"/>
+  <ellipse cx="496" cy="331" rx="112" ry="17" fill="#D9C2A8"/>
+  <path d="M422 182c0-11 9-20 20-20h108v106c0 33-27 60-60 60h-8c-33 0-60-27-60-60V182Z" fill="#FFFDF8"/>
+  <path d="M550 190h15c19 0 34 15 34 34s-15 34-34 34h-15" stroke="#FFFDF8" stroke-width="14"/>
+  <path d="M441 179h89v14h-89z" fill="#7B4429"/>
+  <ellipse cx="485" cy="177" rx="44" ry="11" fill="#4B2B20"/>
+  <path d="M461 144c-10-17 13-21 2-37M488 143c-10-17 13-21 2-37M514 144c-10-17 13-21 2-37" stroke="#B98763" stroke-linecap="round" stroke-width="4"/>
+  <path d="M450 237c19 17 50 17 69 0" stroke="#C49A76" stroke-linecap="round" stroke-width="4"/>
+  <circle cx="574" cy="113" r="5" fill="#B56F4C"/>
+  <circle cx="402" cy="289" r="4" fill="#B56F4C"/>
+  <path d="M39 388h562" stroke="#DDCDBA"/>
+  <text x="39" y="423" fill="#382619" font-family="Georgia,serif" font-size="18" font-weight="700">Made slow. Sipped slowly.</text>
+  <text x="414" y="422" fill="#76695D" font-family="Arial,sans-serif" font-size="11">MON–SUN  ·  7AM–5PM</text>
+</svg>

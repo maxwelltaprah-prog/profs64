@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" fill="none">
+  <rect width="640" height="480" fill="#F5F0FB"/>
+  <rect width="640" height="57" fill="#F5F0FB"/>
+  <circle cx="43" cy="28" r="14" fill="#5A3C8B"/>
+  <path d="M36 29c4-9 10-9 14 0-4 8-10 8-14 0Z" fill="#F2C955"/>
+  <text x="66" y="34" fill="#372851" font-family="Arial,sans-serif" font-size="13" font-weight="700">THE GOOD GATHERING</text>
+  <text x="453" y="33" fill="#776A88" font-family="Arial,sans-serif" font-size="9">ABOUT</text><text x="509" y="33" fill="#776A88" font-family="Arial,sans-serif" font-size="9">SCHEDULE</text><text x="577" y="33" fill="#776A88" font-family="Arial,sans-serif" font-size="9">FAQ</text>
+  <rect x="0" y="57" width="640" height="250" fill="#5A3C8B"/>
+  <circle cx="542" cy="103" r="77" fill="#F2C955"/>
+  <path d="M542 43c22 29 43 41 73 43-30 20-42 41-43 73-20-30-42-43-73-44 30-19 42-41 43-72Z" fill="#F6A87D"/>
+  <circle cx="568" cy="133" r="12" fill="#BDE2CF"/>
+  <text x="42" y="102" fill="#D8C8F2" font-family="Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="2">A ONE-DAY CREATIVE WORKSHOP</text>
+  <text x="38" y="157" fill="#FFF9F2" font-family="Georgia,serif" font-size="43" font-weight="700">Make room</text>
+  <text x="38" y="204" fill="#FFF9F2" font-family="Georgia,serif" font-size="43" font-weight="700">for good ideas.</text>
+  <text x="42" y="232" fill="#DED4EF" font-family="Arial,sans-serif" font-size="11">A day to learn, make things, and meet your kind of people.</text>
+  <text x="42" y="259" fill="#F5D466" font-family="Arial,sans-serif" font-size="11" font-weight="700">SATURDAY, JUNE 14  ·  BROOKLYN, NY</text>
+  <rect x="42" y="274" width="129" height="29" rx="14.5" fill="#F2C955"/>
+  <text x="60" y="293" fill="#3C2A5D" font-family="Arial,sans-serif" font-size="9" font-weight="700">SAVE YOUR SEAT ↗</text>
+  <text x="40" y="344" fill="#372851" font-family="Georgia,serif" font-size="18" font-weight="700">A day, thoughtfully planned</text>
+  <rect x="40" y="359" width="270" height="91" rx="9" fill="#FFFFFF"/>
+  <rect x="330" y="359" width="270" height="91" rx="9" fill="#FFFFFF"/>
+  <circle cx="66" cy="384" r="13" fill="#FBE8DA"/><path d="M61 384h10M66 379v10" stroke="#D77B55" stroke-linecap="round" stroke-width="1.6"/>
+  <text x="88" y="382" fill="#8A75AA" font-family="Arial,sans-serif" font-size="9" font-weight="700">10:00 AM</text>
+  <text x="88" y="400" fill="#372851" font-family="Arial,sans-serif" font-size="11" font-weight="700">Find your starting point</text>
+  <text x="88" y="418" fill="#888091" font-family="Arial,sans-serif" font-size="9">A warm welcome + creative warm-up</text>
+  <circle cx="356" cy="384" r="13" fill="#E1F0E6"/><path d="M351 387c4-9 8-9 10 0-3 3-7 3-10 0Z" fill="#58916A"/>
+  <text x="378" y="382" fill="#8A75AA" font-family="Arial,sans-serif" font-size="9" font-weight="700">11:30 AM</text>
+  <text x="378" y="400" fill="#372851" font-family="Arial,sans-serif" font-size="11" font-weight="700">Make something together</text>
+  <text x="378" y="418" fill="#888091" font-family="Arial,sans-serif" font-size="9">A hands-on workshop with Maya Chen</text>
+  <text x="40" y="466" fill="#8D829B" font-family="Arial,sans-serif" font-size="9">Small group · All materials included · Good coffee, too</text>
+</svg>

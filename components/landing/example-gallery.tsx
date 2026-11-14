@@ -1,20 +1,16 @@
 "use client";
 
+import Image from "next/image";
+
 import { cn } from "@/lib/utils/cn";
 
 import { PICK_EXAMPLE_EVENT } from "./prompt-box";
-
-// Starting points. Each card carries the full prompt it will put in the box, and a small
-// schematic of the page that prompt tends to produce, drawn with plain blocks rather than a
-// screenshot so the gallery never over-promises.
-
-type Block = "bar" | "hero" | "row" | "grid" | "list" | "form" | "stat";
 
 interface Example {
   title: string;
   kind: string;
   prompt: string;
-  layout: readonly Block[];
+  preview: string;
 }
 
 const EXAMPLES: readonly Example[] = [
@@ -23,75 +19,44 @@ const EXAMPLES: readonly Example[] = [
     kind: "Landing page",
     prompt:
       "A landing page for a coffee shop called Bean There: a hero with the name and a tagline, a menu of six drinks with prices, opening hours and an address block.",
-    layout: ["bar", "hero", "list", "row"],
+    preview: "/project-previews/coffee-shop.svg",
   },
   {
     title: "Habit tracker",
     kind: "Personal tool",
     prompt:
       "A habit tracker: add habits, tick them off per day on a weekly grid, and show the current streak for each. Keep the state in localStorage.",
-    layout: ["bar", "stat", "grid"],
+    preview: "/project-previews/habit-tracker.svg",
   },
   {
     title: "Expense log",
     kind: "Internal tool",
     prompt:
       "An expense log for a small team: a form to add an expense with amount, category and date, a table of entries, and a running total for the month.",
-    layout: ["bar", "form", "list", "stat"],
+    preview: "/project-previews/expense-log.svg",
   },
   {
     title: "Portfolio",
     kind: "Personal site",
     prompt:
       "A portfolio site for a product designer: a short intro, a grid of six projects with titles and one-line descriptions, and a contact form.",
-    layout: ["bar", "hero", "grid", "form"],
+    preview: "/project-previews/portfolio.svg",
   },
   {
     title: "Status page",
     kind: "Operations",
     prompt:
       "A status page for a SaaS product: overall status at the top, a list of six services with their current state, and a history of the last five incidents.",
-    layout: ["bar", "stat", "list", "list"],
+    preview: "/project-previews/status-page.svg",
   },
   {
     title: "Event sign-up",
     kind: "Form",
     prompt:
       "A sign-up page for a one-day workshop: event details, a schedule with four sessions, and a registration form with name, email and a dietary note.",
-    layout: ["bar", "hero", "row", "form"],
+    preview: "/project-previews/event-sign-up.svg",
   },
 ];
-
-function Schematic({ layout }: { layout: readonly Block[] }) {
-  return (
-    <div
-      aria-hidden="true"
-      className="bg-surface-2 border-hairline flex aspect-[4/3] flex-col gap-1.5 rounded-md border p-3"
-    >
-      {layout.map((block, index) => (
-        <div
-          key={`${block}-${index}`}
-          className={cn(
-            "bg-hairline-strong rounded-sm",
-            block === "bar" && "h-1.5 w-1/3",
-            block === "hero" && "h-6 w-3/4",
-            block === "row" && "h-2 w-full",
-            block === "stat" && "h-4 w-1/4",
-            block === "form" && "h-5 w-2/3",
-            block === "list" && "h-2 w-5/6",
-            block === "grid" && "grid flex-1 grid-cols-3 gap-1.5 bg-transparent",
-          )}
-        >
-          {block === "grid"
-            ? Array.from({ length: 6 }, (_, cell) => (
-                <div key={cell} className="bg-hairline-strong rounded-sm" />
-              ))
-            : null}
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function ExampleGallery() {
   const pick = (prompt: string) => {
@@ -107,7 +72,19 @@ export function ExampleGallery() {
             onClick={() => pick(example.prompt)}
             className="lift ring-line bg-surface group block w-full rounded-xl p-3 text-left"
           >
-            <Schematic layout={example.layout} />
+            <div className="border-hairline aspect-[4/3] overflow-hidden rounded-md border">
+              <Image
+                src={example.preview}
+                alt=""
+                aria-hidden="true"
+                width={640}
+                height={480}
+                className={cn(
+                  "block h-full w-full object-cover transition-transform duration-300",
+                  "group-hover:scale-[1.02] motion-reduce:transition-none",
+                )}
+              />
+            </div>
             <div className="mt-3 flex items-baseline justify-between gap-3 px-1">
               <span className="text-[15px] font-medium">{example.title}</span>
               <span className="text-subtle text-xs">{example.kind}</span>

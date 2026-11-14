@@ -447,6 +447,31 @@
     transform: none;
   }
 
+  .reveal.is-visible .stagger-item {
+    animation: section-item-in var(--duration-slow) var(--ease-out) both;
+  }
+  .reveal.is-visible .stagger-item .section-icon {
+    animation: section-icon-in var(--duration-slow) var(--ease-out) both;
+  }
+  .reveal.is-visible .stagger-item:nth-child(2) {
+    animation-delay: 45ms;
+  }
+  .reveal.is-visible .stagger-item:nth-child(3) {
+    animation-delay: 90ms;
+  }
+  .reveal.is-visible .stagger-item:nth-child(4) {
+    animation-delay: 135ms;
+  }
+  .reveal.is-visible .stagger-item:nth-child(5) {
+    animation-delay: 180ms;
+  }
+  .reveal.is-visible .stagger-item:nth-child(6) {
+    animation-delay: 225ms;
+  }
+  .reveal.is-visible .stagger-item:nth-child(n + 2) .section-icon {
+    animation-delay: inherit;
+  }
+
   /* Hover lift for cards and other pointer targets. */
   .lift {
     transition:
@@ -479,10 +504,11 @@
   /* Modal entrance. Opened from the keyboard (Cmd+K) it is used hundreds of times a day, so the
      command palette opts out with data-instant; occasional dialogs keep the entrance. */
   dialog[open]:not([data-instant]) {
-    animation: dialog-in var(--duration-base) var(--ease-out);
+    animation: dialog-in var(--duration-slow) var(--ease-out);
+    will-change: opacity, transform;
   }
   dialog[open]:not([data-instant])::backdrop {
-    animation: fade-in var(--duration-base) var(--ease-out);
+    animation: fade-in var(--duration-slow) var(--ease-out);
   }
 
   /* Toasts use transitions with @starting-style so a burst of them retargets mid-flight instead
@@ -611,6 +637,8 @@
     }
     .rise,
     .reveal,
+    .stagger-item,
+    .section-icon,
     dialog[open],
     dialog[open]::backdrop {
       animation: none;
@@ -643,6 +671,28 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes section-item-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes section-icon-in {
+  from {
+    opacity: 0.6;
+    transform: scale(0.82) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
   }
 }
 
@@ -681,7 +731,7 @@
 @keyframes dialog-in {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.96);
+    transform: translateY(10px) scale(0.985);
   }
   to {
     opacity: 1;

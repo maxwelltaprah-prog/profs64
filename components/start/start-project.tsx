@@ -32,7 +32,7 @@ export function StartProject() {
     }
 
     const run = async () => {
-      const result = await createProjectForPrompt(pending.text);
+      const result = await createProjectForPrompt(pending.text, pending.attachments, pending.mode);
       if (result.ok) router.replace(`/project/${result.projectId}`);
       else setState({ kind: "error", message: result.message });
     };

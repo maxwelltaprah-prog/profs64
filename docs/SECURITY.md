@@ -82,7 +82,7 @@ This document describes what the code does and how each claim was checked. "Chec
 
 ## External sign-in (optional)
 
-- Off by default. `OAUTH_PROVIDERS` (google, github, apple) lists the providers to offer; each must also be enabled in Supabase. `GET /auth/oauth/[provider]` returns 404 for anything not on the fixed allowlist and enabled, is rate limited with the login limit, checks the return path with `safeRedirectPath`, and sends `redirectTo` only when `APP_URL` is set (never from a Host header). The code comes back through `/auth/callback`, the same PKCE exchange email links use.
+- Off by default. `OAUTH_PROVIDERS` (google, github, apple) narrows the providers offered when Supabase settings are reachable and is the fallback allowlist when that public settings endpoint is unavailable; each provider still needs its client id and secret configured in Supabase. `GET /auth/oauth/[provider]` returns 404 for anything not on the fixed allowlist and enabled, is rate limited with the login limit, checks the return path with `safeRedirectPath`, and sends `redirectTo` only when `APP_URL` is set (never from a Host header). The code comes back through `/auth/callback`, the same PKCE exchange email links use.
 - The sign-in page remembers only a method name ("email", "google"...) in localStorage to mark "Last used". It is not an email address or a token.
 - **Verified:** allowlist, return-path, rate-limit and failure behaviour in unit tests (`tests/unit/oauth-providers.test.ts`). **Not verified:** a real provider round trip; that needs the provider configured in Supabase.
 

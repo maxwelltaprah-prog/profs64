@@ -53,7 +53,11 @@ import {
 } from "@/lib/workspace/chat-lines";
 import { notifyDone, shouldOfferNotifications } from "@/lib/workspace/notify";
 import { creditsLabel, type OutputInfo, type Rating } from "@/lib/workspace/outputs";
-import { clearPendingPrompt, readPendingPrompt } from "@/lib/workspace/pending-prompt";
+import {
+  clearPendingPrompt,
+  formatPromptForMode,
+  readPendingPrompt,
+} from "@/lib/workspace/pending-prompt";
 import { appendDictation } from "@/lib/workspace/speech";
 import { suggestFollowUps, type SuggestionFile } from "@/lib/workspace/suggestions";
 
@@ -469,20 +473,73 @@ export function ChatPanel({
     const pending = readPendingPrompt();
     if (!pending || pending.projectId !== projectId) return;
     autoSent.current = true;
-    clearPendingPrompt();
     if (enabled && initialMessages.length === 0) {
-      stick.current = true;
-      void sendMessage({ text: pending.text });
-      // Notification permission is browser-only state, read once after mount like the prompt.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (shouldOfferNotifications()) setOfferNotify(true);
+      const sendPending = async () => {
+        let text = formatPromptForMode(pending.text, pending.mode);
+        if (pending.attachments?.length) {
+          setUploading(true);
+          try {
+            const response = await fetch(`/api/projects/${projectId}/files`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ files: pending.attachments }),
+            });
+            if (!response.ok) {
+              setInput(text);
+              setAttachments(
+                pending.attachments.map((file) => ({
+                  ...file,
+                  bytes: new TextEncoder().encode(file.content).length,
+                })),
+              );
+              setAttachError(await errorMessageFrom(response));
+              return;
+            }
+            const data = (await response.json()) as { paths?: string[] };
+            if (!data.paths || data.paths.length !== pending.attachments.length) {
+              setInput(text);
+              setAttachments(
+                pending.attachments.map((file) => ({
+                  ...file,
+                  bytes: new TextEncoder().encode(file.content).length,
+                })),
+              );
+              setAttachError("The files were not attached. Try again.");
+              return;
+            }
+            text = withAttachmentMarker(text, data.paths);
+            onFilesChanged();
+          } catch {
+            setInput(text);
+            setAttachments(
+              pending.attachments.map((file) => ({
+                ...file,
+                bytes: new TextEncoder().encode(file.content).length,
+              })),
+            );
+            setAttachError("The files could not be attached. Check your connection and try again.");
+            return;
+          } finally {
+            setUploading(false);
+          }
+        }
+        clearPendingPrompt();
+        stick.current = true;
+        void sendMessage({ text });
+        if (shouldOfferNotifications()) setOfferNotify(true);
+      };
+      void sendPending();
     } else {
-      // Client-only state: the prompt lives in localStorage, so it cannot be an initial value
-      // without a hydration mismatch. One extra render on mount is the cost.
-
-      setInput(pending.text);
+      clearPendingPrompt();
+      setInput(formatPromptForMode(pending.text, pending.mode));
+      setAttachments(
+        (pending.attachments ?? []).map((file) => ({
+          ...file,
+          bytes: new TextEncoder().encode(file.content).length,
+        })),
+      );
     }
-  }, [enabled, initialMessages.length, projectId, sendMessage]);
+  }, [enabled, initialMessages.length, onFilesChanged, projectId, sendMessage]);
 
   // Refresh the file tree as soon as each file-changing tool call completes.
   useEffect(() => {
@@ -599,6 +656,7 @@ export function ChatPanel({
 
     setInput("");
     setAttachments([]);
+    clearPendingPrompt();
     stick.current = true;
     void sendMessage({ text });
     if (shouldOfferNotifications()) setOfferNotify(true);

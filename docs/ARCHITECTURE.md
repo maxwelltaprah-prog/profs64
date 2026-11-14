@@ -90,7 +90,7 @@ After the first message is sent, a dialog offers browser notifications once (`co
 
 ### Sign-in providers
 
-Provider buttons come from Supabase's public `/auth/v1/settings` (`lib/db/auth-providers.ts`, cached 5 minutes, hidden on any failure). `OAUTH_PROVIDERS` is now optional and can only narrow that list.
+Provider buttons come from Supabase's public `/auth/v1/settings` (`lib/db/auth-providers.ts`). Enabled providers are cached for five minutes; an empty result is cached for 15 seconds so newly enabled providers appear promptly. If the settings endpoint is unavailable, the explicit `OAUTH_PROVIDERS` allowlist is used as a fallback.
 
 ### Code view
 

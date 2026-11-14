@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" fill="none">
+  <rect width="640" height="480" fill="#FBF3E9"/>
+  <path d="M0 0h640v59H0z" fill="#FBF3E9"/>
+  <circle cx="43" cy="29" r="13" fill="#D7664C"/>
+  <path d="M38 31c4-12 9-12 11 0-4 4-7 4-11 0Z" fill="#F4C86A"/>
+  <text x="67" y="35" fill="#292722" font-family="Arial,sans-serif" font-size="14" font-weight="700">MAYA CHEN</text>
+  <text x="453" y="34" fill="#69645B" font-family="Arial,sans-serif" font-size="10">WORK</text><text x="511" y="34" fill="#69645B" font-family="Arial,sans-serif" font-size="10">ABOUT</text><text x="570" y="34" fill="#69645B" font-family="Arial,sans-serif" font-size="10">CONTACT</text>
+  <circle cx="572" cy="166" r="75" fill="#F0D56C"/>
+  <path d="M529 168c25-41 57-40 83 0-24 34-57 34-83 0Z" fill="#D7664C"/>
+  <circle cx="570" cy="165" r="23" fill="#F9EEE1"/>
+  <path d="M570 138v54M543 165h54M551 146l38 38M589 146l-38 38" stroke="#D7664C" stroke-width="2"/>
+  <text x="37" y="125" fill="#D7664C" font-family="Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="2">INDEPENDENT DESIGNER · BROOKLYN, NY</text>
+  <text x="35" y="184" fill="#292722" font-family="Georgia,serif" font-size="48" font-weight="700">Good design,</text>
+  <text x="35" y="235" fill="#292722" font-family="Georgia,serif" font-size="48" font-weight="700">for real life.</text>
+  <text x="38" y="266" fill="#69645B" font-family="Arial,sans-serif" font-size="12">I help thoughtful teams turn complicated things</text>
+  <text x="38" y="284" fill="#69645B" font-family="Arial,sans-serif" font-size="12">into products people love to use.</text>
+  <rect x="38" y="304" width="112" height="35" rx="17.5" fill="#292722"/>
+  <text x="55" y="326" fill="#FFF9F1" font-family="Arial,sans-serif" font-size="10" font-weight="700">EXPLORE MY WORK ↗</text>
+  <text x="38" y="375" fill="#292722" font-family="Georgia,serif" font-size="19" font-weight="700">Selected work</text>
+  <rect x="38" y="390" width="177" height="67" rx="8" fill="#DDE9D8"/>
+  <rect x="230" y="390" width="177" height="67" rx="8" fill="#EAD6CA"/>
+  <rect x="422" y="390" width="177" height="67" rx="8" fill="#D9D3E8"/>
+  <rect x="51" y="401" width="44" height="43" rx="5" fill="#A6C29A"/>
+  <rect x="57" y="408" width="32" height="7" rx="3.5" fill="#F9F6EB"/><rect x="57" y="420" width="22" height="3" rx="1.5" fill="#F9F6EB"/><rect x="57" y="428" width="29" height="3" rx="1.5" fill="#F9F6EB"/>
+  <text x="105" y="414" fill="#323B2F" font-family="Arial,sans-serif" font-size="9" font-weight="700">GOODROOT</text><text x="105" y="430" fill="#677262" font-family="Arial,sans-serif" font-size="8">A calmer way to eat</text>
+  <circle cx="264" cy="424" r="20" fill="#CF8065"/><path d="M252 427h24l-4-16h-16l-4 16ZM257 410v-4h14v4" stroke="#FFF4E8" stroke-width="2"/>
+  <text x="294" y="414" fill="#45332D" font-family="Arial,sans-serif" font-size="9" font-weight="700">STUDIO DAY</text><text x="294" y="430" fill="#836A60" font-family="Arial,sans-serif" font-size="8">Tools for creative teams</text>
+  <rect x="438" y="404" width="39" height="39" rx="7" fill="#8777A8"/>
+  <path d="M446 433v-12l7-6 7 6v12M456 433v-8h8v8" stroke="#F7F1FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+  <text x="486" y="414" fill="#393143" font-family="Arial,sans-serif" font-size="9" font-weight="700">OPEN DOOR</text><text x="486" y="430" fill="#777087" font-family="Arial,sans-serif" font-size="8">Housing made simpler</text>
+</svg>

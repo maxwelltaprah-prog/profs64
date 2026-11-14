@@ -7,7 +7,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatPanel } from "@/components/workspace/chat-panel";
 import { createFakeModel, type FakeModelOptions } from "@/lib/ai/fake-model";
 import { createProjectTools, type FileStore } from "@/lib/ai/tools";
-import { readPendingPrompt, savePendingPrompt } from "@/lib/workspace/pending-prompt";
+import {
+  formatPromptForMode,
+  readPendingPrompt,
+  savePendingPrompt,
+} from "@/lib/workspace/pending-prompt";
 
 // Runs the real server-side pipeline (fake model, real tools, real UI stream encoding) behind a
 // fake fetch, so the panel is tested against the exact wire format the route produces.
@@ -262,6 +266,41 @@ describe("ChatPanel", () => {
       expect((screen.getByLabelText("Message") as HTMLTextAreaElement).value).toBe(
         "Build a coffee shop landing page",
       );
+      expect(readPendingPrompt()).toBeNull();
+    });
+
+    it("uploads pending files and applies plan mode before sending the first message", async () => {
+      const { requests, impl, side } = installServer(new Map());
+      side.mockImplementation(async (url) =>
+        url.endsWith("/files")
+          ? Response.json({ paths: ["attachments/menu.md"] }, { status: 201 })
+          : Response.json({ outputs: {} }),
+      );
+      savePendingPrompt(
+        "Build a coffee shop landing page",
+        PROJECT,
+        [{ name: "menu.md", content: "# Menu" }],
+        "plan",
+      );
+
+      renderPanel();
+      await waitFor(() => expect(impl).toHaveBeenCalledTimes(1));
+      expect(side).toHaveBeenCalledWith(
+        `/api/projects/${PROJECT}/files`,
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ files: [{ name: "menu.md", content: "# Menu" }] }),
+        }),
+      );
+      expect(requests[0]).toMatchObject({
+        message: {
+          parts: [
+            {
+              text: `${formatPromptForMode("Build a coffee shop landing page", "plan")}\n\nAttached: attachments/menu.md`,
+            },
+          ],
+        },
+      });
       expect(readPendingPrompt()).toBeNull();
     });
   });
