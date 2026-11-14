@@ -1,14 +1,14 @@
 "use client";
 
-import { Check, FileText, Folder } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Check, FileText, Folder, Pause, Play, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { iconProps } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
 
 // One orchestrated replay of a real request: the prompt, the tool calls as they land, the tree
-// and code filling in, and the credit balance settling. The figures are from an actual run.
-// With reduced motion the final state is shown at once.
+// and code filling in, and the credit balance settling. It can be paused or replayed; with reduced
+// motion the final state is shown at once.
 
 const PROMPT = "Build a landing page for a coffee shop with a menu and opening hours.";
 
@@ -62,40 +62,52 @@ const END_BALANCE = 19.74;
 export function BuildDemo() {
   const [step, setStep] = useState(0);
   const [animated, setAnimated] = useState(false);
+  const [playing, setPlaying] = useState(true);
+  const [complete, setComplete] = useState(false);
+  const [motionReduced, setMotionReduced] = useState(false);
   const [typed, setTyped] = useState(0);
   const [balance, setBalance] = useState(END_BALANCE);
+  const typedRef = useRef(0);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- browser-only preference
-      setStep(FINAL_STEP);
+      setMotionReduced(true);
       return;
     }
     setAnimated(true);
-    let current = 0;
-    let timer: ReturnType<typeof setTimeout>;
-    const advance = () => {
-      current = current >= FINAL_STEP ? 0 : current + 1;
-      if (current === 1) setTyped(0);
-      setStep(current);
-      timer = setTimeout(advance, STEP_MS[current] ?? 1000);
-    };
-    timer = setTimeout(advance, STEP_MS[0]);
-    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!animated || !playing || step >= FINAL_STEP) return;
+    const timer = setTimeout(() => {
+      const next = step + 1;
+      if (next === 1) {
+        typedRef.current = 0;
+        setTyped(0);
+      }
+      setStep(next);
+      if (next === FINAL_STEP) {
+        setPlaying(false);
+        setComplete(true);
+      }
+    }, STEP_MS[step] ?? 1000);
+    return () => clearTimeout(timer);
+  }, [animated, playing, step]);
 
   // Typewriter for the prompt while step 1 runs. State is only written from the interval.
   useEffect(() => {
-    if (!animated || step !== 1) return;
-    let count = 0;
+    if (!animated || !playing || step !== 1) return;
+    let count = typedRef.current;
     const interval = setInterval(() => {
       count += 1;
+      typedRef.current = count;
       setTyped(count);
       if (count >= PROMPT.length) clearInterval(interval);
     }, TYPE_MS);
     return () => clearInterval(interval);
-  }, [animated, step]);
+  }, [animated, playing, step]);
 
   // The balance counts down over a short beat when the charge lands.
   useEffect(() => {
@@ -116,8 +128,19 @@ export function BuildDemo() {
   // What is on screen is derived from the step; the animated values only apply mid-step.
   const typedNow = !animated ? PROMPT.length : step === 0 ? 0 : step === 1 ? typed : PROMPT.length;
   const balanceNow = !animated || step >= FINAL_STEP ? balance : START_BALANCE;
+  const controlLabel = playing ? "Pause replay" : complete ? "Replay demo" : "Resume replay";
+  const toggleReplay = () => {
+    if (complete) {
+      setStep(0);
+      typedRef.current = 0;
+      setTyped(0);
+      setBalance(START_BALANCE);
+      setComplete(false);
+    }
+    setPlaying((current) => !current);
+  };
 
-  const shown = (at: number) => step >= at;
+  const shown = (at: number) => (motionReduced ? FINAL_STEP : step) >= at;
   const reveal = (at: number) =>
     cn(
       animated && "transition-[opacity,transform] duration-250 ease-out",
@@ -134,11 +157,37 @@ export function BuildDemo() {
           <span className="font-semibold">Buildr</span>
           <span className="text-ink-muted">coffee-shop</span>
         </div>
-        <div className="flex items-center gap-1.5 tabular-nums">
-          <span className={cn("font-medium", shown(6) && animated && "text-ink-accent")}>
-            {balanceNow.toFixed(2)}
-          </span>
-          <span className="text-ink-muted">credits</span>
+        <div className="flex items-center gap-3 tabular-nums">
+          <button
+            type="button"
+            aria-label={
+              motionReduced ? "Animation disabled by reduced motion preference" : controlLabel
+            }
+            disabled={motionReduced}
+            onClick={toggleReplay}
+            className="press text-ink-muted hover:text-ink-text hover:bg-ink-2 inline-flex items-center gap-1.5 rounded px-2 py-1 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {motionReduced ? (
+              <span>Motion off</span>
+            ) : (
+              <>
+                {playing ? (
+                  <Pause size={13} />
+                ) : complete ? (
+                  <RotateCcw size={13} />
+                ) : (
+                  <Play size={13} />
+                )}
+                <span>{playing ? "Pause" : complete ? "Replay" : "Resume"}</span>
+              </>
+            )}
+          </button>
+          <div className="flex items-center gap-1.5">
+            <span className={cn("font-medium", shown(6) && animated && "text-ink-accent")}>
+              {balanceNow.toFixed(2)}
+            </span>
+            <span className="text-ink-muted">credits</span>
+          </div>
         </div>
       </div>
 
