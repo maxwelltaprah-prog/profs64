@@ -33,7 +33,8 @@ export function SiteHeader({ account }: { account: ReactNode }) {
       )}
     >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-[15px] font-semibold tracking-tight">
+        <Link href="/" className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+          <span aria-hidden="true" className="bg-brass size-5 rounded-md" />
           Buildr
         </Link>
         <nav aria-label="Page" className="text-muted hidden items-center gap-6 text-[13px] md:flex">

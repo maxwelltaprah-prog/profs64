@@ -32,6 +32,7 @@
   --danger-subtle: #fdeceb;
   --success: #15803d;
   --focus: #0f766e;
+  --brass: #b88746;
   /* Syntax colours for the code view. Content colour, not UI chrome: scoped to .code-view. */
   --code-kw: #8250df;
   --code-str: #116329;
@@ -204,6 +205,7 @@
   --color-danger: var(--danger);
   --color-danger-subtle: var(--danger-subtle);
   --color-success: var(--success);
+  --color-brass: var(--brass);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-border: var(--ink-border);

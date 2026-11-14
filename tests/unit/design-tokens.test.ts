@@ -107,6 +107,26 @@ describe.each(themes)("%s theme tokens", (_name, tokens) => {
 });
 
 describe("theme definitions stay in sync", () => {
+  it("adds brass only as a supporting Buildr brand-mark color", () => {
+    expect(css).toContain("--brass: #b88746;");
+    expect(css).toContain("--color-brass: var(--brass);");
+    expect(
+      readFileSync(
+        path.resolve(import.meta.dirname, "../../components/home/home-sidebar.tsx"),
+        "utf8",
+      ),
+    ).toContain("bg-brass size-5 rounded-md");
+    expect(
+      readFileSync(path.resolve(import.meta.dirname, "../../app/(auth)/layout.tsx"), "utf8"),
+    ).toContain("bg-brass size-5 rounded-md");
+    expect(
+      readFileSync(
+        path.resolve(import.meta.dirname, "../../components/landing/site-header.tsx"),
+        "utf8",
+      ),
+    ).toContain("bg-brass size-5 rounded-md");
+  });
+
   it("the system-preference dark block matches the explicit dark block", () => {
     const [, explicit] = themes[1] ?? [];
     const [, system] = themes[2] ?? [];

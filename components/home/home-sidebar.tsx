@@ -43,7 +43,7 @@ export function HomeSidebar({
           href="/dashboard"
           className="flex items-center gap-2 px-1 py-1 text-sm font-semibold tracking-tight"
         >
-          <span aria-hidden="true" className="bg-accent size-5 rounded-md" />
+          <span aria-hidden="true" className="bg-brass size-5 rounded-md" />
           Buildr
         </Link>
         <div className="ml-auto flex items-center gap-1 md:ml-0">

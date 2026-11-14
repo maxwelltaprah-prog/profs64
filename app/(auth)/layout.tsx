@@ -13,7 +13,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
             href="/"
             className="inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight"
           >
-            <span aria-hidden="true" className="bg-accent size-5 rounded-md" />
+            <span aria-hidden="true" className="bg-brass size-5 rounded-md" />
             Buildr
           </Link>
         </header>
