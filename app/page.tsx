@@ -147,7 +147,7 @@ export default async function Home() {
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-6">
         <section className="landing-hero relative isolate pt-12 pb-14 text-center md:pt-16 md:pb-20">
-          <h1 className="rise mx-auto max-w-3xl text-[2.25rem] leading-[1.08] font-semibold tracking-[-0.04em] text-balance md:text-5xl">
+          <h1 className="rise mx-auto max-w-3xl text-[2.25rem] leading-[1.08] font-semibold tracking-[-0.025em] text-balance md:text-5xl">
             What do you want to build?
           </h1>
           <p className="rise rise-1 text-muted mx-auto mt-4 max-w-2xl text-base leading-7 text-balance md:text-lg">

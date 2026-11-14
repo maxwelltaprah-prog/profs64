@@ -219,8 +219,8 @@
   --color-paper-accent: var(--paper-accent);
   --color-paper-accent-fg: var(--paper-accent-fg);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   --radius-sm: var(--radius-1);
   --radius-md: var(--radius-2);

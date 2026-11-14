@@ -1,4 +1,3 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 
@@ -7,9 +6,6 @@ import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { default: "Buildr", template: "%s · Buildr" },
@@ -40,7 +36,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-theme={theme === "system" ? undefined : theme}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <body className="bg-bg text-text min-h-full">
         <a

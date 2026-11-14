@@ -107,6 +107,14 @@ describe.each(themes)("%s theme tokens", (_name, tokens) => {
 });
 
 describe("theme definitions stay in sync", () => {
+  it("uses native system fonts for a familiar, platform-fit reading experience", () => {
+    const layout = readFileSync(path.resolve(import.meta.dirname, "../../app/layout.tsx"), "utf8");
+    expect(layout).not.toContain("next/font/google");
+    expect(css).toContain('"Segoe UI"');
+    expect(css).toContain("ui-sans-serif");
+    expect(css).toContain("ui-monospace");
+  });
+
   it("adds brass only as a supporting Buildr brand-mark color", () => {
     expect(css).toContain("--brass: #b88746;");
     expect(css).toContain("--color-brass: var(--brass);");

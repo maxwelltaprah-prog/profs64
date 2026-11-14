@@ -49,7 +49,7 @@ Cost: `lib/ai/models.ts` holds prices, `lib/credits/math.ts` converts dollars to
 
 ## Browser
 
-- `components/workspace/*`: split pane (keyboard and pointer resizable, size remembered per user and project), file tree, read-only code viewer, chat panel using `useChat`. Model text is rendered as text nodes only.
+- `components/workspace/*`: split pane (keyboard and pointer resizable, size remembered per user and project), file tree, read-only code viewer, chat panel using `useChat`. Model text is rendered as text nodes only. Product UI typography uses the native system sans-serif and monospace stacks for familiar platform rendering; generated preview typography remains project-controlled.
 - The file tree is refreshed from the server as each file-changing tool call completes. The credit balance refreshes when a turn ends.
 - UI primitives in `components/ui/*` use CSS variable tokens (`app/globals.css`). No inline `style` attributes are used anywhere, because the production CSP forbids them.
 
