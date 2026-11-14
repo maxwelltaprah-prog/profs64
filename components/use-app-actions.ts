@@ -60,10 +60,22 @@ export function useAppActions(extraActions: readonly RunnableAction[] = []) {
         },
       },
       {
+        id: "settings",
+        label: "Settings",
+        keywords: "preferences appearance profile",
+        run: () => router.push("/settings"),
+      },
+      {
         id: "account",
         label: "Account and data",
-        keywords: "export delete settings",
+        keywords: "export delete privacy",
         run: () => router.push("/account"),
+      },
+      {
+        id: "upgrade",
+        label: "Plan and credits",
+        keywords: "upgrade billing credits",
+        run: () => router.push("/upgrade"),
       },
       { id: "signout", label: "Sign out", keywords: "log out logout", run: () => void signOut() },
     ],

@@ -50,6 +50,10 @@ test("protected pages send signed-out visitors to sign in and keep the destinati
   await expect(page).toHaveURL(/\/login\?next=/);
   await page.goto("/account");
   await expect(page).toHaveURL(/\/login\?next=%2Faccount$/);
+  await page.goto("/settings");
+  await expect.poll(() => new URL(page.url()).searchParams.get("next")).toBe("/settings");
+  await page.goto("/upgrade");
+  await expect.poll(() => new URL(page.url()).searchParams.get("next")).toBe("/upgrade");
   await page.goto("/start");
   await expect(page).toHaveURL(/\/login\?next=%2Fstart$/);
   await page.goto("/chat");

@@ -1,6 +1,6 @@
 "use client";
 
-import { House, MessageSquare, Plus, UserRound } from "lucide-react";
+import { ArrowUpRight, House, MessageSquare, Plus, Settings2, UserRound, Zap } from "lucide-react";
 import Link from "next/link";
 
 import { formatCredits } from "@/components/app-header";
@@ -16,10 +16,8 @@ export const HOME_PROMPT_ID = "home-prompt";
 const item =
   "press text-muted hover:bg-surface-2 hover:text-text flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px]";
 
-// The home screen's left rail: new project, home, account, recent projects, credits, theme and
-// sign out. Below the md breakpoint it collapses to a top bar with the brand, search, theme and
-// sign out; the rest of its content is on the page itself. Each control is rendered once, so the
-// palette's keyboard shortcut is registered once.
+// The signed-in app rail: navigation, recent work, credits, upgrade, settings and account actions.
+// Below the md breakpoint it collapses to a compact top bar.
 export function HomeSidebar({
   balance,
   theme,
@@ -48,7 +46,21 @@ export function HomeSidebar({
           <span aria-hidden="true" className="bg-accent size-5 rounded-md" />
           Buildr
         </Link>
-        <div className="ml-auto md:ml-0">
+        <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <Link
+            href="/upgrade"
+            aria-label="Upgrade"
+            className="press text-accent hover:bg-accent-subtle flex size-8 items-center justify-center rounded-md md:hidden"
+          >
+            <Zap {...iconProps} />
+          </Link>
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            className="press text-muted hover:bg-surface-2 hover:text-text flex size-8 items-center justify-center rounded-md md:hidden"
+          >
+            <Settings2 {...iconProps} />
+          </Link>
           <CommandPalette actions={actions} triggerClassName="md:w-full" />
         </div>
       </div>
@@ -88,6 +100,14 @@ export function HomeSidebar({
         >
           <House {...iconProps} />
           Home
+        </Link>
+        <Link
+          href="/settings"
+          aria-current={active === "settings" ? "page" : undefined}
+          className={`${item} ${active === "settings" ? "bg-surface-2 text-text" : ""}`}
+        >
+          <Settings2 {...iconProps} />
+          Settings
         </Link>
         <Link href="/account" className={item}>
           <UserRound {...iconProps} />
@@ -142,6 +162,18 @@ export function HomeSidebar({
         <p className="mt-0.5 text-lg font-semibold tabular-nums">{formatCredits(balance)}</p>
         <p className="text-subtle mt-1 text-xs leading-4">Charged by the tokens each reply uses.</p>
       </div>
+
+      <Link
+        href="/upgrade"
+        aria-current={active === "upgrade" ? "page" : undefined}
+        className={`press mb-1 hidden h-9 items-center justify-between rounded-md px-2.5 text-[13px] font-medium md:mb-0 md:flex ${active === "upgrade" ? "bg-accent-subtle text-accent" : "bg-accent text-accent-fg hover:bg-accent-hover"}`}
+      >
+        <span className="flex items-center gap-2">
+          <Zap {...iconProps} />
+          Upgrade
+        </span>
+        <ArrowUpRight {...iconProps} size={14} />
+      </Link>
 
       <div className="border-hairline flex items-center gap-1 md:mt-3 md:border-t md:pt-3">
         <p

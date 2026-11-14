@@ -82,7 +82,7 @@ The Stop button stops the local stream and calls `POST /api/projects/[id]/chat/s
 
 ### Home screen
 
-`/dashboard` is the signed-in home: a left rail (`components/home/home-sidebar.tsx`: search, new project, home, account, recent projects, credits, theme, sign out; a top bar below md) and a page with a greeting, the same prompt box as the landing page (it creates the project and opens the workspace), recent projects as cards with relative times, and "Start from an idea" cards that fill the prompt. The rail only links to pages that exist. The header and the rail share commands and sign out through `useAppActions`.
+`/dashboard` is the signed-in home: a left rail (`components/home/home-sidebar.tsx`: search, new project, home, settings, account and data, recent projects and chats, credits, upgrade, theme and sign out; a compact top bar below md) and a page with a greeting, the same prompt box as the landing page (it creates the project and opens the workspace), recent projects as cards with relative times, and "Start from an idea" cards that fill the prompt. `/settings` provides appearance selection, password recovery, account/data management and keyboard-shortcut help. `/upgrade` shows the current balance and plan status; it does not offer a checkout because paid plans and credit top-ups are not available. The rail only links to real destinations. The header and the rail share commands and sign out through `useAppActions`.
 
 ### Done notifications
 
