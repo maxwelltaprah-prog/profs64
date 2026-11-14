@@ -120,8 +120,8 @@ export function Workspace({
       firstHidden={chatHidden}
       first={
         <>
-          <div className="border-hairline flex h-9 shrink-0 items-center justify-between border-b pr-1.5 pl-4">
-            <h2 className="flex items-center gap-2 text-[13px] font-medium">
+          <div className="border-hairline flex h-11 shrink-0 items-center justify-between border-b px-3">
+            <h2 className="flex items-center gap-2 text-sm font-medium tracking-tight">
               <MessageSquare {...iconProps} />
               Chat
             </h2>
@@ -130,7 +130,7 @@ export function Workspace({
               aria-label="Hide chat"
               title="Hide chat"
               onClick={() => toggleChat(true)}
-              className="press text-muted hover:text-text hover:bg-surface-2 flex size-7 items-center justify-center rounded-md"
+              className="press touch-target text-muted hover:text-text hover:bg-surface-2 flex size-8 items-center justify-center rounded-md"
             >
               <PanelLeftClose {...iconProps} />
             </button>
@@ -152,18 +152,14 @@ export function Workspace({
       }
       second={
         <>
-          <div
-            role="tablist"
-            aria-label="Workspace view"
-            className="border-hairline flex h-9 shrink-0 items-stretch border-b px-2"
-          >
+          <div className="border-hairline flex h-11 shrink-0 items-center gap-3 border-b px-3">
             {chatHidden ? (
               <button
                 type="button"
                 aria-label="Show chat"
                 title="Show chat"
                 onClick={() => toggleChat(false)}
-                className="press text-muted hover:text-text relative mr-1 flex items-center gap-1.5 px-2 text-[13px]"
+                className="press touch-target text-muted hover:text-text relative flex h-8 items-center gap-1.5 rounded-md px-2 text-[13px]"
               >
                 <PanelLeftOpen {...iconProps} />
                 Chat
@@ -175,26 +171,30 @@ export function Workspace({
                 ) : null}
               </button>
             ) : null}
-            {tabs.map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                id={`tab-${id}`}
-                aria-selected={tab === id}
-                aria-controls={`panel-${id}`}
-                onClick={() => setTab(id)}
-                className={cn(
-                  "press flex items-center gap-1.5 border-b-2 px-3 text-[13px]",
-                  tab === id
-                    ? "border-accent text-text"
-                    : "text-muted hover:text-text border-transparent",
-                )}
-              >
-                <Icon {...iconProps} />
-                {label}
-              </button>
-            ))}
+            <div
+              role="tablist"
+              aria-label="Workspace view"
+              className="bg-surface-2 flex min-h-9 items-center gap-0.5 rounded-lg p-0.5"
+            >
+              {tabs.map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  id={`tab-${id}`}
+                  aria-selected={tab === id}
+                  aria-controls={`panel-${id}`}
+                  onClick={() => setTab(id)}
+                  className={cn(
+                    "press touch-target flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium",
+                    tab === id ? "bg-surface text-text shadow-sm" : "text-muted hover:text-text",
+                  )}
+                >
+                  <Icon {...iconProps} />
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           {tab === "code" ? (
             <div

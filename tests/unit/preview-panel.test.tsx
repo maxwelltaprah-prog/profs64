@@ -83,6 +83,7 @@ describe("PreviewPanel", () => {
 
   it("switches preview widths", async () => {
     await renderPanel();
+    expect(screen.getByRole("group", { name: "Preview width" })).toBeDefined();
     await userEvent.click(screen.getByRole("button", { name: "Phone" }));
     expect(screen.getByRole("button", { name: "Phone" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: "Desktop" }).getAttribute("aria-pressed")).toBe(

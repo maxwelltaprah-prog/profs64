@@ -711,7 +711,9 @@ export function ChatPanel({
     ? "Confirm your email address to use the assistant"
     : !hasCredits
       ? "You are out of credits"
-      : "Describe what to build";
+      : assistantReplies > 0
+        ? "Ask for a change or next step"
+        : "Describe what to build";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -843,8 +845,11 @@ export function ChatPanel({
         </ul>
       ) : null}
 
-      <form onSubmit={(event) => void submit(event)} className="p-3">
-        <div className="border-input bg-surface transition-ui ring-line-focus rounded-xl border">
+      <form
+        onSubmit={(event) => void submit(event)}
+        className="glass-bar border-hairline shrink-0 border-t px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+      >
+        <div className="border-hairline-strong bg-surface transition-ui ring-line-focus rounded-2xl border shadow-sm">
           {attachments.length > 0 ? (
             <ul aria-label="Files to attach" className="flex flex-wrap gap-1.5 px-3 pt-3">
               {attachments.map((attachment) => (
@@ -904,6 +909,7 @@ export function ChatPanel({
                 type="button"
                 variant="ghost"
                 size="icon"
+                className="touch-target"
                 aria-label="Attach files"
                 title={`Attach up to ${MAX_ATTACHMENTS_PER_MESSAGE} text files, ${MAX_ATTACHMENT_BYTES / 1024} KB each`}
                 disabled={!enabled || busy || attachments.length >= MAX_ATTACHMENTS_PER_MESSAGE}
@@ -916,12 +922,12 @@ export function ChatPanel({
                   type="button"
                   variant="ghost"
                   size="icon"
+                  className={cn("touch-target", speech.listening && "bg-danger-subtle text-danger")}
                   aria-label={speech.listening ? "Stop voice input" : "Start voice input"}
                   aria-pressed={speech.listening}
                   title="Dictate with your browser's speech recognition"
                   disabled={!enabled || busy}
                   onClick={toggleVoice}
-                  className={cn(speech.listening && "bg-danger-subtle text-danger")}
                 >
                   {speech.listening ? <MicOff {...iconProps} /> : <Mic {...iconProps} />}
                 </Button>
@@ -931,7 +937,13 @@ export function ChatPanel({
               </p>
             </div>
             {busy ? (
-              <Button type="button" variant="secondary" size="sm" onClick={stopReply}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="touch-target"
+                onClick={stopReply}
+              >
                 <Square {...iconProps} />
                 Stop
               </Button>
@@ -939,6 +951,7 @@ export function ChatPanel({
               <Button
                 type="submit"
                 size="sm"
+                className="touch-target"
                 loading={uploading}
                 disabled={!enabled || (input.trim().length === 0 && attachments.length === 0)}
               >

@@ -765,4 +765,9 @@
   select {
     font-size: 16px;
   }
+
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }

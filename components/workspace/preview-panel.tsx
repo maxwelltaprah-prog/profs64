@@ -140,8 +140,12 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
       aria-labelledby="tab-preview"
       className="flex min-h-0 flex-1 flex-col"
     >
-      <div className="border-hairline flex h-10 shrink-0 items-center justify-between gap-2 border-b px-2">
-        <div role="group" aria-label="Preview width" className="flex items-center gap-0.5">
+      <div className="border-hairline flex h-11 shrink-0 items-center justify-between gap-2 border-b px-3">
+        <div
+          role="group"
+          aria-label="Preview width"
+          className="bg-surface-2 flex min-h-9 items-center gap-0.5 rounded-lg p-0.5"
+        >
           {VIEWPORTS.map(({ id, label, Icon }) => (
             <Button
               key={id}
@@ -150,14 +154,27 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
               aria-label={label}
               aria-pressed={viewport === id}
               onClick={() => setViewport(id)}
-              className={cn(viewport === id && "bg-surface-2 text-text")}
+              className={cn(
+                "touch-target rounded-md",
+                viewport === id && "bg-surface text-text shadow-sm",
+              )}
             >
               <Icon {...iconProps} />
             </Button>
           ))}
         </div>
-        <p className="text-subtle flex items-center gap-2 text-xs" aria-live="polite">
-          {status === "building" && "Preparing preview"}
+        <p
+          className="border-hairline bg-surface text-muted flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs"
+          aria-live="polite"
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "size-1.5 shrink-0 rounded-full",
+              status === "ready" ? "bg-success" : status === "failed" ? "bg-danger" : "bg-accent",
+            )}
+          />
+          {status === "building" && "Preparing"}
           {status === "loading" && "Loading"}
           {status === "ready" && "Live"}
           {status === "failed" && (
@@ -170,8 +187,10 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
         <Button
           variant="ghost"
           size="sm"
+          className="touch-target"
           onClick={reload}
           disabled={!bundle || status === "building"}
+          title="Reload preview"
         >
           <RefreshCw {...iconProps} />
           Reload

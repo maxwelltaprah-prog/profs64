@@ -18,7 +18,7 @@ export function applyTheme(choice: ThemeChoice) {
   document.cookie = `${THEME_COOKIE}=${choice}; path=/; max-age=31536000; samesite=lax`;
 }
 
-export function ThemeToggle({ initial }: { initial: ThemeChoice }) {
+export function ThemeToggle({ initial, className }: { initial: ThemeChoice; className?: string }) {
   const [choice, setChoice] = useState<ThemeChoice>(initial);
   const Icon = ICON[choice];
 
@@ -26,6 +26,7 @@ export function ThemeToggle({ initial }: { initial: ThemeChoice }) {
     <Button
       variant="ghost"
       size="icon"
+      className={className}
       aria-label={`Theme: ${LABEL[choice]}. Switch to ${LABEL[nextTheme(choice)]}.`}
       onClick={() => {
         const next = nextTheme(choice);

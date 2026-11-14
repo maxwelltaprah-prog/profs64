@@ -189,6 +189,29 @@ describe("ChatPanel", () => {
     expect(container.textContent).toContain("<b>bold</b>");
   });
 
+  it("uses a contextual composer prompt after the assistant has replied", () => {
+    render(
+      <ChatPanel
+        projectId="p"
+        initialMessages={[
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "The project is ready." }],
+          },
+        ]}
+        canUseAssistant
+        hasCredits
+        onFilesChanged={() => undefined}
+        onFinished={() => undefined}
+      />,
+    );
+
+    expect(screen.getByLabelText("Message").getAttribute("placeholder")).toBe(
+      "Ask for a change or next step",
+    );
+  });
+
   it("disables the composer when out of credits and explains why", () => {
     renderPanel({ hasCredits: false });
     expect((screen.getByLabelText("Message") as HTMLTextAreaElement).disabled).toBe(true);
