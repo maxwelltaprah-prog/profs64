@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // real content replaces it in place rather than jumping.
 export default function Loading() {
   return (
-    <div className="flex h-screen flex-col" aria-busy="true">
+    <div className="flex h-dvh flex-col overflow-hidden" aria-busy="true">
       <div className="border-hairline flex h-12 items-center justify-between border-b px-4">
         <div className="flex items-center gap-3">
           <Skeleton className="h-4 w-14" />

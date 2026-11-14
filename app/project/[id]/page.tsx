@@ -38,11 +38,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const theme = parseTheme(store.get(THEME_COOKIE)?.value);
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <AppHeader balance={balance} theme={theme}>
         <span className="text-muted truncate text-[13px]">{project.name}</span>
       </AppHeader>
-      <main id="main" className="flex min-h-0 flex-1 flex-col">
+      <main id="main" className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <Workspace
           userId={user.id}
           projectId={id}

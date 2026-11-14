@@ -65,6 +65,8 @@ The Stop button stops the local stream and calls `POST /api/projects/[id]/chat/s
 
 ### Chat actions, details and hiding the chat
 
+- **Workspace sizing.** `/project/[id]` and its loading skeleton are locked to the dynamic viewport. Page-level overflow is clipped; chat history, code, and the preview remain the intentional independently scrollable regions.
+
 - **Replies collapse to a preview.** A finished assistant reply shows its closing text, a one-line summary of the work (steps, files changed) and a Details toggle. Details reveals earlier narration, each step, buttons that open the changed files, the token and credit line, and View preview. The reply being generated is shown in full.
 - **Per-reply actions.** Copy, Good reply, Bad reply, Share, and the credits used sit under each finished reply. Copy and Share use the clipboard and the share sheet (`navigator.share`, else clipboard); there are no public share links.
 - **Credits per reply.** The chat route fixes the reply's id up front, settles billing, then stores a `data-usage` part (credits, input and output tokens) with the reply. `GET /api/projects/[id]/outputs` returns usage and the caller's rating for each reply. Replies created before this change have no usage and say so. `data-usage` parts are dropped when history is replayed to the model.
