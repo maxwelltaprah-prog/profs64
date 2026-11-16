@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowUpRight, House, MessageSquare, Plus, Settings2, UserRound, Zap } from "lucide-react";
+import {
+  ArrowUpRight,
+  House,
+  MessageSquare,
+  Plus,
+  Settings2,
+  UserRound,
+  Zap,
+  ChartColumn,
+} from "lucide-react";
 import Link from "next/link";
 
 import { formatCredits } from "@/components/app-header";
@@ -100,6 +109,14 @@ export function HomeSidebar({
         >
           <House {...iconProps} />
           Home
+        </Link>
+        <Link
+          href="/usage"
+          aria-current={active === "usage" ? "page" : undefined}
+          className={`${item} ${active === "usage" ? "bg-surface-2 text-text" : ""}`}
+        >
+          <ChartColumn {...iconProps} />
+          Usage
         </Link>
         <Link
           href="/settings"

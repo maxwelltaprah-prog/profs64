@@ -9,7 +9,16 @@ import { getRequestId } from "@/lib/security/request-id";
 // authorization layer: every page and route re-verifies the user itself.
 
 export const PREVIEW_FRAME_PATH = "/preview-frame";
-const PROTECTED_PREFIXES = ["/dashboard", "/project", "/account", "/start", "/chat"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/project",
+  "/account",
+  "/start",
+  "/chat",
+  "/usage",
+  "/upgrade",
+  "/settings",
+];
 const GUEST_ONLY = ["/login", "/signup", "/forgot-password"];
 
 const matches = (pathname: string, prefixes: string[]) =>
