@@ -23,7 +23,7 @@ const timeFormat = new Intl.DateTimeFormat("en", {
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="border-hairline bg-surface rounded-2xl border p-5">
-      <p className="text-muted text-[13px]">{label}</p>
+      <p className="page-in text-muted text-[13px]">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
       {hint ? <p className="text-subtle mt-1 text-xs">{hint}</p> : null}
     </div>

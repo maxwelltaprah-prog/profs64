@@ -39,11 +39,7 @@ export function SiteHeader({ account }: { account: ReactNode }) {
         </Link>
         <nav aria-label="Page" className="text-muted hidden items-center gap-6 text-[13px] md:flex">
           {LINKS.map(([href, label]) => (
-            <a
-              key={href}
-              href={href}
-              className="hover:text-text transition-ui underline-offset-4 hover:underline"
-            >
+            <a key={href} href={href} className="hover:text-text transition-ui link-grow">
               {label}
             </a>
           ))}

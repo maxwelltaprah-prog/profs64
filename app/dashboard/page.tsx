@@ -5,7 +5,9 @@ import { CreateProject } from "@/components/dashboard/create-project";
 import { HOME_PROMPT_ID, HomeSidebar } from "@/components/home/home-sidebar";
 import { StartIdeas } from "@/components/home/start-ideas";
 import { PromptBox } from "@/components/landing/prompt-box";
+import { ProjectGrid } from "@/components/projects/project-grid";
 import { getOptionalUser } from "@/lib/db/auth";
+import { loadProjectCards } from "@/lib/db/library";
 import { loadShell } from "@/lib/db/shell";
 import { PASSWORD_MIN } from "@/lib/security/limits";
 import { greetingName, timeAgo } from "@/lib/workspace/home";
@@ -20,7 +22,10 @@ export default async function DashboardPage() {
   const user = await getOptionalUser();
   if (!user) redirect("/login?next=/dashboard");
 
-  const { projects, balance, theme, chats } = await loadShell(user.id);
+  const [{ projects, balance, theme, chats }, cards] = await Promise.all([
+    loadShell(user.id),
+    loadProjectCards(),
+  ]);
   const name = greetingName(user.email);
 
   return (
@@ -79,29 +84,16 @@ export default async function DashboardPage() {
             <h2 id="recent-title" className="text-muted text-[13px] font-medium">
               Recent projects
             </h2>
-            {projects.length === 0 ? (
-              <p className="border-hairline-strong text-muted mt-3 rounded-xl border border-dashed p-6 text-[13px]">
-                Nothing here yet. Describe an app above, or start from one of the ideas below.
-              </p>
-            ) : (
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {projects.map((project) => (
-                  <li key={project.id}>
-                    <Link
-                      href={`/project/${project.id}`}
-                      className="press border-hairline bg-surface hover:border-hairline-strong hover:bg-surface-2 flex flex-col gap-1 rounded-xl border px-4 py-3"
-                    >
-                      <span className="truncate text-sm font-medium" title={project.name}>
-                        {project.name}
-                      </span>
-                      <span className="text-muted text-xs">
-                        Updated {timeAgo(project.updatedAt)}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ProjectGrid
+              projects={cards.projects.map((project) => ({
+                id: project.id,
+                name: project.title,
+                updatedLabel: timeAgo(project.updatedAt),
+                pinned: project.pinned,
+              }))}
+              pinsEnabled={cards.pinsEnabled}
+              empty="Nothing here yet. Describe an app above, or start from one of the ideas below."
+            />
           </section>
 
           <section

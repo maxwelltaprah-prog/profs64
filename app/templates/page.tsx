@@ -26,7 +26,7 @@ export default async function TemplatesPage() {
       />
       <main id="main" className="min-w-0 flex-1 px-6 py-10 md:px-10 md:py-14">
         <div className="mx-auto w-full max-w-5xl">
-          <p className="text-muted text-[13px]">Start faster</p>
+          <p className="page-in text-muted text-[13px]">Start faster</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Templates</h1>
           <p className="text-muted mt-2 text-sm">
             Pick a template to create a project and start building it right away. You can change

@@ -147,26 +147,53 @@ export default async function Home() {
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-6">
         <section className="landing-hero relative isolate pt-12 pb-14 text-center md:pt-16 md:pb-20">
-          <h1 className="rise mx-auto max-w-3xl text-[2.25rem] leading-[1.08] font-semibold tracking-[-0.025em] text-balance md:text-5xl">
-            What do you want to build?
+          <p className="rise border-hairline-strong bg-surface text-muted mx-auto mb-5 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium">
+            <span aria-hidden="true" className="live-dot bg-accent size-1.5 rounded-full" />
+            AI app builder. Pay only for what each reply uses.
+          </p>
+          <h1 className="rise rise-1 mx-auto max-w-3xl text-[2.5rem] leading-[1.05] font-semibold tracking-[-0.03em] text-balance md:text-5xl">
+            What do you want to <span className="underline-draw text-accent">build?</span>
           </h1>
-          <p className="rise rise-1 text-muted mx-auto mt-4 max-w-2xl text-base leading-7 text-balance md:text-lg">
+          <p className="rise rise-2 text-muted mx-auto mt-5 max-w-2xl text-base leading-7 text-balance md:text-lg">
             Start with a sentence. Buildr turns your idea into project files you can inspect, edit
             and make your own.
           </p>
-          <div className="rise rise-2 mx-auto mt-6 w-full max-w-3xl text-left">
+          <div className="rise rise-3 mx-auto mt-7 w-full max-w-3xl text-left">
             <PromptBox
               signedIn={Boolean(user)}
               passwordMin={PASSWORD_MIN}
               providers={user ? [] : await liveProviders()}
             />
           </div>
-          <p className="rise rise-3 text-subtle mt-4 text-[13px]">
+          <p className="rise rise-4 text-subtle mt-4 text-[13px]">
             Twenty credits to start. No card. Confirm your email and you are in.
           </p>
+          <div className="marquee rise rise-5 mx-auto mt-10 max-w-4xl" aria-hidden="true">
+            <div className="marquee-track">
+              {[0, 1].map((copy) =>
+                [
+                  "Landing pages",
+                  "Dashboards",
+                  "Internal tools",
+                  "Forms",
+                  "Portfolios",
+                  "Games",
+                  "Trackers",
+                  "Quizzes",
+                ].map((label) => (
+                  <span
+                    key={`${copy}-${label}`}
+                    className="border-hairline bg-surface text-muted rounded-full border px-3.5 py-1.5 text-[13px] whitespace-nowrap"
+                  >
+                    {label}
+                  </span>
+                )),
+              )}
+            </div>
+          </div>
         </section>
 
-        <section aria-label="What happens after you press Generate" className="rise rise-4 pb-20">
+        <section aria-label="What happens after you press Generate" className="rise rise-6 pb-20">
           <BuildDemo />
           <p className="text-subtle mt-3 text-center text-[13px]">
             A replay of one request. The token counts and the charge are from a real run.

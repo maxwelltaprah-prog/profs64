@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { PACK_IDS } from "@/lib/credits/packs";
+import { INTEGRATION_IDS } from "@/lib/integrations/catalog";
 import {
   ATTACHMENT_BODY_LIMIT_BYTES,
   AUTH_BODY_LIMIT_BYTES,
@@ -128,3 +129,8 @@ export const waitlistBodySchema = z.strictObject({
   pack: z.enum(PACK_IDS as [string, ...string[]]),
 });
 export type WaitlistBody = z.infer<typeof waitlistBodySchema>;
+
+// Asking to be told when an integration ships: only a known integration id is accepted.
+export const integrationInterestSchema = z.strictObject({
+  integration: z.enum(INTEGRATION_IDS as [string, ...string[]]),
+});

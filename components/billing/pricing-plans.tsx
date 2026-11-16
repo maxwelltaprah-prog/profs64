@@ -30,7 +30,7 @@ function PackCard({ pack, joined }: { pack: CreditPack; joined: boolean }) {
   return (
     <div
       className={cn(
-        "border-hairline bg-surface relative flex flex-col rounded-2xl border p-5",
+        "lift border-hairline bg-surface relative flex flex-col rounded-2xl border p-5",
         pack.popular && "border-accent ring-accent/20 ring-2",
       )}
     >
@@ -77,7 +77,7 @@ function PackCard({ pack, joined }: { pack: CreditPack; joined: boolean }) {
 
 export function PricingPlans({ joined }: { joined: readonly string[] }) {
   return (
-    <div className="mt-5 grid gap-4 sm:grid-cols-3">
+    <div className="card-in mt-5 grid gap-4 sm:grid-cols-3">
       {CREDIT_PACKS.map((pack) => (
         <PackCard key={pack.id} pack={pack} joined={joined.includes(pack.id)} />
       ))}

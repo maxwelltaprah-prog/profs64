@@ -26,16 +26,16 @@ export const CREDIT_PACKS: readonly CreditPack[] = [
   {
     id: "builder",
     name: "Builder",
-    priceUsd: 20,
-    credits: 560,
+    priceUsd: 15,
+    credits: 400,
     blurb: "Enough to take a project from idea to finished app.",
     popular: true,
   },
   {
     id: "studio",
     name: "Studio",
-    priceUsd: 50,
-    credits: 1500,
+    priceUsd: 20,
+    credits: 560,
     blurb: "For heavy building, long chats and lots of documents.",
   },
 ];

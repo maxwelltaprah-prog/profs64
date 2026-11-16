@@ -160,3 +160,42 @@ export async function getCreditBalance(userId: string, supabase?: SupabaseClient
   if (error) throw translateDbError(error);
   return data ? Number((data as { credit_balance: string | number }).credit_balance) : 0;
 }
+
+const COPY_SUFFIX = " (copy)";
+const NAME_MAX = 80;
+
+// A copy of a project's files under a new name. Chat history and the share link are not copied:
+// the copy is a fresh starting point. Like createProject, a failed file copy removes the new
+// project again instead of leaving it empty.
+export async function duplicateProject(
+  ownerId: string,
+  sourceId: string,
+  supabase?: SupabaseClient,
+): Promise<ProjectSummary> {
+  const client = supabase ?? (await createSupabaseServerClient());
+  const source = await getProject(sourceId, client);
+  const files = await listProjectFiles(sourceId, client);
+  const name = `${source.name.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
+
+  const { data, error } = await client
+    .from("projects")
+    .insert({ owner_id: ownerId, name })
+    .select("id, name, updated_at")
+    .single();
+  if (error) throw translateDbError(error);
+  const created = data as { id: string; name: string; updated_at: string };
+
+  if (files.length > 0) {
+    const { error: copyError } = await client
+      .from("project_files")
+      .insert(
+        files.map((file) => ({ project_id: created.id, path: file.path, content: file.content })),
+      );
+    if (copyError) {
+      const { error: cleanupError } = await client.from("projects").delete().eq("id", created.id);
+      if (cleanupError) logger.error("project_copy_cleanup_failed", { projectId: created.id });
+      throw translateDbError(copyError);
+    }
+  }
+  return { id: created.id, name: created.name, updatedAt: created.updated_at };
+}

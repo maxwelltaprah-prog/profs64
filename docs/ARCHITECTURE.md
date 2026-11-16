@@ -110,6 +110,15 @@ Free fallback: when a person's balance is below 1 credit or their daily cap is r
 
 ### Pricing, usage, templates, organize and share
 
+- **Cards and menu**: `components/projects/project-grid.tsx` renders projects as cards with a
+  per-card action menu (open, pin, edit details, duplicate, delete). `POST
+/api/projects/[id]/duplicate` copies files only (not chat or share link). Covers are flat CSS
+  shapes chosen from the id (`lib/workspace/cover.ts`).
+- **Navigation speed**: every signed-in route has a `loading.tsx` using `PageSkeleton`, so a click
+  shows a shell at once and Next can prefetch it. The command palette uses a solid surface, not blur.
+- **Integrations** (`/integrations`): catalogue in `lib/integrations/catalog.ts`; interest is stored
+  as `integration_interest` audit events. Nothing is connected (KI-51).
+
 - **Pricing** (`/upgrade`): one-time credit packs (`lib/credits/packs.ts`) with a "Notify me"
   waitlist that records a `pack_waitlist` audit event. No checkout; nothing is charged.
 - **Usage** (`/usage`): credit totals, a per-day inline-SVG bar chart, per-project spend and recent

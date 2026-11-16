@@ -72,6 +72,12 @@ export function useAppActions(extraActions: readonly RunnableAction[] = []) {
         run: () => router.push("/account"),
       },
       {
+        id: "integrations",
+        label: "Integrations",
+        keywords: "connect github vercel stripe apps",
+        run: () => router.push("/integrations"),
+      },
+      {
         id: "upgrade",
         label: "Plan and credits",
         keywords: "upgrade billing credits",

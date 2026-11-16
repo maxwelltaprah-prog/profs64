@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { ProjectGrid } from "@/components/projects/project-grid";
 import { Button } from "@/components/ui/button";
 import { iconProps } from "@/components/ui/icons";
 import { type LibraryItem } from "@/lib/db/library";
@@ -216,13 +217,17 @@ export function LibraryView({
   chats,
   pinsEnabled,
 }: {
-  projects: LibraryItem[];
+  projects: Array<LibraryItem & { updatedLabel: string }>;
   chats: LibraryItem[];
   pinsEnabled: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const refresh = () => router.refresh();
+  const visibleProjects = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return needle ? projects.filter((p) => p.title.toLowerCase().includes(needle)) : projects;
+  }, [projects, query]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -254,15 +259,22 @@ export function LibraryView({
         </p>
       ) : null}
 
-      <Section
-        title="Projects"
-        kind="project"
-        items={projects}
-        pinsEnabled={pinsEnabled}
-        query={query}
-        onChanged={refresh}
-        empty="No projects yet."
-      />
+      <section aria-label="Projects">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold tracking-tight">Projects</h2>
+          <span className="text-subtle text-xs tabular-nums">{visibleProjects.length}</span>
+        </div>
+        <ProjectGrid
+          projects={visibleProjects.map((project) => ({
+            id: project.id,
+            name: project.title,
+            updatedLabel: project.updatedLabel,
+            pinned: project.pinned,
+          }))}
+          pinsEnabled={pinsEnabled}
+          empty={query.trim() ? "No matches." : "No projects yet."}
+        />
+      </section>
       <Section
         title="Chats"
         kind="chat"

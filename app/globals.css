@@ -488,6 +488,94 @@
     animation-delay: inherit;
   }
 
+  /* Grids of cards settle in one after another; the delay stops after nine so a long list is not slow. */
+  .card-in > * {
+    animation: card-in var(--duration-slow) var(--ease-out) both;
+  }
+  .card-in > :nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .card-in > :nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .card-in > :nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .card-in > :nth-child(5) {
+    animation-delay: 160ms;
+  }
+  .card-in > :nth-child(6) {
+    animation-delay: 200ms;
+  }
+  .card-in > :nth-child(7) {
+    animation-delay: 240ms;
+  }
+  .card-in > :nth-child(8) {
+    animation-delay: 280ms;
+  }
+  .card-in > :nth-child(9) {
+    animation-delay: 320ms;
+  }
+
+  /* Hero details: a live dot, a drawn underline and a slow chip marquee. All transform or opacity. */
+  .live-dot {
+    animation: live-dot 2s var(--ease-in-out) infinite;
+  }
+  .underline-draw {
+    position: relative;
+  }
+  .underline-draw::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.04em;
+    height: 0.07em;
+    border-radius: 9999px;
+    background-color: currentColor;
+    opacity: 0.5;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: draw-line 700ms var(--ease-out) 600ms forwards;
+  }
+  .marquee {
+    overflow: hidden;
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    gap: 0.5rem;
+    padding-right: 0.5rem;
+    animation: marquee 38s linear infinite;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  /* Page headings in the app rise in once. */
+  .page-in {
+    animation: card-in var(--duration-slow) var(--ease-out) both;
+  }
+  /* Sidebar and header links: an underline that grows from the left on hover. */
+  .link-grow {
+    position: relative;
+  }
+  .link-grow::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 1px;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  .link-grow:hover::after,
+  .link-grow[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+
   /* Hover lift for cards and other pointer targets. */
   .lift {
     transition:
@@ -501,6 +589,135 @@
       transform: translateY(-2px);
       box-shadow: var(--shadow-2);
     }
+  }
+
+  /* Project covers: flat tinted tile with a simple shape, picked per project (lib/workspace/cover.ts).
+     No gradients; the colours are mixes of the theme tokens so both themes work. */
+  .cover {
+    position: relative;
+    overflow: hidden;
+    background-color: color-mix(in oklab, var(--cover-tint) 16%, var(--surface-2));
+  }
+  .cover::before,
+  .cover::after {
+    content: "";
+    position: absolute;
+    background-color: color-mix(in oklab, var(--cover-tint) 38%, var(--surface));
+    transition: transform 400ms var(--ease-out);
+  }
+  .cover-0 {
+    --cover-tint: var(--accent);
+  }
+  .cover-0::before {
+    width: 46%;
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    left: 14%;
+    top: 22%;
+  }
+  .cover-0::after {
+    width: 30%;
+    height: 12%;
+    border-radius: 9999px;
+    right: 12%;
+    bottom: 22%;
+  }
+  .cover-1 {
+    --cover-tint: var(--brass);
+  }
+  .cover-1::before {
+    width: 38%;
+    height: 56%;
+    border-radius: 10px;
+    right: 14%;
+    top: 18%;
+  }
+  .cover-1::after {
+    width: 26%;
+    height: 10%;
+    border-radius: 9999px;
+    left: 14%;
+    bottom: 24%;
+  }
+  .cover-2 {
+    --cover-tint: var(--text-muted);
+  }
+  .cover-2::before {
+    width: 60%;
+    height: 14%;
+    border-radius: 9999px;
+    left: 14%;
+    top: 30%;
+  }
+  .cover-2::after {
+    width: 40%;
+    height: 14%;
+    border-radius: 9999px;
+    left: 14%;
+    top: 52%;
+  }
+  .cover-3 {
+    --cover-tint: var(--accent);
+  }
+  .cover-3::before {
+    width: 34%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    left: 12%;
+    top: 20%;
+  }
+  .cover-3::after {
+    width: 34%;
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    right: 12%;
+    bottom: 18%;
+  }
+  .cover-4 {
+    --cover-tint: var(--brass);
+  }
+  .cover-4::before {
+    width: 52%;
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    right: 10%;
+    top: 12%;
+  }
+  .cover-4::after {
+    width: 28%;
+    height: 12%;
+    border-radius: 9999px;
+    left: 14%;
+    bottom: 22%;
+  }
+  .cover-5 {
+    --cover-tint: var(--text-muted);
+  }
+  .cover-5::before {
+    width: 30%;
+    height: 50%;
+    border-radius: 10px;
+    left: 14%;
+    top: 24%;
+  }
+  .cover-5::after {
+    width: 30%;
+    height: 50%;
+    border-radius: 10px;
+    left: 50%;
+    top: 24%;
+  }
+  .card-hover:hover .cover::before {
+    transform: translateY(-3px) scale(1.04);
+  }
+  .card-hover:hover .cover::after {
+    transform: translateY(3px) scale(1.04);
+  }
+
+  /* Small popup menu (project card actions): scales from its corner, leaves instantly. */
+  .menu-pop {
+    transform-origin: top right;
+    animation: menu-in 140ms var(--ease-out);
   }
 
   /* Press feedback for anything pressable: 160ms, scale 0.97 (range 0.95-0.98). */
@@ -671,9 +888,59 @@
       transition: opacity var(--duration-fast) linear;
     }
     .lift:hover,
-    .press:active {
+    .press:active,
+    .cover::before,
+    .cover::after,
+    .card-hover:hover .cover::before,
+    .card-hover:hover .cover::after {
       transform: none;
+      transition: none;
     }
+    .menu-pop,
+    .marquee-track,
+    .live-dot {
+      animation: none;
+    }
+    .underline-draw::after {
+      animation: none;
+      transform: scaleX(1);
+    }
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes live-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes draw-line {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
   }
 }
 

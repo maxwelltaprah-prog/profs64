@@ -11,6 +11,7 @@ import {
   ChartColumn,
   LayoutTemplate,
   FolderOpen,
+  Plug,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -127,6 +128,14 @@ export function HomeSidebar({
         >
           <LayoutTemplate {...iconProps} />
           Templates
+        </Link>
+        <Link
+          href="/integrations"
+          aria-current={active === "integrations" ? "page" : undefined}
+          className={`${item} ${active === "integrations" ? "bg-surface-2 text-text" : ""}`}
+        >
+          <Plug {...iconProps} />
+          Integrations
         </Link>
         <Link
           href="/usage"

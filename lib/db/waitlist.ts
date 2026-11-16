@@ -21,3 +21,20 @@ export async function joinedPacks(supabase?: SupabaseClient): Promise<string[]> 
   }
   return [...packs];
 }
+
+// Integrations the signed-in person has asked to be told about, from their own audit rows.
+export async function interestedIntegrations(supabase?: SupabaseClient): Promise<string[]> {
+  const client = supabase ?? (await createSupabaseServerClient());
+  const { data, error } = await client
+    .from("audit_log")
+    .select("metadata")
+    .eq("event", "integration_interest")
+    .limit(200);
+  if (error || !data) return [];
+  const ids = new Set<string>();
+  for (const row of data as Array<{ metadata: Record<string, unknown> }>) {
+    const id = row.metadata?.["integration"];
+    if (typeof id === "string") ids.add(id);
+  }
+  return [...ids];
+}

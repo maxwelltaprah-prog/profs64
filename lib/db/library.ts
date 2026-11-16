@@ -74,3 +74,12 @@ export async function loadLibrary(supabase?: SupabaseClient): Promise<Library> {
   ]);
   return { projects: projects.items, chats: chats.items, pinsEnabled: projects.pinned };
 }
+
+// Projects only, for the home screen's cards.
+export async function loadProjectCards(
+  supabase?: SupabaseClient,
+): Promise<{ projects: LibraryItem[]; pinsEnabled: boolean }> {
+  const client = supabase ?? (await createSupabaseServerClient());
+  const { items, pinned } = await readAll(client, "projects", "name");
+  return { projects: items.slice(0, 12), pinsEnabled: pinned };
+}

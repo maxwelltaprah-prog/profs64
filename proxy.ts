@@ -20,6 +20,7 @@ const PROTECTED_PREFIXES = [
   "/settings",
   "/templates",
   "/library",
+  "/integrations",
 ];
 const GUEST_ONLY = ["/login", "/signup", "/forgot-password"];
 
