@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { PACK_IDS } from "@/lib/credits/packs";
 import {
   ATTACHMENT_BODY_LIMIT_BYTES,
   AUTH_BODY_LIMIT_BYTES,
@@ -101,3 +102,9 @@ export const attachmentsBodySchema = z.strictObject({
     .max(3),
 });
 export type AttachmentsBody = z.infer<typeof attachmentsBodySchema>;
+
+// Joining the credit-pack waitlist: only a known pack id is accepted.
+export const waitlistBodySchema = z.strictObject({
+  pack: z.enum(PACK_IDS as [string, ...string[]]),
+});
+export type WaitlistBody = z.infer<typeof waitlistBodySchema>;

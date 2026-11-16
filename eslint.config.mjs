@@ -16,6 +16,9 @@ const eslintConfig = defineConfig([
       },
     },
     rules: {
+      // The strict nonce CSP forbids inline styles; next/image emits a `style` attribute, so the
+      // app uses plain <img> on purpose (CLAUDE.md). Previews are small, already-sized assets.
+      "@next/next/no-img-element": "off",
       "import/no-duplicates": "error",
       "import/no-cycle": ["error", { maxDepth: 5 }],
       "import/no-self-import": "error",

@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 import { cn } from "@/lib/utils/cn";
 
 import { PICK_EXAMPLE_EVENT } from "./prompt-box";
@@ -73,12 +71,15 @@ export function ExampleGallery() {
             className="lift ring-line bg-surface group block w-full rounded-xl p-3 text-left"
           >
             <div className="border-hairline aspect-[4/3] overflow-hidden rounded-md border">
-              <Image
+              {/* Plain img, not next/image: next/image emits an inline style that the CSP blocks. */}
+              <img
                 src={example.preview}
                 alt=""
                 aria-hidden="true"
                 width={640}
                 height={480}
+                loading="lazy"
+                decoding="async"
                 className={cn(
                   "block h-full w-full object-cover transition-transform duration-300",
                   "group-hover:scale-[1.02] motion-reduce:transition-none",

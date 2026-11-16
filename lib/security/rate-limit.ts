@@ -135,4 +135,5 @@ export const LIMITS = {
   documentDownloadUser: { name: "document-download-user", limit: 120, windowSeconds: 600 },
   attachUser: { name: "attach-user", limit: 20, windowSeconds: 600 },
   passwordChangeUser: { name: "password-change-user", limit: 5, windowSeconds: 3600 },
+  waitlistUser: { name: "waitlist-user", limit: 20, windowSeconds: 3600 },
 } as const satisfies Record<string, LimiterConfig>;

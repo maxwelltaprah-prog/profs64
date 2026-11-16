@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { formatCredits } from "@/components/app-header";
+import { PricingPlans } from "@/components/billing/pricing-plans";
 import { HomeSidebar } from "@/components/home/home-sidebar";
+import { formatCredits, USD_PER_CREDIT } from "@/lib/credits/math";
 import { getOptionalUser } from "@/lib/db/auth";
 import { loadShell } from "@/lib/db/shell";
+import { joinedPacks } from "@/lib/db/waitlist";
 
 import type { Metadata } from "next";
 
@@ -14,7 +16,7 @@ export default async function UpgradePage() {
   const user = await getOptionalUser();
   if (!user) redirect("/login?next=/upgrade");
 
-  const shell = await loadShell(user.id);
+  const [shell, joined] = await Promise.all([loadShell(user.id), joinedPacks()]);
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
@@ -27,54 +29,55 @@ export default async function UpgradePage() {
         active="upgrade"
       />
       <main id="main" className="min-w-0 flex-1 px-6 py-10 md:px-10 md:py-14">
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="mx-auto w-full max-w-4xl">
           <p className="text-muted text-[13px]">Plan and credits</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Your Buildr plan</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Credits and top-ups</h1>
 
           <section
             aria-labelledby="current-plan"
-            className="border-hairline bg-surface mt-8 rounded-2xl border p-5 sm:p-6"
+            className="border-hairline bg-surface mt-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-5 sm:p-6"
           >
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h2 id="current-plan" className="text-lg font-semibold">
-                  Free plan
-                </h2>
-                <p className="text-muted mt-1 text-[13px]">
-                  Build projects and use chat with your available credits.
-                </p>
-              </div>
-              <span className="bg-accent-subtle text-accent rounded-full px-3 py-1 text-xs font-medium">
-                Current plan
-              </span>
+            <div>
+              <h2 id="current-plan" className="text-lg font-semibold">
+                Free plan
+              </h2>
+              <p className="text-muted mt-1 text-[13px]">
+                You started with 20 credits. Credits are spent on model usage as you build and chat.
+              </p>
             </div>
-            <div className="border-hairline mt-5 flex items-center justify-between border-t pt-4">
-              <span className="text-muted text-[13px]">Available credits</span>
-              <span className="text-lg font-semibold tabular-nums">
-                {formatCredits(shell.balance)}
-              </span>
+            <div className="text-right">
+              <p className="text-muted text-[13px]">Available credits</p>
+              <p className="text-2xl font-semibold tabular-nums">{formatCredits(shell.balance)}</p>
             </div>
           </section>
 
-          <section
-            aria-labelledby="upgrade-status"
-            className="border-hairline mt-6 rounded-2xl border p-5 sm:p-6"
-          >
-            <h2 id="upgrade-status" className="text-sm font-semibold">
-              Paid plans and credit top-ups aren&apos;t available yet
-            </h2>
-            <p className="text-muted mt-2 text-[13px] leading-6">
-              There is no checkout or subscription to activate right now. Buildr charges credits
-              based on model usage; one credit covers $0.03 of usage. You can see your current
-              balance above and keep using your existing projects and chats.
+          <section aria-labelledby="packs" className="mt-10">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 id="packs" className="text-lg font-semibold tracking-tight">
+                  Top up with a credit pack
+                </h2>
+                <p className="text-muted mt-1 text-[13px]">
+                  One credit covers ${USD_PER_CREDIT.toFixed(2)} of model usage. Bigger packs
+                  include more credits per dollar.
+                </p>
+              </div>
+            </div>
+            <PricingPlans joined={joined} />
+            <p className="text-subtle mt-4 text-xs leading-5">
+              Checkout isn&apos;t live yet, so nothing is charged. Choose a pack to be notified when
+              top-ups open — you&apos;ll keep all the credits you already have in the meantime.
             </p>
+          </section>
+
+          <div className="mt-8">
             <Link
               href="/dashboard"
-              className="press bg-accent text-accent-fg hover:bg-accent-hover mt-5 inline-flex h-9 items-center rounded-md px-4 text-[13px] font-medium"
+              className="text-muted hover:text-text text-[13px] underline underline-offset-4"
             >
               Back to projects
             </Link>
-          </section>
+          </div>
         </div>
       </main>
     </div>

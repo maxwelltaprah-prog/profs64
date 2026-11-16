@@ -6,13 +6,13 @@ import { type ReactNode } from "react";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAppActions } from "@/components/use-app-actions";
+import { formatCredits } from "@/lib/credits/math";
 import { type ThemeChoice } from "@/lib/theme";
 
 import { CommandPalette, type RunnableAction } from "./command-palette";
 
-export function formatCredits(value: number): string {
-  return value.toFixed(2);
-}
+// Re-exported so existing client imports (sidebar, etc.) keep working.
+export { formatCredits };
 
 export function AppHeader({
   balance,

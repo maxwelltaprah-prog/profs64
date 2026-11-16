@@ -142,8 +142,14 @@ describe("theme definitions stay in sync", () => {
   });
 
   it("uses a single accent hue family and no gradients or glows", () => {
-    expect(css).not.toMatch(/gradient\(/);
     expect(css).not.toMatch(/drop-shadow|glow/i);
+    // Owner decision 2026-11-16: one subtle accent-tinted radial gradient is allowed as the
+    // landing hero backdrop (.landing-hero::before), and nowhere else.
+    const gradients = [...css.matchAll(/([^{}]*)\{[^{}]*gradient\([^{}]*\}/g)].map(
+      (m) => (m[1] ?? "").split("}").pop()?.trim() ?? "",
+    );
+    expect(gradients.length).toBeGreaterThan(0);
+    for (const selector of gradients) expect(selector).toBe(".landing-hero::before");
   });
 
   // Owner decision 2026-11-08: subtle glass is allowed, but only through the three glass classes,

@@ -18,3 +18,8 @@ export function estimateTokensFromChars(chars: number): number {
   if (!Number.isFinite(chars) || chars <= 0) return 0;
   return Math.ceil(chars / 3);
 }
+
+// Credits shown to people, always two decimals. Pure so server components can call it too.
+export function formatCredits(value: number): string {
+  return value.toFixed(2);
+}
