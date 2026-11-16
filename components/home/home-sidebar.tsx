@@ -14,6 +14,7 @@ import {
   Plug,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { formatCredits } from "@/components/app-header";
 import { CommandPalette } from "@/components/command-palette";
@@ -36,17 +37,19 @@ export function HomeSidebar({
   email,
   recent,
   chats = [],
-  active = "home",
 }: {
   balance: number;
   theme: ThemeChoice;
   email: string;
   recent: ReadonlyArray<{ id: string; name: string }>;
   chats?: ReadonlyArray<{ id: string; title: string }>;
-  /** Which page is showing: home, a chat, or a specific conversation (its id). */
-  active?: "home" | "chat" | string;
 }) {
   const { actions, signOut, signingOut } = useAppActions();
+  const pathname = usePathname();
+  // Which page is showing is read from the URL here, on the client, so the sidebar can stay
+  // mounted in the shared layout while only the page beside it changes.
+  const active = pathname === "/dashboard" ? "home" : (pathname.split("/")[1] ?? "");
+  const activeChat = pathname.startsWith("/chat/") ? pathname.slice("/chat/".length) : null;
 
   return (
     <aside className="glass-bar border-hairline sticky top-0 z-20 flex items-center gap-2 border-b px-3 py-2 md:h-dvh md:w-64 md:shrink-0 md:flex-col md:items-stretch md:border-r md:border-b-0 md:py-3">
@@ -99,8 +102,8 @@ export function HomeSidebar({
         )}
         <Link
           href="/chat"
-          aria-current={active === "chat" ? "page" : undefined}
-          className={`${item} ${active === "chat" ? "bg-surface-2 text-text" : ""}`}
+          aria-current={active === "chat" && !activeChat ? "page" : undefined}
+          className={`${item} ${active === "chat" && !activeChat ? "bg-surface-2 text-text" : ""}`}
         >
           <MessageSquare {...iconProps} />
           New chat
@@ -169,8 +172,8 @@ export function HomeSidebar({
                   <Link
                     href={`/chat/${chat.id}`}
                     title={chat.title}
-                    aria-current={active === chat.id ? "page" : undefined}
-                    className={`${item} block truncate leading-8 ${active === chat.id ? "bg-surface-2 text-text" : ""}`}
+                    aria-current={activeChat === chat.id ? "page" : undefined}
+                    className={`${item} block truncate leading-8 ${activeChat === chat.id ? "bg-surface-2 text-text" : ""}`}
                   >
                     {chat.title}
                   </Link>

@@ -86,7 +86,7 @@ export function ShareButton({
       <dialog
         ref={dialog}
         aria-labelledby="share-title"
-        className="glass border-hairline-strong text-text m-auto w-[min(480px,calc(100vw-2rem))] rounded-xl border p-0 shadow-[0_24px_64px_rgb(0_0_0/0.28)] backdrop:bg-black/30"
+        className="bg-surface border-hairline-strong text-text m-auto w-[min(480px,calc(100vw-2rem))] rounded-xl border p-0 shadow-md backdrop:bg-black/30"
       >
         <div className="flex items-start justify-between gap-4 p-5">
           <div>

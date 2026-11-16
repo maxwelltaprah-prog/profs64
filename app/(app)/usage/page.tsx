@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { HomeSidebar } from "@/components/home/home-sidebar";
 import { UsageChart } from "@/components/usage/usage-chart";
 import { formatCredits } from "@/lib/credits/math";
 import { getOptionalUser } from "@/lib/db/auth";
@@ -38,15 +37,7 @@ export default async function UsagePage() {
   const projectName = new Map(shell.projects.map((p) => [p.id, p.name]));
 
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
-      <HomeSidebar
-        balance={shell.balance}
-        theme={shell.theme}
-        email={user.email ?? ""}
-        recent={shell.projects.slice(0, 8)}
-        chats={shell.chats}
-        active="usage"
-      />
+    <>
       <main id="main" className="min-w-0 flex-1 px-6 py-10 md:px-10 md:py-14">
         <div className="mx-auto w-full max-w-4xl">
           <p className="text-muted text-[13px]">Workspace</p>
@@ -145,6 +136,6 @@ export default async function UsagePage() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }

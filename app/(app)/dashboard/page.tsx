@@ -2,13 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CreateProject } from "@/components/dashboard/create-project";
-import { HOME_PROMPT_ID, HomeSidebar } from "@/components/home/home-sidebar";
+import { HOME_PROMPT_ID } from "@/components/home/home-sidebar";
 import { StartIdeas } from "@/components/home/start-ideas";
 import { PromptBox } from "@/components/landing/prompt-box";
 import { ProjectGrid } from "@/components/projects/project-grid";
 import { getOptionalUser } from "@/lib/db/auth";
 import { loadProjectCards } from "@/lib/db/library";
-import { loadShell } from "@/lib/db/shell";
 import { PASSWORD_MIN } from "@/lib/security/limits";
 import { greetingName, timeAgo } from "@/lib/workspace/home";
 
@@ -16,30 +15,15 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Home" };
 
-const RECENT_IN_SIDEBAR = 8;
-
 export default async function DashboardPage() {
   const user = await getOptionalUser();
   if (!user) redirect("/login?next=/dashboard");
 
-  const [{ projects, balance, theme, chats }, cards] = await Promise.all([
-    loadShell(user.id),
-    loadProjectCards(),
-  ]);
+  const cards = await loadProjectCards();
   const name = greetingName(user.email);
 
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
-      <HomeSidebar
-        balance={balance}
-        theme={theme}
-        email={user.email ?? ""}
-        recent={projects
-          .slice(0, RECENT_IN_SIDEBAR)
-          .map(({ id, name: title }) => ({ id, name: title }))}
-        chats={chats}
-        active="home"
-      />
+    <>
       <main id="main" className="min-w-0 flex-1 px-6 pt-12 pb-16 md:px-10 md:pt-20">
         <div className="mx-auto w-full max-w-3xl">
           {!user.email_confirmed_at ? (
@@ -126,6 +110,6 @@ export default async function DashboardPage() {
           </section>
         </div>
       </main>
-    </div>
+    </>
   );
 }

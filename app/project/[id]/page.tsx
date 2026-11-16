@@ -45,7 +45,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <AppHeader balance={balance} theme={theme}>
-        <span className="text-muted truncate text-[13px]">{project.name}</span>
+        <span className="text-text min-w-0 truncate text-[13px] font-medium" title={project.name}>
+          {project.name}
+        </span>
         <ShareButton projectId={id} initialSlug={share.slug} available={share.available} />
       </AppHeader>
       <main id="main" className="flex min-h-0 flex-1 flex-col overflow-hidden">

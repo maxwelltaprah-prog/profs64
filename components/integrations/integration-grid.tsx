@@ -3,9 +3,16 @@
 import { Check } from "lucide-react";
 import { useState } from "react";
 
+import { BrandIcon } from "@/components/integrations/brand-icon";
 import { Button } from "@/components/ui/button";
+import { FilterChips } from "@/components/ui/filter-chips";
 import { iconProps } from "@/components/ui/icons";
-import { INTEGRATION_CATEGORIES, INTEGRATIONS, type Integration } from "@/lib/integrations/catalog";
+import {
+  INTEGRATION_CATEGORIES,
+  INTEGRATIONS,
+  type Integration,
+  type IntegrationCategory,
+} from "@/lib/integrations/catalog";
 
 function Card({ integration, joined }: { integration: Integration; joined: boolean }) {
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">(
@@ -31,9 +38,9 @@ function Card({ integration, joined }: { integration: Integration; joined: boole
       <div className="flex items-center gap-3">
         <span
           aria-hidden="true"
-          className="bg-accent-subtle text-accent flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold"
+          className="bg-paper ring-line flex size-10 shrink-0 items-center justify-center rounded-lg"
         >
-          {integration.name.charAt(0)}
+          <BrandIcon id={integration.id} className="size-5" />
         </span>
         <h3 className="text-sm font-semibold">{integration.name}</h3>
         <span className="text-subtle border-hairline ml-auto rounded-full border px-2 py-0.5 text-[11px]">
@@ -69,24 +76,33 @@ function Card({ integration, joined }: { integration: Integration; joined: boole
 }
 
 export function IntegrationGrid({ interested }: { interested: readonly string[] }) {
+  const [filter, setFilter] = useState<IntegrationCategory | "All">("All");
   return (
     <div className="flex flex-col gap-9">
-      {INTEGRATION_CATEGORIES.map((category) => (
-        <section key={category} aria-label={category}>
-          <h2 className="text-sm font-semibold tracking-tight">{category}</h2>
-          <ul className="card-in mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {INTEGRATIONS.filter((integration) => integration.category === category).map(
-              (integration) => (
-                <Card
-                  key={integration.id}
-                  integration={integration}
-                  joined={interested.includes(integration.id)}
-                />
-              ),
-            )}
-          </ul>
-        </section>
-      ))}
+      <FilterChips
+        label="Integration category"
+        options={INTEGRATION_CATEGORIES}
+        value={filter}
+        onChange={setFilter}
+      />
+      {INTEGRATION_CATEGORIES.filter((category) => filter === "All" || category === filter).map(
+        (category) => (
+          <section key={category} aria-label={category}>
+            <h2 className="text-sm font-semibold tracking-tight">{category}</h2>
+            <ul className="card-in mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {INTEGRATIONS.filter((integration) => integration.category === category).map(
+                (integration) => (
+                  <Card
+                    key={integration.id}
+                    integration={integration}
+                    joined={interested.includes(integration.id)}
+                  />
+                ),
+              )}
+            </ul>
+          </section>
+        ),
+      )}
     </div>
   );
 }

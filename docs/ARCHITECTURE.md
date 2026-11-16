@@ -114,10 +114,15 @@ Free fallback: when a person's balance is below 1 credit or their daily cap is r
   per-card action menu (open, pin, edit details, duplicate, delete). `POST
 /api/projects/[id]/duplicate` copies files only (not chat or share link). Covers are flat CSS
   shapes chosen from the id (`lib/workspace/cover.ts`).
+- **Shared shell**: signed-in pages live in the `app/(app)` route group. `app/(app)/layout.tsx` renders
+  the sidebar once; the active item comes from the URL in `HomeSidebar` (client), so navigating
+  swaps only the page beside it. `loadShell` and `getOptionalUser` are cached per request. The
+  project workspace (`/project/[id]`) keeps its own full-height layout.
 - **Navigation speed**: every signed-in route has a `loading.tsx` using `PageSkeleton`, so a click
   shows a shell at once and Next can prefetch it. The command palette uses a solid surface, not blur.
 - **Integrations** (`/integrations`): catalogue in `lib/integrations/catalog.ts`; interest is stored
-  as `integration_interest` audit events. Nothing is connected (KI-51).
+  as `integration_interest` audit events. Nothing is connected (KI-51). Logos are Simple Icons paths (CC0) copied into
+  `lib/integrations/brand-icons.ts`, so no package was added.
 
 - **Pricing** (`/upgrade`): one-time credit packs (`lib/credits/packs.ts`) with a "Notify me"
   waitlist that records a `pack_waitlist` audit event. No checkout; nothing is charged.

@@ -17,8 +17,13 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { FilterChips } from "@/components/ui/filter-chips";
 import { createProjectForPrompt } from "@/lib/workspace/open-project";
-import { templatesByCategory, type ProjectTemplate } from "@/lib/workspace/templates";
+import {
+  type TemplateCategory,
+  templatesByCategory,
+  type ProjectTemplate,
+} from "@/lib/workspace/templates";
 
 const ICONS: Readonly<Record<string, LucideIcon>> = {
   "saas-landing": Globe,
@@ -50,7 +55,7 @@ function TemplateCard({
       disabled={busy}
       aria-busy={busy}
       onClick={() => onPick(template)}
-      className="press border-hairline bg-surface hover:border-hairline-strong hover:bg-surface-2 flex w-full flex-col gap-2.5 rounded-xl border p-4 text-left disabled:opacity-60"
+      className="lift press border-hairline bg-surface hover:border-hairline-strong flex w-full flex-col gap-2.5 rounded-xl border p-4 text-left disabled:opacity-60"
     >
       <span className="bg-surface-2 border-hairline text-muted flex size-10 items-center justify-center rounded-lg border">
         {busy ? (
@@ -71,7 +76,9 @@ export function TemplateGallery() {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const groups = templatesByCategory();
+  const [filter, setFilter] = useState<TemplateCategory | "All">("All");
+  const allGroups = templatesByCategory();
+  const groups = allGroups.filter((group) => filter === "All" || group.category === filter);
 
   const pick = async (template: ProjectTemplate) => {
     if (busyId) return;
@@ -87,7 +94,13 @@ export function TemplateGallery() {
   };
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-8">
+      <FilterChips
+        label="Template category"
+        options={allGroups.map((group) => group.category)}
+        value={filter}
+        onChange={setFilter}
+      />
       {error ? (
         <p
           role="alert"
@@ -101,7 +114,7 @@ export function TemplateGallery() {
           <h2 id={`cat-${group.category}`} className="text-sm font-semibold tracking-tight">
             {group.category}
           </h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="card-in mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {group.items.map((template) => (
               <TemplateCard
                 key={template.id}

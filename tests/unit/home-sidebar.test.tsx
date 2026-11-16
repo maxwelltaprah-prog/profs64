@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { HomeSidebar } from "@/components/home/home-sidebar";
 import { AppearanceSetting } from "@/components/settings/appearance-setting";
 
+vi.mock("next/navigation", () => ({ usePathname: () => "/settings" }));
 vi.mock("@/components/use-app-actions", () => ({
   useAppActions: () => ({ actions: [], signOut: vi.fn(), signingOut: false }),
 }));
@@ -32,15 +33,7 @@ afterEach(() => {
 
 describe("signed-in navigation", () => {
   it("offers Settings and puts Upgrade above the account email", () => {
-    render(
-      <HomeSidebar
-        balance={9.36}
-        theme="dark"
-        email="person@example.com"
-        recent={[]}
-        active="settings"
-      />,
-    );
+    render(<HomeSidebar balance={9.36} theme="dark" email="person@example.com" recent={[]} />);
 
     expect(
       screen

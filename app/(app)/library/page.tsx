@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
 
-import { HomeSidebar } from "@/components/home/home-sidebar";
 import { LibraryView } from "@/components/library/library-view";
 import { getOptionalUser } from "@/lib/db/auth";
 import { loadLibrary } from "@/lib/db/library";
-import { loadShell } from "@/lib/db/shell";
 import { timeAgo } from "@/lib/workspace/home";
 
 import type { Metadata } from "next";
@@ -14,18 +12,10 @@ export const metadata: Metadata = { title: "Your library" };
 export default async function LibraryPage() {
   const user = await getOptionalUser();
   if (!user) redirect("/login?next=/library");
-  const [shell, library] = await Promise.all([loadShell(user.id), loadLibrary()]);
+  const library = await loadLibrary();
 
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
-      <HomeSidebar
-        balance={shell.balance}
-        theme={shell.theme}
-        email={user.email ?? ""}
-        recent={shell.projects.slice(0, 8)}
-        chats={shell.chats}
-        active="library"
-      />
+    <>
       <main id="main" className="min-w-0 flex-1 px-6 py-10 md:px-10 md:py-14">
         <div className="mx-auto w-full max-w-5xl">
           <p className="page-in text-muted text-[13px]">Workspace</p>
@@ -45,6 +35,6 @@ export default async function LibraryPage() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }

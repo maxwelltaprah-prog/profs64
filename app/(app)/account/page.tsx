@@ -1,11 +1,7 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DeleteAccount } from "@/components/account/delete-account";
-import { AppHeader } from "@/components/app-header";
 import { getOptionalUser } from "@/lib/db/auth";
-import { getCreditBalance } from "@/lib/db/projects";
-import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 
 import type { Metadata } from "next";
 
@@ -14,11 +10,9 @@ export const metadata: Metadata = { title: "Account" };
 export default async function AccountPage() {
   const user = await getOptionalUser();
   if (!user) redirect("/login?next=/account");
-  const [balance, store] = await Promise.all([getCreditBalance(user.id), cookies()]);
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <AppHeader balance={balance} theme={parseTheme(store.get(THEME_COOKIE)?.value)} />
+    <>
       <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
         <h1 className="text-xl font-semibold tracking-tight">Account</h1>
         <p className="text-muted mt-1 text-[13px]">{user.email}</p>
@@ -53,6 +47,6 @@ export default async function AccountPage() {
           <DeleteAccount />
         </section>
       </main>
-    </div>
+    </>
   );
 }

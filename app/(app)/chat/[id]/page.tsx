@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
 import { ConversationView } from "@/components/chat/conversation-view";
-import { HomeSidebar } from "@/components/home/home-sidebar";
 import { toUiMessages } from "@/lib/ai/messages";
 import { openFreeWindowUntil } from "@/lib/db/agent-status";
 import { getOptionalUser } from "@/lib/db/auth";
@@ -36,16 +35,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const freeUntil = await openFreeWindowUntil(user.id, shell.balance, supabase);
 
   return (
-    <div className="flex h-dvh flex-col md:flex-row">
-      <HomeSidebar
-        balance={shell.balance}
-        theme={shell.theme}
-        email={user.email ?? ""}
-        recent={shell.projects.slice(0, 8)}
-        chats={shell.chats}
-        active={conversation.id}
-      />
-      <main id="main" className="flex min-h-0 min-w-0 flex-1 flex-col">
+    <>
+      <main
+        id="main"
+        className="flex h-[calc(100dvh-3.25rem)] min-h-0 min-w-0 flex-1 flex-col md:h-dvh"
+      >
         <h1
           className="border-hairline truncate border-b px-5 py-3 text-sm font-medium"
           title={conversation.title}
@@ -58,6 +52,6 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           initialFreeUntil={freeUntil}
         />
       </main>
-    </div>
+    </>
   );
 }

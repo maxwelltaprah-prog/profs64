@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { PricingPlans } from "@/components/billing/pricing-plans";
-import { HomeSidebar } from "@/components/home/home-sidebar";
 import { formatCredits, USD_PER_CREDIT } from "@/lib/credits/math";
 import { getOptionalUser } from "@/lib/db/auth";
 import { loadShell } from "@/lib/db/shell";
@@ -19,15 +18,7 @@ export default async function UpgradePage() {
   const [shell, joined] = await Promise.all([loadShell(user.id), joinedPacks()]);
 
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
-      <HomeSidebar
-        balance={shell.balance}
-        theme={shell.theme}
-        email={user.email ?? ""}
-        recent={shell.projects.slice(0, 8)}
-        chats={shell.chats}
-        active="upgrade"
-      />
+    <>
       <main id="main" className="min-w-0 flex-1 px-6 py-10 md:px-10 md:py-14">
         <div className="mx-auto w-full max-w-4xl">
           <p className="text-muted text-[13px]">Plan and credits</p>
@@ -80,6 +71,6 @@ export default async function UpgradePage() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }

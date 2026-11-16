@@ -42,14 +42,16 @@ export function AppHeader({
             <span aria-hidden="true" className="text-subtle text-xs">
               /
             </span>
-            <span className="text-muted min-w-0 truncate text-[13px]">{children}</span>
+            <span className="text-muted flex min-w-0 items-center gap-2 text-[13px]">
+              {children}
+            </span>
           </>
         ) : null}
       </div>
       <div className="flex items-center gap-2">
-        <p className="border-hairline bg-surface text-muted flex h-8 items-center rounded-full border px-3 text-xs whitespace-nowrap">
-          <span className="text-text font-medium tabular-nums">{formatCredits(balance)}</span>{" "}
-          credits
+        <p className="border-hairline bg-surface text-muted flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs whitespace-nowrap">
+          <span className="text-text font-medium tabular-nums">{formatCredits(balance)}</span>
+          <span>credits</span>
         </p>
         <CommandPalette actions={actions} triggerClassName="touch-target" />
         <ThemeToggle initial={theme} className="touch-target" />
