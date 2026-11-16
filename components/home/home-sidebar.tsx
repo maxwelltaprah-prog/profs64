@@ -10,6 +10,7 @@ import {
   Zap,
   ChartColumn,
   LayoutTemplate,
+  FolderOpen,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -110,6 +111,14 @@ export function HomeSidebar({
         >
           <House {...iconProps} />
           Home
+        </Link>
+        <Link
+          href="/library"
+          aria-current={active === "library" ? "page" : undefined}
+          className={`${item} ${active === "library" ? "bg-surface-2 text-text" : ""}`}
+        >
+          <FolderOpen {...iconProps} />
+          Your library
         </Link>
         <Link
           href="/templates"

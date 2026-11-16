@@ -79,6 +79,26 @@ export const conversationCreateSchema = z.strictObject({
 });
 export const conversationRenameSchema = conversationCreateSchema;
 
+// Renaming and/or pinning a conversation. At least one field must be present.
+export const conversationUpdateSchema = z
+  .strictObject({
+    title: z.string().trim().min(1).max(120).optional(),
+    pinned: z.boolean().optional(),
+  })
+  .refine((body) => body.title !== undefined || body.pinned !== undefined, {
+    message: "Nothing to update.",
+  });
+
+// Renaming and/or pinning a project.
+export const projectUpdateSchema = z
+  .strictObject({
+    name: z.string().trim().min(1).max(80).optional(),
+    pinned: z.boolean().optional(),
+  })
+  .refine((body) => body.name !== undefined || body.pinned !== undefined, {
+    message: "Nothing to update.",
+  });
+
 export const deleteAccountSchema = z.strictObject({
   password: z.string().min(1).max(PASSWORD_MAX),
   confirm: z.literal(DELETE_CONFIRMATION),

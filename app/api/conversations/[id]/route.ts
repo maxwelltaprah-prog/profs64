@@ -5,24 +5,25 @@ import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { withApi } from "@/lib/security/api";
 import { PROJECT_BODY_LIMIT_BYTES } from "@/lib/security/limits";
 import { readJson } from "@/lib/security/request";
-import { conversationRenameSchema } from "@/lib/security/schemas";
+import { conversationUpdateSchema } from "@/lib/security/schemas";
 
 type Context = { params: Promise<{ id: string }> };
 
 // Rename. Ownership: RLS makes another person's conversation a 404.
 export async function PATCH(request: Request, context: Context) {
   const { id } = await context.params;
-  return withApi("conversations.rename", async () => {
+  return withApi("conversations.update", async () => {
     await getVerifiedUser();
-    const body = await readJson(request, conversationRenameSchema, PROJECT_BODY_LIMIT_BYTES);
+    const body = await readJson(request, conversationUpdateSchema, PROJECT_BODY_LIMIT_BYTES);
     const supabase = await createSupabaseServerClient();
     await getConversation(id, supabase);
-    const { error } = await supabase
-      .from("conversations")
-      .update({ title: body.title, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    const patch: Record<string, string | null> = { updated_at: new Date().toISOString() };
+    if (body.title !== undefined) patch["title"] = body.title;
+    if (body.pinned !== undefined)
+      patch["pinned_at"] = body.pinned ? new Date().toISOString() : null;
+    const { error } = await supabase.from("conversations").update(patch).eq("id", id);
     if (error) throw translateDbError(error);
-    return Response.json({ conversation: { id, title: body.title } });
+    return Response.json({ conversation: { id } });
   })(request);
 }
 

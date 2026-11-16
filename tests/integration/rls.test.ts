@@ -54,7 +54,7 @@ describe("RLS is on and default deny everywhere", () => {
     }
   });
 
-  it("no public function is executable by anon or authenticated", async () => {
+  it("no public function is executable by anon or authenticated, except the public share reader", async () => {
     const { rows } = await pool.query(
       `select p.oid::regprocedure::text as signature,
               has_function_privilege('anon', p.oid, 'execute') as anon_exec,
@@ -63,7 +63,15 @@ describe("RLS is on and default deny everywhere", () => {
        where n.nspname = 'public'`,
     );
     expect(rows.length).toBeGreaterThan(0);
+    // get_shared_project is deliberately callable by anon: it serves the public read-only preview
+    // and returns nothing unless a project has a share_slug set.
+    const allowed = new Set(["get_shared_project(text)"]);
     for (const row of rows) {
+      const name = String(row.signature).replace(/^public\./, "");
+      if (allowed.has(name)) {
+        expect(row.anon_exec, `${row.signature} anon`).toBe(true);
+        continue;
+      }
       expect(row.anon_exec, `${row.signature} anon`).toBe(false);
       expect(row.auth_exec, `${row.signature} authenticated`).toBe(false);
     }
