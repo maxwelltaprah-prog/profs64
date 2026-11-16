@@ -108,6 +108,24 @@ New projects include framer-motion, sonner and tailwindcss-animate, with `Motion
 
 Free fallback: when a person's balance is below 1 credit or their daily cap is reached, the agent (not the builder) uses an OpenRouter free model for 24 hours from the first such message, then not again for 24 hours (`lib/agent/free-window.ts`, recorded as a `free_window_started` audit event). Free replies are never billed, are limited to 40 per person per day, and are marked "Free model" in the chat; the response header `x-buildr-mode` tells the browser.
 
+### Pricing, usage, templates, organize and share
+
+- **Pricing** (`/upgrade`): one-time credit packs (`lib/credits/packs.ts`) with a "Notify me"
+  waitlist that records a `pack_waitlist` audit event. No checkout; nothing is charged.
+- **Usage** (`/usage`): credit totals, a per-day inline-SVG bar chart, per-project spend and recent
+  activity, aggregated purely in `lib/workspace/usage.ts` from the user's own ledger (RLS).
+- **Templates** (`/templates`): curated build prompts (`lib/workspace/templates.ts`); picking one
+  creates a project and sends the prompt as the first message, reusing `createProjectForPrompt`.
+- **Organize** (`/library`): search, rename, pin and delete projects and chats. `lib/db/library.ts`
+  reads `pinned_at` defensively, so the page works before the migration (pins disabled). Routes:
+  `PATCH`/`DELETE /api/projects/[id]` and the conversation `PATCH` toggles pins.
+- **Share** (`/p/[slug]`): a signed-out, read-only public preview. The project header's Share dialog
+  calls `POST`/`DELETE /api/projects/[id]/share` to set an unguessable `share_slug`. The public page
+  reads only name and files through the `SECURITY DEFINER` `get_shared_project(slug)` (returns
+  nothing unless shared) and renders them in the same sandboxed preview frame as the editor — no
+  chat, files, cookies or account are exposed. The migration `20261116000001` adds these columns
+  and the reader; all the features degrade gracefully until it is applied.
+
 ## Live preview
 
 The Preview tab runs the project in the browser without a build server.

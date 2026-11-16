@@ -87,6 +87,15 @@ The provider account (OpenRouter) cannot pay for requests. Logs show `model_stre
 
 To check the key from a shell: `GET https://openrouter.ai/api/v1/credits` with the key as a bearer token shows total credits and usage.
 
+## Apply the organize and share migration (once)
+
+In the Supabase dashboard, open SQL Editor, paste the whole of
+`supabase/migrations/20261116000001_organize_and_share.sql`, and run it. It adds `pinned_at` to
+projects and conversations, `share_slug` to projects, and the `get_shared_project(slug)` reader
+for public previews. Until it is applied, the app runs normally but pinning shows as unavailable
+and public share links cannot be created (both degrade gracefully). To undo: run
+`supabase/down/20261116000001_organize_and_share.down.sql`.
+
 ## Apply the chat agent migration (once)
 
 In the Supabase dashboard, open SQL Editor, paste the whole of `supabase/migrations/20261109000001_conversations.sql`, and run it. It creates `conversations`, `conversation_messages` and `conversation_documents` with RLS, and updates `export_user_data`. To undo: run `supabase/down/20261109000001_conversations.down.sql` (deletes all conversations).
