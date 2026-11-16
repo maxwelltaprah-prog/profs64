@@ -59,3 +59,7 @@ Added on 2026-11-09 so generated apps feel smooth, from Lovable's `vite_react_sh
 ## Error reporting (2026-11-16)
 
 `@sentry/nextjs` 11.13.0, pinned. Why: crash and error reports from the server and browser for the closed beta, which Vercel's logs alone do not give. Loaded only when `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` is set, so it costs nothing otherwise. Privacy: `lib/monitoring/sentry-options.ts` removes cookies, request bodies, headers, users, breadcrumbs and extras and shortens messages before sending, with no tracing; the CSP allows only the DSN's ingest origin. `npm audit` shows no advisory from it (the two high findings are the existing `pptxgenjs` / `image-size` one, KI-46).
+
+## Synthetic user feedback skill (2026-11-16, development only)
+
+`.claude/skills/synthetic-user-feedback` from github.com/travisseh/synthetic-user-feedback (MIT, three markdown files, no code, no scripts, no network calls). Read in full before installing. Never bundled or run by the app. `references/buildr-personas.md` is ours: four draft personas for Buildr, not reviewed by the owner. Reports are saved in `docs/`.
