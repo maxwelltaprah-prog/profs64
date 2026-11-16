@@ -85,8 +85,10 @@ export function CommandPalette({
       >
         <Search {...iconProps} />
         <span className="hidden sm:inline">Search</span>
-        <span className="flex-1" aria-hidden="true" />
-        <Kbd>{isMac ? "⌘K" : "Ctrl K"}</Kbd>
+        <span className="flex-1 max-sm:hidden" aria-hidden="true" />
+        <span className="max-sm:hidden">
+          <Kbd>{isMac ? "⌘K" : "Ctrl K"}</Kbd>
+        </span>
         <span className="sr-only">Open command palette</span>
       </button>
 

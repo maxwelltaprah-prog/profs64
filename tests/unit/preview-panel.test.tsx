@@ -91,3 +91,12 @@ describe("PreviewPanel", () => {
     );
   });
 });
+
+describe("PreviewPanel empty project", () => {
+  it("says nothing is built yet instead of running the starter", () => {
+    render(<PreviewPanel files={files} empty />);
+    expect(screen.getAllByText("Nothing built yet").length).toBeGreaterThan(0);
+    expect(screen.queryByTitle("Project preview")).toBeNull();
+    expect(screen.queryByText("Live")).toBeNull();
+  });
+});

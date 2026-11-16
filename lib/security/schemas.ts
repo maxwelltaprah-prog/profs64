@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { PACK_IDS } from "@/lib/credits/packs";
+import { isValidBranch, parseRepoInput } from "@/lib/github/push";
 import { INTEGRATION_IDS } from "@/lib/integrations/catalog";
 import {
   ATTACHMENT_BODY_LIMIT_BYTES,
@@ -144,4 +145,30 @@ export type WaitlistBody = z.infer<typeof waitlistBodySchema>;
 // Asking to be told when an integration ships: only a known integration id is accepted.
 export const integrationInterestSchema = z.strictObject({
   integration: z.enum(INTEGRATION_IDS as [string, ...string[]]),
+});
+
+// Push a project to GitHub. The token is only ever read from this body, used once and dropped.
+export const githubPushSchema = z.strictObject({
+  token: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9_-]{20,255}$/, "That does not look like a GitHub token."),
+  repo: z
+    .string()
+    .trim()
+    .max(200)
+    .refine((value) => parseRepoInput(value) !== null, "Use the form owner/repository."),
+  branch: z
+    .string()
+    .trim()
+    .max(100)
+    .refine(isValidBranch, "That is not a valid branch name.")
+    .optional(),
+  message: z
+    .string()
+    .trim()
+    .max(200)
+    .regex(/^[^\u0000-\u001f\u007f]*$/)
+    .optional(),
+  create: z.boolean().default(false),
 });

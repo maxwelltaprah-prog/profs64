@@ -28,6 +28,7 @@ export function SplitPane({
   second,
   firstLabel,
   firstHidden = false,
+  mobilePane = "first",
 }: {
   storageKey: string;
   defaultSize?: number;
@@ -36,6 +37,8 @@ export function SplitPane({
   firstLabel: string;
   /** Hides the first pane but keeps it mounted, so work inside it (a streaming reply) continues. */
   firstHidden?: boolean;
+  /** Below md only one pane is shown at a time. */
+  mobilePane?: "first" | "second";
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(defaultSize);
@@ -100,7 +103,8 @@ export function SplitPane({
         hidden={firstHidden}
         className={cn(
           "min-h-0 min-w-0 flex-1 flex-col md:w-(--split) md:flex-none",
-          firstHidden ? "hidden" : "flex",
+          mobilePane === "first" ? "max-md:flex" : "max-md:hidden",
+          firstHidden ? "md:hidden" : "md:flex",
         )}
       >
         {first}
@@ -125,8 +129,8 @@ export function SplitPane({
       />
       <div
         className={cn(
-          "border-hairline flex min-h-0 min-w-0 flex-1 flex-col border-t md:border-t-0",
-          firstHidden && "border-t-0",
+          "border-hairline min-h-0 min-w-0 flex-1 flex-col md:flex md:border-t-0",
+          mobilePane === "second" ? "max-md:flex" : "max-md:hidden",
         )}
       >
         {second}

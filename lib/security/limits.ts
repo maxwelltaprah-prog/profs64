@@ -18,3 +18,4 @@ export const FEEDBACK_BODY_LIMIT_BYTES = 256;
 export const ATTACHMENT_BODY_LIMIT_BYTES = 512 * 1024;
 
 export const DELETE_CONFIRMATION = "delete my account";
+export const GITHUB_PUSH_BODY_LIMIT_BYTES = 2 * 1024;

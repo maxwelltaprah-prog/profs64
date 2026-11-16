@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { iconProps } from "@/components/ui/icons";
 import { type ProjectFile } from "@/lib/db/projects";
+import { isStarterUntouched } from "@/lib/templates/vite-react-starter";
 import { cn } from "@/lib/utils/cn";
 import { type OutputInfo } from "@/lib/workspace/outputs";
 
@@ -40,6 +41,8 @@ export function Workspace({
   const [tab, setTab] = useState<Tab>("preview");
   const [chatHidden, setChatHidden] = useState(false);
   const [chatBusy, setChatBusy] = useState(false);
+  // On a phone only one pane is shown: the chat, or the preview or code (whichever tab is chosen).
+  const [mobileChat, setMobileChat] = useState(true);
   const hiddenKey = `buildr:chat-hidden:${userId}:${projectId}`;
   const [current, setCurrent] = useState<ProjectFile[]>(files);
   const [selected, setSelected] = useState<string | null>(files[0]?.path ?? null);
@@ -113,108 +116,148 @@ export function Workspace({
     { id: "preview", label: "Preview", Icon: PanelRight },
   ];
 
+  const phoneView: Tab | "chat" = mobileChat ? "chat" : tab;
+  const phoneTabs: Array<{ id: Tab | "chat"; label: string; Icon: typeof Code2 }> = [
+    { id: "chat", label: "Chat", Icon: MessageSquare },
+    ...tabs,
+  ];
+  const choosePhoneView = (id: Tab | "chat") => {
+    if (id === "chat") setMobileChat(true);
+    else {
+      setMobileChat(false);
+      setTab(id);
+    }
+  };
+
   return (
-    <SplitPane
-      storageKey={`buildr:split:${userId}:${projectId}`}
-      firstLabel="Chat"
-      firstHidden={chatHidden}
-      first={
-        <>
-          <div className="border-hairline flex h-11 shrink-0 items-center justify-between border-b px-3">
-            <h2 className="flex items-center gap-2 text-sm font-medium tracking-tight">
-              <MessageSquare {...iconProps} />
-              Chat
-            </h2>
-            <button
-              type="button"
-              aria-label="Hide chat"
-              title="Hide chat"
-              onClick={() => toggleChat(true)}
-              className="press touch-target text-muted hover:text-text hover:bg-surface-2 flex size-8 items-center justify-center rounded-md"
-            >
-              <PanelLeftClose {...iconProps} />
-            </button>
-          </div>
-          <ChatPanel
-            projectId={projectId}
-            initialMessages={messages}
-            initialOutputs={outputs}
-            projectFiles={current}
-            onOpenFile={openFile}
-            onOpenPreview={openPreview}
-            onBusyChange={setChatBusy}
-            canUseAssistant={canUseAssistant}
-            hasCredits={balance >= 1}
-            onFilesChanged={refreshFiles}
-            onFinished={onFinished}
-          />
-        </>
-      }
-      second={
-        <>
-          <div className="border-hairline flex h-11 shrink-0 items-center gap-3 border-b px-3">
-            {chatHidden ? (
+    <>
+      <div
+        role="group"
+        aria-label="Switch view"
+        className="border-hairline bg-surface flex shrink-0 gap-1 border-b p-1.5 md:hidden"
+      >
+        {phoneTabs.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={phoneView === id}
+            onClick={() => choosePhoneView(id)}
+            className={cn(
+              "press flex h-10 flex-1 items-center justify-center gap-1.5 rounded-md text-[13px] font-medium",
+              phoneView === id ? "bg-surface-2 text-text" : "text-muted",
+            )}
+          >
+            <Icon {...iconProps} />
+            {label}
+            {id === "chat" && chatBusy && phoneView !== "chat" ? (
+              <span aria-label="The assistant is working" className="thinking-dot bg-accent" />
+            ) : null}
+          </button>
+        ))}
+      </div>
+      <SplitPane
+        mobilePane={mobileChat ? "first" : "second"}
+        storageKey={`buildr:split:${userId}:${projectId}`}
+        firstLabel="Chat"
+        firstHidden={chatHidden}
+        first={
+          <>
+            <div className="border-hairline flex h-11 shrink-0 items-center justify-between border-b px-3 max-md:hidden">
+              <h2 className="flex items-center gap-2 text-sm font-medium tracking-tight">
+                <MessageSquare {...iconProps} />
+                Chat
+              </h2>
               <button
                 type="button"
-                aria-label="Show chat"
-                title="Show chat"
-                onClick={() => toggleChat(false)}
-                className="press touch-target text-muted hover:text-text relative flex h-8 items-center gap-1.5 rounded-md px-2 text-[13px]"
+                aria-label="Hide chat"
+                title="Hide chat"
+                onClick={() => toggleChat(true)}
+                className="press touch-target text-muted hover:text-text hover:bg-surface-2 flex size-8 items-center justify-center rounded-md"
               >
-                <PanelLeftOpen {...iconProps} />
-                Chat
-                {chatBusy ? (
-                  <span
-                    aria-label="The assistant is working"
-                    className="thinking-dot bg-accent absolute top-2 right-0.5"
-                  />
-                ) : null}
+                <PanelLeftClose {...iconProps} />
               </button>
-            ) : null}
-            <div
-              role="tablist"
-              aria-label="Workspace view"
-              className="bg-surface-2 flex min-h-9 items-center gap-0.5 rounded-lg p-0.5"
-            >
-              {tabs.map(({ id, label, Icon }) => (
+            </div>
+            <ChatPanel
+              projectId={projectId}
+              initialMessages={messages}
+              initialOutputs={outputs}
+              projectFiles={current}
+              onOpenFile={openFile}
+              onOpenPreview={openPreview}
+              onBusyChange={setChatBusy}
+              canUseAssistant={canUseAssistant}
+              hasCredits={balance >= 1}
+              onFilesChanged={refreshFiles}
+              onFinished={onFinished}
+            />
+          </>
+        }
+        second={
+          <>
+            <div className="border-hairline flex h-11 shrink-0 items-center gap-3 border-b px-3 max-md:hidden">
+              {chatHidden ? (
                 <button
-                  key={id}
                   type="button"
-                  role="tab"
-                  id={`tab-${id}`}
-                  aria-selected={tab === id}
-                  aria-controls={`panel-${id}`}
-                  onClick={() => setTab(id)}
-                  className={cn(
-                    "press touch-target flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium",
-                    tab === id ? "bg-surface text-text shadow-sm" : "text-muted hover:text-text",
-                  )}
+                  aria-label="Show chat"
+                  title="Show chat"
+                  onClick={() => toggleChat(false)}
+                  className="press touch-target text-muted hover:text-text relative flex h-8 items-center gap-1.5 rounded-md px-2 text-[13px]"
                 >
-                  <Icon {...iconProps} />
-                  {label}
+                  <PanelLeftOpen {...iconProps} />
+                  Chat
+                  {chatBusy ? (
+                    <span
+                      aria-label="The assistant is working"
+                      className="thinking-dot bg-accent absolute top-2 right-0.5"
+                    />
+                  ) : null}
                 </button>
-              ))}
+              ) : null}
+              <div
+                role="tablist"
+                aria-label="Workspace view"
+                className="bg-surface-2 flex min-h-9 items-center gap-0.5 rounded-lg p-0.5"
+              >
+                {tabs.map(({ id, label, Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    id={`tab-${id}`}
+                    aria-selected={tab === id}
+                    aria-controls={`panel-${id}`}
+                    onClick={() => setTab(id)}
+                    className={cn(
+                      "press touch-target flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium",
+                      tab === id ? "bg-surface text-text shadow-sm" : "text-muted hover:text-text",
+                    )}
+                  >
+                    <Icon {...iconProps} />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          {tab === "code" ? (
-            <div
-              role="tabpanel"
-              id="panel-code"
-              aria-labelledby="tab-code"
-              className="flex min-h-0 flex-1"
-            >
-              <CodeWorkspace
-                projectName={projectName}
-                files={current}
-                selected={selected}
-                onSelect={setSelected}
-              />
-            </div>
-          ) : (
-            <PreviewPanel files={current} />
-          )}
-        </>
-      }
-    />
+            {tab === "code" ? (
+              <div
+                role="tabpanel"
+                id="panel-code"
+                aria-labelledby="tab-code"
+                className="flex min-h-0 flex-1"
+              >
+                <CodeWorkspace
+                  projectName={projectName}
+                  files={current}
+                  selected={selected}
+                  onSelect={setSelected}
+                />
+              </div>
+            ) : (
+              <PreviewPanel files={current} empty={isStarterUntouched(current)} />
+            )}
+          </>
+        }
+      />
+    </>
   );
 }

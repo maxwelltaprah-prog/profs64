@@ -6,7 +6,7 @@ import {
   MAX_FILES_PER_PROJECT,
   validateProjectPath,
 } from "@/lib/security/paths";
-import { STARTER_FILES } from "@/lib/templates/vite-react-starter";
+import { isStarterUntouched, STARTER_FILES } from "@/lib/templates/vite-react-starter";
 
 describe("starter template", () => {
   it("only contains paths the path validator accepts, with no duplicates", () => {
@@ -79,5 +79,17 @@ describe("starter template", () => {
     for (const file of STARTER_FILES) {
       expect(file.content, file.path).not.toMatch(/https?:\/\/|api[_-]?key|secret|token/i);
     }
+  });
+});
+
+describe("isStarterUntouched", () => {
+  const same = STARTER_FILES.map((f) => ({ path: f.path, content: f.content }));
+  it("is true only for the exact starter files", () => {
+    expect(isStarterUntouched(same)).toBe(true);
+    expect(isStarterUntouched(same.slice(1))).toBe(false);
+    expect(isStarterUntouched([...same, { path: "src/New.tsx", content: "x" }])).toBe(false);
+    expect(
+      isStarterUntouched(same.map((f, i) => (i === 0 ? { ...f, content: f.content + " " } : f))),
+    ).toBe(false);
   });
 });

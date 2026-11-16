@@ -1,8 +1,7 @@
 import { cookies } from "next/headers";
 import { notFound as nextNotFound, redirect } from "next/navigation";
 
-import { AppHeader } from "@/components/app-header";
-import { ShareButton } from "@/components/workspace/share-button";
+import { ProjectHeader } from "@/components/workspace/project-header";
 import { Workspace } from "@/components/workspace/workspace";
 import { toUiMessages } from "@/lib/ai/messages";
 import { getOptionalUser } from "@/lib/db/auth";
@@ -11,6 +10,7 @@ import { getCreditBalance, getProject, listMessages, listProjectFiles } from "@/
 import { getProjectShareSlug } from "@/lib/db/share";
 import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { AppError } from "@/lib/security/errors";
+import { isStarterUntouched } from "@/lib/templates/vite-react-starter";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 
 import type { Metadata } from "next";
@@ -32,24 +32,30 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   }
 
   const supabase = await createSupabaseServerClient();
-  const [files, messages, balance, store, ratings, share] = await Promise.all([
+  const [files, messages, balance, store, ratings, share, created] = await Promise.all([
     listProjectFiles(id, supabase),
     listMessages(id, supabase),
     getCreditBalance(user.id, supabase),
     cookies(),
     listRatings(id, supabase),
     getProjectShareSlug(id, supabase),
+    supabase.from("projects").select("created_at").eq("id", id).maybeSingle(),
   ]);
   const theme = parseTheme(store.get(THEME_COOKIE)?.value);
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
-      <AppHeader balance={balance} theme={theme}>
-        <span className="text-text min-w-0 truncate text-[13px] font-medium" title={project.name}>
-          {project.name}
-        </span>
-        <ShareButton projectId={id} initialSlug={share.slug} available={share.available} />
-      </AppHeader>
+      <ProjectHeader
+        balance={balance}
+        theme={theme}
+        projectId={id}
+        name={project.name}
+        createdAt={(created.data as { created_at?: string } | null)?.created_at ?? null}
+        ownerEmail={user.email ?? ""}
+        built={!isStarterUntouched(files)}
+        shareSlug={share.slug}
+        shareAvailable={share.available}
+      />
       <main id="main" className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <Workspace
           userId={user.id}

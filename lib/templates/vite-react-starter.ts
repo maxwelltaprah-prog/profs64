@@ -536,3 +536,11 @@ Components live in \`src/components\`, pages in \`src/pages\`, and \`@/\` points
 ];
 
 export const STARTER_PATHS: ReadonlyArray<string> = STARTER_FILES.map((file) => file.path);
+
+// True while a project still holds exactly the starter files, so the workspace can say "nothing
+// built yet" instead of showing the generic starter page as if it were the person's app.
+export function isStarterUntouched(files: ReadonlyArray<{ path: string; content: string }>) {
+  if (files.length !== STARTER_FILES.length) return false;
+  const current = new Map(files.map((file) => [file.path, file.content]));
+  return STARTER_FILES.every((file) => current.get(file.path) === file.content);
+}

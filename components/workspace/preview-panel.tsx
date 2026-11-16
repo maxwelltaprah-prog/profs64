@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Monitor, RefreshCw, Smartphone, Tablet } from "lucide-react";
+import { AlertCircle, Monitor, RefreshCw, Smartphone, Sparkles, Tablet } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,14 @@ const VIEWPORTS: Array<{ id: Viewport; label: string; Icon: typeof Monitor; clas
 // Runs the project in a sandboxed frame. The files are transpiled here, in the page, and the
 // result is posted to the frame, which has no access to the app, its cookies or its storage.
 // Every file change rebuilds; the frame is reloaded only when the output actually changed.
-export function PreviewPanel({ files }: { files: ProjectFile[] }) {
+export function PreviewPanel({
+  files,
+  empty = false,
+}: {
+  files: ProjectFile[];
+  /** The project still holds only the starter files: show "nothing built yet", not the starter. */
+  empty?: boolean;
+}) {
   const frame = useRef<HTMLIFrameElement>(null);
   const transpiler = useRef<Transpile | null>(null);
   const [transpilerReady, setTranspilerReady] = useState(false);
@@ -64,7 +71,7 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
 
   // Rebuild shortly after the files settle. A new frame is loaded only if the bundle changed.
   useEffect(() => {
-    if (!transpilerReady || !transpiler.current) return;
+    if (empty || !transpilerReady || !transpiler.current) return;
     const transpile = transpiler.current;
     const timer = setTimeout(() => {
       const next = buildPreview(fileMap, transpile);
@@ -81,7 +88,7 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
       setVersion((v) => v + 1);
     }, 400);
     return () => clearTimeout(timer);
-  }, [fileMap, transpilerReady]);
+  }, [fileMap, transpilerReady, empty]);
 
   // Messages from the frame. Its origin is opaque ("null"), so identity is checked by source.
   useEffect(() => {
@@ -171,13 +178,20 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
             aria-hidden="true"
             className={cn(
               "size-1.5 shrink-0 rounded-full",
-              status === "ready" ? "bg-success" : status === "failed" ? "bg-danger" : "bg-accent",
+              empty
+                ? "bg-subtle"
+                : status === "ready"
+                  ? "bg-success"
+                  : status === "failed"
+                    ? "bg-danger"
+                    : "bg-accent",
             )}
           />
-          {status === "building" && "Preparing"}
-          {status === "loading" && "Loading"}
-          {status === "ready" && "Live"}
-          {status === "failed" && (
+          {empty && "Nothing built yet"}
+          {!empty && status === "building" && "Preparing"}
+          {!empty && status === "loading" && "Loading"}
+          {!empty && status === "ready" && "Live"}
+          {!empty && status === "failed" && (
             <>
               <AlertCircle {...iconProps} size={14} className="text-danger" />
               {errorCount === 1 ? "1 problem" : `${errorCount} problems`}
@@ -189,7 +203,7 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
           size="sm"
           className="touch-target"
           onClick={reload}
-          disabled={!bundle || status === "building"}
+          disabled={empty || !bundle || status === "building"}
           title="Reload preview"
         >
           <RefreshCw {...iconProps} />
@@ -198,8 +212,21 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
       </div>
 
       <div className="bg-surface-2 relative flex min-h-0 flex-1 justify-center overflow-auto p-3">
+        {empty ? (
+          <div className="border-hairline-strong bg-surface m-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
+            <span className="bg-surface-2 text-muted flex size-10 items-center justify-center rounded-full">
+              <Sparkles {...iconProps} size={18} />
+            </span>
+            <h3 className="text-sm font-semibold tracking-tight">Nothing built yet</h3>
+            <p className="text-muted text-[13px] leading-5">
+              Describe what you want in the chat. The app appears here as soon as the assistant has
+              written it, and you can open the code at any time.
+            </p>
+          </div>
+        ) : null}
         <div
           className={cn(
+            empty && "hidden",
             "bg-surface border-hairline relative flex min-h-full flex-col overflow-hidden rounded-md border transition-[width] duration-200 ease-out",
             current.className,
           )}
@@ -241,7 +268,7 @@ export function PreviewPanel({ files }: { files: ProjectFile[] }) {
               )}
             </div>
           ) : null}
-          {bundle && bundle.errors.length === 0 ? (
+          {!empty && bundle && bundle.errors.length === 0 ? (
             <iframe
               key={version}
               ref={frame}

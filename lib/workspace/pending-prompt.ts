@@ -132,8 +132,14 @@ export function clearPendingPrompt(): void {
   }
 }
 
-// First line of the prompt, cleaned to satisfy the project-name schema (no control characters,
-// at most 80 characters) and cut at a word boundary so the tree and header stay readable.
+const TITLE_MAX = 40;
+
+// A short title for a new project, derived from the first line of the prompt without any model
+// call (so it works when the assistant is down and costs nothing). Rules, in order:
+//   1. "called X" or "named X" wins, because that is what the person calls the thing.
+//   2. Otherwise drop the request wrapper ("Build me a", "I want"), cut at the first clause
+//      ("," ";" ":" or a word like "with" or "that"), and cap at about 40 characters.
+// The result satisfies the project-name schema (no control characters, at most 80 characters).
 export function projectNameFromPrompt(text: string): string {
   const firstLine = text.split("\n").find((line) => line.trim().length > 0) ?? "";
   const cleaned = firstLine
@@ -141,19 +147,38 @@ export function projectNameFromPrompt(text: string): string {
     .replace(/\s+/g, " ")
     .trim();
   if (cleaned.length === 0) return "New project";
-  if (cleaned.length <= PROJECT_NAME_MAX) return cleaned;
-  const cut = cleaned.slice(0, PROJECT_NAME_MAX);
-  // Prefer ending at a clause boundary, then at a word boundary, so the name reads as a phrase.
-  const half = PROJECT_NAME_MAX / 2;
-  const clause = Math.max(
-    ...[".", ":", ";", ",", "!", "?", " - ", " ("].map((m) => cut.lastIndexOf(m)),
-  );
-  const stop =
-    clause > half ? clause : cut.lastIndexOf(" ") > half ? cut.lastIndexOf(" ") : cut.length;
-  return (
+
+  const named =
+    /\b(?:called|named)\s+["\u201c']?([\p{L}\p{N}][\p{L}\p{N}&'\u2019 .-]{0,30}?)(?=["\u201d']|\s*[,:;.!?]|\s+(?:with|that|which|where|using|and|for|in|so)\b|$)/iu.exec(
+      cleaned,
+    );
+  const candidate = named?.[1]?.trim();
+  if (candidate && candidate.length >= 2) return capitalise(candidate.slice(0, TITLE_MAX));
+
+  const stripped = cleaned
+    .replace(/^please\s+/i, "")
+    .replace(/^(?:can|could|would)\s+you\s+/i, "")
+    .replace(/^i\s+(?:want|need|would\s+like|'d\s+like)\s+/i, "")
+    .replace(/^you\s+to\s+/i, "")
+    .replace(/^(?:build|create|make|design|generate|write|develop|code)\s+/i, "")
+    .replace(/^me\s+/i, "")
+    .replace(/^(?:an?|the|some)\s+/i, "");
+  const clause = stripped.split(/[,;:.!?]/)[0] ?? "";
+  const core = (
+    clause.split(/\s(?:with|that|which|where|using|including|featuring)\s/i)[0] ?? ""
+  ).trim();
+  const base = core.length >= 3 ? core : cleaned;
+  if (base.length <= TITLE_MAX) return capitalise(base);
+  const cut = base.slice(0, TITLE_MAX);
+  const stop = cut.lastIndexOf(" ") > TITLE_MAX / 2 ? cut.lastIndexOf(" ") : cut.length;
+  return capitalise(
     cut
       .slice(0, stop)
       .replace(/[\s.:;,!?(-]+$/, "")
-      .trimEnd() || cut.trimEnd()
+      .trimEnd() || cut.trimEnd(),
   );
+}
+
+function capitalise(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

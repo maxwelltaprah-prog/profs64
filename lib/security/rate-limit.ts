@@ -150,5 +150,6 @@ export const LIMITS = {
   passwordChangeUser: { name: "password-change-user", limit: 5, windowSeconds: 3600 },
   waitlistUser: { name: "waitlist-user", limit: 20, windowSeconds: 3600 },
   testerFeedbackUser: { name: "tester-feedback-user", limit: 20, windowSeconds: 3600 },
+  githubPushUser: { name: "github-push-user", limit: 10, windowSeconds: 3600 },
   shareUser: { name: "share-user", limit: 60, windowSeconds: 3600 },
 } as const satisfies Record<string, LimiterConfig>;

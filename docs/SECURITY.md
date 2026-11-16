@@ -106,3 +106,7 @@ Fixed:
 - **Interpolated filter column in `lib/db/stop.ts`.** The stop-scope column was built with a template literal. Although `scope` is a hardcoded typed constant (never user input), it now resolves through a fixed `Map`, so the filter column can never be built from an outside value.
 
 Not run: Strix (usestrix/strix), an autonomous exploitation agent. The build container's network is allowlisted to package registries and GitHub, so it cannot reach the production host, and pointing an autonomous exploit agent at live third-party-backed infrastructure (Supabase, Vercel, OpenRouter) risks real data and trips those providers' abuse protections. The review above was done against the source instead.
+
+## GitHub push (2026-11-16)
+
+`POST /api/projects/[id]/github` takes a personal access token in the body. It is validated by a strict schema (token shape, `owner/repo`, branch name), used for calls to `api.github.com` only (fixed host, redirects refused, 10 s timeout) and dropped. The token is not stored, logged, put in the audit event (which holds file count and flags only) or echoed in errors; unit tests assert the audit call and error messages do not contain it. Same-origin check, verified email, ownership through RLS and a 10-per-hour limit apply. Pushes never force and never delete repository files. Not verified: a push with a real token (the sandbox could only reach GitHub with a fake one, which GitHub rejected as expected), and the effect of Vercel platform request logging on request bodies.

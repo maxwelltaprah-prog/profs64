@@ -82,25 +82,30 @@ describe("pending prompt storage", () => {
     clearPendingPrompt();
   });
 
-  it("derives a clean project name from the first line", () => {
-    expect(projectNameFromPrompt("\n\n  A coffee\tshop\u0007 site \nmore")).toBe(
-      "A coffee shop site",
+  it("derives a short project title from the prompt", () => {
+    const name = projectNameFromPrompt;
+    expect(name("\n\n  A coffee\tshop\u0007 site \nmore")).toBe("Coffee shop site");
+    expect(name("")).toBe("New project");
+    expect(name("A website for my cafe called Bean There, with a menu and opening hours")).toBe(
+      "Bean There",
     );
-    expect(projectNameFromPrompt("")).toBe("New project");
-    const long = projectNameFromPrompt(
+    expect(
+      name("Build a landing page for a coffee shop called Bean There: a Hero with the name"),
+    ).toBe("Bean There");
+    expect(name("Make me a todo app, with dark mode and a weekly view please and more")).toBe(
+      "Todo app",
+    );
+    expect(name("I want a dashboard that tracks my weekly running distance")).toBe("Dashboard");
+    expect(name("Habit tracker")).toBe("Habit tracker");
+    const long = name(
       "A very long description of an application that goes on and on past the limit",
     );
-    expect(long.length).toBeLessThanOrEqual(60);
+    expect(long.length).toBeLessThanOrEqual(40);
     expect(long.endsWith(" ")).toBe(false);
-    expect(long).toBe("A very long description of an application that goes on and");
-    expect(
-      projectNameFromPrompt(
-        "Build a landing page for a coffee shop called Bean There: a Hero with the name",
-      ),
-    ).toBe("Build a landing page for a coffee shop called Bean There");
-    expect(
-      projectNameFromPrompt("Make me a todo app, with dark mode and a weekly view please and more"),
-    ).toBe("Make me a todo app, with dark mode and a weekly view please");
+    expect(long).toBe("Very long description of an application");
+    // Never empty, never over the schema limit, even for odd input.
+    expect(name("Build me a").length).toBeGreaterThan(0);
+    expect(name("x".repeat(500)).length).toBeLessThanOrEqual(40);
   });
 });
 
@@ -297,7 +302,7 @@ describe("StartProject", () => {
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/project/p-new"));
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(String(init.body))).toEqual({ name: "A coffee shop site" });
+    expect(JSON.parse(String(init.body))).toEqual({ name: "Coffee shop site" });
     expect(readPendingPrompt()).toMatchObject({
       text: "A coffee shop site\nwith a menu",
       projectId: "p-new",
