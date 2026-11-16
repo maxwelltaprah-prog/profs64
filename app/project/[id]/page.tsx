@@ -2,11 +2,14 @@ import { cookies } from "next/headers";
 import { notFound as nextNotFound, redirect } from "next/navigation";
 
 import { AppHeader } from "@/components/app-header";
+import { ShareButton } from "@/components/workspace/share-button";
 import { Workspace } from "@/components/workspace/workspace";
 import { toUiMessages } from "@/lib/ai/messages";
 import { getOptionalUser } from "@/lib/db/auth";
 import { listRatings, outputsFor } from "@/lib/db/outputs";
 import { getCreditBalance, getProject, listMessages, listProjectFiles } from "@/lib/db/projects";
+import { getProjectShareSlug } from "@/lib/db/share";
+import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { AppError } from "@/lib/security/errors";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 
@@ -28,12 +31,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     throw error;
   }
 
-  const [files, messages, balance, store, ratings] = await Promise.all([
-    listProjectFiles(id),
-    listMessages(id),
-    getCreditBalance(user.id),
+  const supabase = await createSupabaseServerClient();
+  const [files, messages, balance, store, ratings, share] = await Promise.all([
+    listProjectFiles(id, supabase),
+    listMessages(id, supabase),
+    getCreditBalance(user.id, supabase),
     cookies(),
-    listRatings(id),
+    listRatings(id, supabase),
+    getProjectShareSlug(id, supabase),
   ]);
   const theme = parseTheme(store.get(THEME_COOKIE)?.value);
 
@@ -41,6 +46,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     <div className="flex h-dvh flex-col overflow-hidden">
       <AppHeader balance={balance} theme={theme}>
         <span className="text-muted truncate text-[13px]">{project.name}</span>
+        <ShareButton projectId={id} initialSlug={share.slug} available={share.available} />
       </AppHeader>
       <main id="main" className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <Workspace

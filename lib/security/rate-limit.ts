@@ -136,4 +136,5 @@ export const LIMITS = {
   attachUser: { name: "attach-user", limit: 20, windowSeconds: 600 },
   passwordChangeUser: { name: "password-change-user", limit: 5, windowSeconds: 3600 },
   waitlistUser: { name: "waitlist-user", limit: 20, windowSeconds: 3600 },
+  shareUser: { name: "share-user", limit: 60, windowSeconds: 3600 },
 } as const satisfies Record<string, LimiterConfig>;
