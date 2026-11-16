@@ -9,6 +9,7 @@ import {
   UserRound,
   Zap,
   ChartColumn,
+  LayoutTemplate,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -109,6 +110,14 @@ export function HomeSidebar({
         >
           <House {...iconProps} />
           Home
+        </Link>
+        <Link
+          href="/templates"
+          aria-current={active === "templates" ? "page" : undefined}
+          className={`${item} ${active === "templates" ? "bg-surface-2 text-text" : ""}`}
+        >
+          <LayoutTemplate {...iconProps} />
+          Templates
         </Link>
         <Link
           href="/usage"

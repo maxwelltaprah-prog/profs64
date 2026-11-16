@@ -108,9 +108,17 @@ export default async function DashboardPage() {
             aria-labelledby="start-title"
             className="rise rise-3 border-hairline bg-surface-2 mt-14 rounded-2xl border p-4 sm:p-5"
           >
-            <h2 id="start-title" className="text-sm font-semibold tracking-tight">
-              Start from an idea
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="start-title" className="text-sm font-semibold tracking-tight">
+                Start from an idea
+              </h2>
+              <Link
+                href="/templates"
+                className="text-accent text-[13px] font-medium underline-offset-4 hover:underline"
+              >
+                Browse templates
+              </Link>
+            </div>
             <p className="text-muted mt-0.5 text-[13px]">
               Pick one to fill the box above, then change the details before you send it.
             </p>

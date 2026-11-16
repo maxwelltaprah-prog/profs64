@@ -18,6 +18,7 @@ const PROTECTED_PREFIXES = [
   "/usage",
   "/upgrade",
   "/settings",
+  "/templates",
 ];
 const GUEST_ONLY = ["/login", "/signup", "/forgot-password"];
 
