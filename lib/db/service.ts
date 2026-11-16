@@ -34,6 +34,30 @@ export async function recordAuditEvent(input: {
   if (error) throw new Error(`audit write failed: ${error.code ?? "unknown"}`);
 }
 
+// Whether this email may create an account while the closed beta is on. The database trigger is
+// the real gate; this only lets the sign-up form give a clear answer first. If the beta migration
+// has not been applied, or the check fails, it answers "yes" and the trigger still decides.
+export async function isEmailInvited(email: string): Promise<boolean> {
+  try {
+    const { data, error } = await serviceClient().rpc("is_email_invited", { p_email: email });
+    if (error || typeof data !== "boolean") return true;
+    return data;
+  } catch {
+    return true;
+  }
+}
+
+export async function insertFeedback(input: {
+  userId: string;
+  message: string;
+  page: string | null;
+}): Promise<void> {
+  const { error } = await serviceClient()
+    .from("feedback")
+    .insert({ user_id: input.userId, message: input.message, page: input.page });
+  if (error) throw new Error(`feedback write failed: ${error.code ?? "unknown"}`);
+}
+
 export interface DeductionResult {
   charged: number;
   balanceAfter: number;

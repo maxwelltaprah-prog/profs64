@@ -1,8 +1,9 @@
+import { isEmailInvited } from "@/lib/db/service";
 import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { withApi } from "@/lib/security/api";
 import { appBaseUrl } from "@/lib/security/app-url";
 import { getClientIp, hashForKey } from "@/lib/security/client-ip";
-import { badRequest, emailSendLimited } from "@/lib/security/errors";
+import { badRequest, emailSendLimited, inviteOnly } from "@/lib/security/errors";
 import { logger } from "@/lib/security/logger";
 import { assertPasswordAcceptable } from "@/lib/security/password-guard";
 import { enforceLimits, LIMITS } from "@/lib/security/rate-limit";
@@ -13,6 +14,12 @@ import { AUTH_BODY_LIMIT_BYTES, signupSchema } from "@/lib/security/schemas";
 export const POST = withApi("auth.signup", async (request, { requestId }) => {
   await enforceLimits([{ config: LIMITS.signupIp, key: hashForKey(getClientIp(request.headers)) }]);
   const { email, password, next } = await readJson(request, signupSchema, AUTH_BODY_LIMIT_BYTES);
+
+  // Closed beta: say so plainly before anything is created. The database also enforces it.
+  if (!(await isEmailInvited(email))) {
+    logger.info("signup_not_invited", { requestId });
+    throw inviteOnly();
+  }
 
   await assertPasswordAcceptable(password, email, requestId);
 

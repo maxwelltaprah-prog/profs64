@@ -24,6 +24,7 @@
   "dependencies": {
     "@ai-sdk/react": "4.0.168",
     "@openrouter/ai-sdk-provider": "3.1.0",
+    "@sentry/nextjs": "11.13.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.0",
     "@upstash/ratelimit": "2.2.0",

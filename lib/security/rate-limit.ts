@@ -91,14 +91,27 @@ function createUpstashLimiter(config: LimiterConfig, fallback: RateLimiter): Rat
 }
 
 const cache = new Map<string, RateLimiter>();
+let warnedInMemory = false;
+
+export function rateLimitBackend(): "upstash" | "memory" {
+  return process.env["UPSTASH_REDIS_REST_URL"] && process.env["UPSTASH_REDIS_REST_TOKEN"]
+    ? "upstash"
+    : "memory";
+}
 
 export function getLimiter(config: LimiterConfig): RateLimiter {
   const cached = cache.get(config.name);
   if (cached) return cached;
   const memory = createMemoryLimiter(config);
-  const useUpstash =
-    Boolean(process.env["UPSTASH_REDIS_REST_URL"]) &&
-    Boolean(process.env["UPSTASH_REDIS_REST_TOKEN"]);
+  const useUpstash = rateLimitBackend() === "upstash";
+  // On serverless each instance has its own memory, so this limiter is close to no limit at all.
+  // Say so once per instance in production rather than let it go unnoticed.
+  if (!useUpstash && process.env.NODE_ENV === "production" && !warnedInMemory) {
+    warnedInMemory = true;
+    logger.warn("rate_limit_in_memory", {
+      note: "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for limits that hold across instances.",
+    });
+  }
   const limiter = useUpstash ? createUpstashLimiter(config, memory) : memory;
   cache.set(config.name, limiter);
   return limiter;
@@ -136,5 +149,6 @@ export const LIMITS = {
   attachUser: { name: "attach-user", limit: 20, windowSeconds: 600 },
   passwordChangeUser: { name: "password-change-user", limit: 5, windowSeconds: 3600 },
   waitlistUser: { name: "waitlist-user", limit: 20, windowSeconds: 3600 },
+  testerFeedbackUser: { name: "tester-feedback-user", limit: 20, windowSeconds: 3600 },
   shareUser: { name: "share-user", limit: 60, windowSeconds: 3600 },
 } as const satisfies Record<string, LimiterConfig>;

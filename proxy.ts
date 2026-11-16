@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { updateSession } from "@/lib/db/supabase-proxy";
+import { sentryConnectOrigin } from "@/lib/monitoring/sentry-options";
 import { buildCsp, newNonce, previewFrameHeaders, securityHeaders } from "@/lib/security/csp";
 import { getRequestId } from "@/lib/security/request-id";
 
@@ -58,7 +59,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const nonce = newNonce();
-  const csp = buildCsp({ nonce, isDev: process.env.NODE_ENV === "development", isHttps });
+  const csp = buildCsp({
+    nonce,
+    isDev: process.env.NODE_ENV === "development",
+    isHttps,
+    reportOrigin: sentryConnectOrigin(process.env["NEXT_PUBLIC_SENTRY_DSN"]),
+  });
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);

@@ -9,6 +9,7 @@ import {
   CHAT_TEXT_MAX_CHARS,
   DELETE_CONFIRMATION,
   FEEDBACK_BODY_LIMIT_BYTES,
+  TESTER_FEEDBACK_MAX_CHARS,
   PASSWORD_MAX,
   PASSWORD_MIN,
   PROJECT_BODY_LIMIT_BYTES,
@@ -128,6 +129,16 @@ export type AttachmentsBody = z.infer<typeof attachmentsBodySchema>;
 export const waitlistBodySchema = z.strictObject({
   pack: z.enum(PACK_IDS as [string, ...string[]]),
 });
+// Feedback from a tester. The page is only the path they were on, so it is cut to a path shape.
+export const testerFeedbackSchema = z.strictObject({
+  message: z.string().trim().min(1).max(TESTER_FEEDBACK_MAX_CHARS),
+  page: z
+    .string()
+    .max(200)
+    .regex(/^\/[A-Za-z0-9/_\-.]*$/)
+    .optional(),
+});
+
 export type WaitlistBody = z.infer<typeof waitlistBodySchema>;
 
 // Asking to be told when an integration ships: only a known integration id is accepted.

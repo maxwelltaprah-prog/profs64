@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 
 import { formatCredits } from "@/components/app-header";
 import { CommandPalette } from "@/components/command-palette";
+import { FeedbackButton } from "@/components/feedback/feedback-button";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { iconProps } from "@/components/ui/icons";
@@ -160,6 +161,7 @@ export function HomeSidebar({
           <UserRound {...iconProps} />
           Account and data
         </Link>
+        <FeedbackButton />
       </nav>
 
       <div className="mt-5 hidden min-h-0 flex-col gap-4 overflow-y-auto md:flex">

@@ -43,6 +43,13 @@ export const rateLimited = (retryAfterSeconds: number) =>
 
 // Supabase's built-in mailer allows a handful of messages per hour; a project without custom
 // SMTP hits this as soon as a few people sign up. Operators are alerted through the log line.
+export const inviteOnly = () =>
+  new AppError(
+    403,
+    "invite_only",
+    "Buildr is invite-only during the beta. Ask for an invite, then sign up with the email address you were invited with.",
+  );
+
 export const emailSendLimited = () =>
   new AppError(
     429,

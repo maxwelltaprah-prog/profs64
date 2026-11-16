@@ -17,7 +17,10 @@ export default async function SignupPage() {
         <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em]">
           Create your account
         </h1>
-        <p className="text-muted text-sm">20 free credits to start. No card needed.</p>
+        <p className="text-muted text-sm">
+          Closed beta: sign up with the email address you were invited with. 20 free credits, no
+          card needed.
+        </p>
       </div>
       <div className="rise rise-1 flex flex-col gap-6">
         <ProviderButtons providers={providers} next="/dashboard" verb="Sign up with" />

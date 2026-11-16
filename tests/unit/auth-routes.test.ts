@@ -12,6 +12,7 @@ const auth = vi.hoisted(() => ({
 const getOptionalUser = vi.hoisted(() => vi.fn());
 const recordAuditEvent = vi.hoisted(() => vi.fn());
 const breach = vi.hoisted(() => vi.fn());
+const isEmailInvited = vi.hoisted(() => vi.fn());
 
 // after() needs a live request context; here it simply runs the callback straight away.
 vi.mock("next/server", async (original) => ({
@@ -20,7 +21,7 @@ vi.mock("next/server", async (original) => ({
 }));
 vi.mock("@/lib/db/supabase-server", () => ({ createSupabaseServerClient: async () => ({ auth }) }));
 vi.mock("@/lib/db/auth", () => ({ getOptionalUser }));
-vi.mock("@/lib/db/service", () => ({ recordAuditEvent }));
+vi.mock("@/lib/db/service", () => ({ recordAuditEvent, isEmailInvited }));
 vi.mock("@/lib/security/password", async (original) => ({
   ...(await original<typeof PasswordModule>()),
   checkBreachedPassword: breach,
@@ -54,9 +55,16 @@ const call = (
 
 beforeEach(() => {
   vi.resetModules();
-  for (const fn of [...Object.values(auth), getOptionalUser, recordAuditEvent, breach])
+  for (const fn of [
+    ...Object.values(auth),
+    getOptionalUser,
+    recordAuditEvent,
+    breach,
+    isEmailInvited,
+  ])
     fn.mockReset();
   breach.mockResolvedValue("clean");
+  isEmailInvited.mockResolvedValue(true);
   auth.signUp.mockResolvedValue({ data: { user: { id: "u" }, session: null }, error: null });
   auth.signInWithPassword.mockResolvedValue({
     data: { user: { id: "u", email_confirmed_at: "2026-01-01" } },
@@ -69,6 +77,20 @@ beforeEach(() => {
 });
 
 describe("POST /api/auth/signup", () => {
+  it("refuses an address that is not on the beta list, before creating anything", async () => {
+    isEmailInvited.mockResolvedValue(false);
+    const response = await call(await load("signup"), {
+      email: "stranger@example.com",
+      password: GOOD_PASSWORD,
+    });
+    expect(response.status).toBe(403);
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe("invite_only");
+    expect(body.error.message).toContain("invite-only");
+    expect(auth.signUp).not.toHaveBeenCalled();
+    expect(breach).not.toHaveBeenCalled();
+  });
+
   it("accepts a valid signup with 202 and asks the user to check their email", async () => {
     const response = await call(await load("signup"), {
       email: "New@Example.com",

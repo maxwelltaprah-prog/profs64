@@ -4,9 +4,11 @@ export interface CspOptions {
   // Only send upgrade-insecure-requests when the page itself is served over HTTPS;
   // otherwise a production build served over plain http (local e2e) cannot load its assets.
   isHttps: boolean;
+  /** Where the browser may send error reports (the Sentry ingest origin), if configured. */
+  reportOrigin?: string | null;
 }
 
-export function buildCsp({ nonce, isDev, isHttps }: CspOptions): string {
+export function buildCsp({ nonce, isDev, isHttps, reportOrigin }: CspOptions): string {
   const directives = [
     "default-src 'self'",
     // 'strict-dynamic' lets nonce-approved scripts load their chunks; React needs eval only in dev.
@@ -15,7 +17,7 @@ export function buildCsp({ nonce, isDev, isHttps }: CspOptions): string {
     isDev ? "style-src 'self' 'unsafe-inline'" : `style-src 'self' 'nonce-${nonce}'`,
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+    `connect-src 'self'${reportOrigin ? ` ${reportOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

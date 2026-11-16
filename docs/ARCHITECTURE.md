@@ -162,3 +162,17 @@ The model is always the deterministic fake (`lib/ai/fake-model.ts`) in tests.
 
 - **Design-engineering rules.** The skills from `emilkowalski/skills` are installed in `.claude/skills/` (MIT, licence copied; the Swift and React Native skills were left out). Applied to the UI: strong custom curves (`--ease-out` cubic-bezier(0.23, 1, 0.32, 1), plus `--ease-in-out` and `--ease-drawer`); press feedback is `scale(0.97)` over 160ms on every pressable (`.press`, including header search, tabs and CTA links); hover motion is gated to `(hover: hover) and (pointer: fine)`; toasts use transitions with `@starting-style` and leave faster than they arrive instead of restarting keyframes; dialogs enter from `scale(0.96)`; the command palette opens with no animation because it is keyboard-initiated and used constantly; the file-tree chevron now actually animates; headings get `-0.02em` tracking and balanced wrapping. Phone baseline: no tap flash, 16px inputs on touch (no iOS focus zoom, zoom never disabled), `touch-action: manipulation`, no text selection on controls, `min-h-dvh` instead of `min-h-screen`, `viewport-fit=cover` and a `theme-color` per colour scheme. `tests/unit/design-tokens.test.ts` fails if `transition: all`, `ease-in` or `scale(0)` appear in the stylesheet, or the baseline is removed. The skills' own conflicts with CLAUDE.md were checked: the cheat sheets and animation rules fit it (150-250ms, no gradients); the libraries are not adopted (KI-31).
 - **Chat panel.** The user's message is a right-aligned bubble; the assistant's reply is plain text with the role label "Buildr". `lib/workspace/message-text.ts` reads the formatting the model writes (paragraphs, lists, headings, fenced code, `**bold**`, `` `code` ``) into plain data and `components/workspace/message-text.tsx` renders it as React text nodes, so nothing from the model becomes HTML; links, images and raw HTML stay literal, and the parser uses no regular expressions over the input. Consecutive file steps are grouped into one list. While a reply is generating: new blocks and steps rise in (`.chat-in`, a `@starting-style` transition, only for content that arrives after the panel opened), the last text block carries a pulsing caret (`.stream-caret`), and three dots (`.thinking-dot`) show between sending and the first token and between tool calls. Under reduced motion the pulses stop and the entrance becomes a plain fade. A "Latest" button appears when the person scrolls up during a reply. Form controls keep a 3:1 visible border (`border-input`), not the faint card edge.
+
+### Closed beta support
+
+- **Sign-up gate**: `20261116000002_beta_gate_and_feedback.sql` adds a `before insert` trigger on
+  `auth.users` that rejects addresses not in `beta_allowlist` (full address or `@domain`) while
+  `app_settings.beta_gate = 'on'` (the default; it fails closed if the row is missing). The sign-up
+  route asks `is_email_invited` first for a clear message; Google sign-in failures land on
+  `/auth/callback` and become `/login?error=invite_only`.
+- **Feedback**: `POST /api/feedback` writes `public.feedback` (own rows via RLS; included in the data
+  export; deleted with the account). Button in the sidebar.
+- **Error reporting**: `instrumentation.ts` (server) and `instrumentation-client.ts` (browser) load
+  Sentry only when a DSN is set; `lib/monitoring/sentry-options.ts` scrubs events.
+- **Rate limits**: `rateLimitBackend()` reports `upstash` or `memory`; production logs a warning for
+  `memory`.

@@ -100,6 +100,13 @@ and public share links cannot be created (both degrade gracefully). To undo: run
 
 In the Supabase dashboard, open SQL Editor, paste the whole of `supabase/migrations/20261109000001_conversations.sql`, and run it. It creates `conversations`, `conversation_messages` and `conversation_documents` with RLS, and updates `export_user_data`. To undo: run `supabase/down/20261109000001_conversations.down.sql` (deletes all conversations).
 
+## Apply the beta gate and feedback migration (once)
+
+Run `supabase/migrations/20261116000002_beta_gate_and_feedback.sql` in the Supabase SQL Editor. It turns
+the sign-up gate ON: from that moment only addresses in `public.beta_allowlist` can create accounts, so
+add your testers first (see docs/BETA_LAUNCH.md, section 3). Existing accounts are unaffected. To
+reverse it, run the matching file in `supabase/down/`.
+
 ## Deploy checklist
 
 - Environment variables set; `AI_MODEL_MODE` empty.

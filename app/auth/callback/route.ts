@@ -17,5 +17,13 @@ export async function GET(request: NextRequest) {
     logger.warn("auth_callback_failed", { code: error.code ?? "unknown" });
   }
 
+  // Google sign-in for an address that is not on the beta list is refused by the database, which
+  // Supabase reports as this generic message.
+  const description = searchParams.get("error_description") ?? "";
+  if (description.includes("Database error saving new user")) {
+    logger.info("oauth_not_invited");
+    return NextResponse.redirect(new URL("/login?error=invite_only", request.url));
+  }
+
   return NextResponse.redirect(new URL("/login?error=link_invalid", request.url));
 }

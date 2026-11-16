@@ -10,6 +10,10 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: "Sign in" };
 
 const NOTICES = new Map<string, string>([
+  [
+    "invite_only",
+    "Buildr is invite-only during the beta. Ask for an invite, then sign in with the email address you were invited with.",
+  ],
   ["link_invalid", "That link has expired or was already used. Request a new one and try again."],
   [
     "provider_unavailable",

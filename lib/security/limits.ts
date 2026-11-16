@@ -7,6 +7,8 @@ export const PASSWORD_MAX = 128;
 
 export const AUTH_BODY_LIMIT_BYTES = 4 * 1024;
 export const PROJECT_BODY_LIMIT_BYTES = 2 * 1024;
+export const TESTER_FEEDBACK_BODY_LIMIT_BYTES = 6 * 1024;
+export const TESTER_FEEDBACK_MAX_CHARS = 2000;
 
 export const CHAT_BODY_LIMIT_BYTES = 32 * 1024;
 export const CHAT_TEXT_MAX_CHARS = 8000;

@@ -22,6 +22,9 @@ const TABLES = [
   "conversations",
   "conversation_messages",
   "conversation_documents",
+  "app_settings",
+  "beta_allowlist",
+  "feedback",
 ];
 
 let alice: string;

@@ -32,6 +32,11 @@ export async function prepareDatabase(): Promise<void> {
         await client.query(readFileSync(path.join(dir, file), "utf8"));
       }
     }
+    // Test accounts use made-up addresses, so the closed-beta gate is switched off here. The gate's
+    // own tests switch it on inside a transaction that is rolled back.
+    await client
+      .query("update public.app_settings set value = 'off' where key = 'beta_gate'")
+      .catch(() => undefined);
   } finally {
     await client.query("select pg_advisory_unlock($1)", [MIGRATION_LOCK]).catch(() => undefined);
     client.release();
