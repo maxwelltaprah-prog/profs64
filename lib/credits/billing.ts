@@ -53,6 +53,11 @@ export function createBiller(options: BillerOptions) {
       stepsStarted += 1;
       stepOutputChars = 0;
     },
+    /** Credits the steps finished so far have cost, from the usage the provider reported. */
+    spentCredits(): number {
+      if (usage.inputTokens + usage.outputTokens === 0) return 0;
+      return creditsForCost(costUsd(options.getModelId(), usage.inputTokens, usage.outputTokens));
+    },
     /** Any content-bearing output from the provider: proof the model call really ran. */
     activitySeen() {
       activity = true;

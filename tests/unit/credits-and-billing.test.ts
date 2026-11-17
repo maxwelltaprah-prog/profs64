@@ -121,6 +121,15 @@ describe("createBiller", () => {
     expect(call?.amount).toBe(creditsForCost(costUsd(DEFAULT_MODEL.id, 3300, 460)));
   });
 
+  it("reports what finished steps have cost so far, for the spending guard", () => {
+    const { biller } = setup();
+    expect(biller.spentCredits()).toBe(0);
+    biller.stepStarted();
+    biller.stepEnded({ inputTokens: 300_000, outputTokens: 8000 });
+    expect(biller.spentCredits()).toBe(creditsForCost(costUsd(DEFAULT_MODEL.id, 300_000, 8000)));
+    expect(biller.spentCredits()).toBeGreaterThan(10);
+  });
+
   it("settles only once however many paths report the end", async () => {
     const { biller, deduct } = setup();
     biller.stepStarted();

@@ -149,7 +149,7 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       messages: modelMessages,
       tools,
       stopWhen: isStepCount(MAX_STEPS),
-      prepareStep: ({ stepNumber }) => stepSettings(stepNumber),
+      prepareStep: ({ stepNumber }) => stepSettings(stepNumber, biller.spentCredits()),
       maxOutputTokens: DEFAULT_MODEL.maxOutputTokens,
       abortSignal: AbortSignal.any([request.signal, stopper.signal]),
       timeout: { totalMs: REQUEST_TIMEOUT_MS },

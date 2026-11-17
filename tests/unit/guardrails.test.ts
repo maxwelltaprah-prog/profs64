@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { MAX_STEPS, stepSettings } from "@/lib/ai/config";
+import { MAX_STEPS, REQUEST_CREDIT_CAP, stepSettings } from "@/lib/ai/config";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const read = (relative: string) => readFileSync(path.join(root, relative), "utf8");
@@ -114,5 +114,8 @@ describe("last step", () => {
     expect(stepSettings(0)).toBeUndefined();
     expect(stepSettings(MAX_STEPS - 2)).toBeUndefined();
     expect(stepSettings(MAX_STEPS - 1)).toEqual({ toolChoice: "none" });
+    // The spending guard stops tool use early, once a request has cost the cap.
+    expect(stepSettings(2, REQUEST_CREDIT_CAP - 0.01)).toBeUndefined();
+    expect(stepSettings(2, REQUEST_CREDIT_CAP)).toEqual({ toolChoice: "none" });
   });
 });
