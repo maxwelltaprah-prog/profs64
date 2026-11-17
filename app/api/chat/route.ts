@@ -59,7 +59,7 @@ import { readJson } from "@/lib/security/request";
 import { CHAT_BODY_LIMIT_BYTES, chatBodySchema } from "@/lib/security/schemas";
 
 // Allow the longest request (REQUEST_TIMEOUT_MS) plus time to settle billing.
-export const maxDuration = 150;
+export const maxDuration = 300;
 
 export const POST = withApi("chat", async (request, { requestId }) => {
   const user = await getVerifiedUser();

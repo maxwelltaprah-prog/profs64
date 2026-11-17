@@ -78,14 +78,14 @@ const STARTERS = [
 ] as const;
 
 // Text parts and consecutive file steps, in the order the assistant produced them.
-function groupParts(parts: Part[]): Group[] {
+function groupParts(parts: Part[], settled: boolean): Group[] {
   const out: Group[] = [];
   parts.forEach((part, index) => {
     if (part.type === "text") {
       if (part.text) out.push({ kind: "text", index, text: part.text });
       return;
     }
-    const line = describeToolPart(part as Parameters<typeof describeToolPart>[0]);
+    const line = describeToolPart(part as Parameters<typeof describeToolPart>[0], settled);
     if (!line) return;
     const previous = out[out.length - 1];
     if (previous?.kind === "steps") previous.lines.push({ index, line });
@@ -190,7 +190,8 @@ function AssistantMessage({
   onRegenerate?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
-  const groups = useMemo(() => groupParts(message.parts), [message.parts]);
+  const settled = !live || message.parts.some((part) => part.type === "data-usage");
+  const groups = useMemo(() => groupParts(message.parts, settled), [message.parts, settled]);
   const lastIndex = message.parts.length - 1;
 
   if (live) {

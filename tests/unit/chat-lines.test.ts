@@ -179,3 +179,22 @@ describe("summariseSteps and changedPaths", () => {
     expect(summariseSteps([])).toBe("");
   });
 });
+
+describe("describeToolPart when the reply has ended", () => {
+  it("shows a step that never finished as stopped, not as still working", async () => {
+    const { describeToolPart } = await import("@/lib/workspace/chat-lines");
+    const part = {
+      type: "tool-write_file",
+      state: "input-streaming",
+      input: { path: "index.html" },
+    };
+    expect(describeToolPart(part)).toMatchObject({ state: "working" });
+    expect(describeToolPart(part, true)).toEqual({
+      text: "Stopped while writing index.html",
+      state: "failed",
+    });
+    expect(
+      describeToolPart({ type: "tool-write_file", state: "input-streaming" }, true)?.text,
+    ).toBe("Stopped while writing a file");
+  });
+});

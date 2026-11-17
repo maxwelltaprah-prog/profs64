@@ -46,7 +46,7 @@ import { enforceLimits, LIMITS } from "@/lib/security/rate-limit";
 import { readJson } from "@/lib/security/request";
 import { agentChatBodySchema, CHAT_BODY_LIMIT_BYTES } from "@/lib/security/schemas";
 
-export const maxDuration = 150;
+export const maxDuration = 300;
 
 const MAX_AGENT_STEPS = 4;
 

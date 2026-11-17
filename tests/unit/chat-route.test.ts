@@ -210,7 +210,7 @@ describe("refusals happen before any model call", () => {
   });
 
   it("429 once the daily spend cap is reached", async () => {
-    state.spentToday = 50;
+    state.spentToday = 100;
     const response = await (await load())(post(goodBody()));
     expect(response.status).toBe(429);
     expect((await response.json()).error.code).toBe("daily_limit");

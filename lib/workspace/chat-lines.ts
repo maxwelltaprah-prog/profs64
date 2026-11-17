@@ -37,7 +37,9 @@ const pathOf = (value: unknown): string => {
   return "";
 };
 
-export function describeToolPart(part: ToolPartLike): ToolLine | null {
+// `settled` means the reply has ended: a step still "working" then never finished (the request
+// timed out or was cut off), so it is shown as stopped instead of spinning forever.
+export function describeToolPart(part: ToolPartLike, settled = false): ToolLine | null {
   if (!part.type.startsWith("tool-")) return null;
   const name = part.type.slice("tool-".length);
   if (!WORKING_VERBS.has(name)) return null;
@@ -45,6 +47,11 @@ export function describeToolPart(part: ToolPartLike): ToolLine | null {
 
   // The input is often incomplete when a write fails midway, so the path may be missing.
   if (part.state === "output-error") {
+    const target = pathOf(part.input) || (name === "list_files" ? "" : "a file");
+    return { text: `Stopped while ${verb.toLowerCase()} ${target}`.trim(), state: "failed" };
+  }
+
+  if (part.state !== "output-available" && settled) {
     const target = pathOf(part.input) || (name === "list_files" ? "" : "a file");
     return { text: `Stopped while ${verb.toLowerCase()} ${target}`.trim(), state: "failed" };
   }

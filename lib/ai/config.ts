@@ -46,4 +46,7 @@ export function stepSettings(
 export const MAX_MESSAGE_CHARS = 8000;
 export const HISTORY_MESSAGES = 20;
 export const SNAPSHOT_BYTES = 60_000;
-export const REQUEST_TIMEOUT_MS = 120_000;
+// Writing several large files is slow (a model emits perhaps 30 to 60 tokens a second), so a
+// request that rewrites a whole site needs minutes. At 120 s such requests were cut off in the
+// middle of a write: nothing was saved and the input was still billed.
+export const REQUEST_TIMEOUT_MS = 270_000;
