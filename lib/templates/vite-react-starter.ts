@@ -3,6 +3,7 @@
 // TypeScript, Tailwind 3 with shadcn/ui tokens, a few shadcn components, lucide icons and
 // react-router. Keep lib/ai/system-prompt.ts and lib/preview/packages.ts in step with it.
 
+import { DB_HELPER_PATH, DB_HELPER_SOURCE } from "./db-helper";
 import { SHADCN_INDEX_CSS, SHADCN_TAILWIND_CONFIG } from "./shadcn-theme";
 
 export interface StarterFile {
@@ -270,6 +271,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 `,
   },
+  { path: DB_HELPER_PATH, content: DB_HELPER_SOURCE },
   {
     path: "src/lib/motion.ts",
     content: `import type { Transition, Variants } from "framer-motion";
@@ -540,7 +542,10 @@ export const STARTER_PATHS: ReadonlyArray<string> = STARTER_FILES.map((file) => 
 // True while a project still holds exactly the starter files, so the workspace can say "nothing
 // built yet" instead of showing the generic starter page as if it were the person's app.
 export function isStarterUntouched(files: ReadonlyArray<{ path: string; content: string }>) {
-  if (files.length !== STARTER_FILES.length) return false;
-  const current = new Map(files.map((file) => [file.path, file.content]));
-  return STARTER_FILES.every((file) => current.get(file.path) === file.content);
+  // Projects made before the data store existed lack its helper file; that alone is not a change.
+  const starter = STARTER_FILES.filter((file) => file.path !== DB_HELPER_PATH);
+  const own = files.filter((file) => file.path !== DB_HELPER_PATH);
+  if (own.length !== starter.length) return false;
+  const current = new Map(own.map((file) => [file.path, file.content]));
+  return starter.every((file) => current.get(file.path) === file.content);
 }

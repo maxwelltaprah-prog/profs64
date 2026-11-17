@@ -28,6 +28,7 @@ Tables (all in `supabase/migrations/20261107000001_init.sql`): `profiles` (credi
 - Row Level Security is on and forced for every table, default deny. Users can read their own rows, create and edit their own projects and files, and insert only `user`-role messages. Users cannot write the ledger, the audit log or their balance.
 - Balance changes only through `record_credit_change`, which locks the profile row, clamps a charge to the balance, writes the ledger row, and returns the result in one transaction. `deduct_credits` wraps it for chat usage.
 - Row caps (50 projects per user, 100 files per project, 2,000 messages per project) and the file path and size rules are enforced by triggers and constraints, so they hold even if application code is wrong.
+- `conversation_images` (pictures for decks) and `project_records` (the generated app's data store) come from `20261117000001_images_and_project_data.sql`; see docs/SECURITY.md for the controls. Generated apps reach the store through `src/lib/db.ts` -> postMessage -> `PreviewPanel` -> `/api/projects/[id]/data/...`.
 - Deleting an account cascades to projects, files and messages; the ledger and audit log are kept with the user and project references removed.
 
 ## The assistant

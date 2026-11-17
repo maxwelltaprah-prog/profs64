@@ -115,3 +115,7 @@ reverse it, run the matching file in `supabase/down/`.
 - Hosted behind a proxy that sets `x-real-ip` or `x-forwarded-for` (see SECURITY.md, IP headers).
 - Upstash variables set if running more than one instance.
 - One real chat request made and its ledger row compared with OpenRouter (KI-17).
+
+## Apply the images and project data migration (once)
+
+Run `supabase/migrations/20261117000001_images_and_project_data.sql` in the Supabase SQL Editor. It creates `conversation_images` and `project_records` with RLS and caps. Until then picture upload and the app data store report "database update needed" and degrade as described in KI-59. Roll back with `supabase/down/20261117000001_images_and_project_data.down.sql` (this deletes the stored pictures and records).

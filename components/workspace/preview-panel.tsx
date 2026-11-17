@@ -11,6 +11,7 @@ import { buildPreview, type PreviewBundle, type Transpile } from "@/lib/preview/
 import { ANIMATE_UTILITIES_CSS } from "@/lib/templates/animate-css";
 import { SHADCN_TAILWIND_CONFIG } from "@/lib/templates/shadcn-theme";
 import { cn } from "@/lib/utils/cn";
+import { parseDataRequest, runDataRequest } from "@/lib/workspace/data-bridge";
 
 type Viewport = "desktop" | "tablet" | "phone";
 type Status = "building" | "loading" | "ready" | "failed";
@@ -38,10 +39,13 @@ const VIEWPORTS: Array<{ id: Viewport; label: string; Icon: typeof Monitor; clas
 // Every file change rebuilds; the frame is reloaded only when the output actually changed.
 export function PreviewPanel({
   files,
+  projectId = null,
   empty = false,
   onViewCode,
 }: {
   files: ProjectFile[];
+  /** The owner's project, for the app's data store. Absent in a shared preview. */
+  projectId?: string | null;
   /** The project still holds only the starter files: show "nothing built yet", not the starter. */
   empty?: boolean;
   /** Switches to the code view; offered from the empty state. */
@@ -99,6 +103,13 @@ export function PreviewPanel({
       if (!frame.current || event.source !== frame.current.contentWindow) return;
       const data = event.data as { type?: string; text?: string; level?: string } | null;
       if (!data || typeof data.type !== "string") return;
+      if (data.type === "buildr-data") {
+        const request = parseDataRequest(event.data);
+        const target = event.source as Window;
+        if (!request) return;
+        void runDataRequest(projectId, request).then((reply) => target.postMessage(reply, "*"));
+        return;
+      }
       if (data.type === "ready" && bundle) {
         frame.current.contentWindow?.postMessage(
           {
@@ -131,7 +142,7 @@ export function PreviewPanel({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [bundle]);
+  }, [bundle, projectId]);
 
   const reload = useCallback(() => {
     if (!bundle || bundle.errors.length > 0) return;

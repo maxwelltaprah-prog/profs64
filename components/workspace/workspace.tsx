@@ -280,6 +280,7 @@ export function Workspace({
             ) : (
               <PreviewPanel
                 files={current}
+                projectId={projectId}
                 empty={isStarterUntouched(current)}
                 onViewCode={() => setTab("code")}
               />
