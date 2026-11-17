@@ -11,7 +11,7 @@ export function aiDisabled(): boolean {
 // so it only matters for accounts that have been topped up.
 export function dailyCreditCap(): number {
   const parsed = Number(process.env["AI_DAILY_CREDIT_CAP"]);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 100;
 }
 
 export function modelMode(): ModelMode {
