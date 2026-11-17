@@ -29,6 +29,9 @@ export function buildSnapshot(files: readonly SnapshotFile[], capBytes: number) 
       .map((f) => `- ${f.path} (${byteLength(f.content)} bytes)`),
   ];
 
+  lines.push(
+    "The full, current contents of every file below are already in front of you. Do not call read_file for them; only for a file listed under Contents not shown. Edits you make are not echoed back, so do not re-read a file to check an edit.",
+  );
   let used = 0;
   const omitted: string[] = [];
   for (const file of sorted) {

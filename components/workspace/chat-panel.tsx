@@ -985,8 +985,8 @@ export function ChatPanel({
         <div aria-live="polite" className="text-xs">
           {!speech.listening && !busy ? (
             <p className="text-subtle mt-2">
-              Most requests cost about 1 to 3 credits and take around a minute. A whole new app can
-              cost more. The exact cost is shown under each reply.
+              Small changes usually cost 1 to 3 credits. Larger ones, such as adding several pages
+              to a big app, can cost 10 or more. The exact cost is shown under each reply.
             </p>
           ) : null}
           {speech.listening ? (
