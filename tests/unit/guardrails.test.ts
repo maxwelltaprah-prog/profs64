@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { MAX_STEPS, stepSettings } from "@/lib/ai/config";
+
 const root = path.resolve(import.meta.dirname, "../..");
 const read = (relative: string) => readFileSync(path.join(root, relative), "utf8");
 const lines = (relative: string) => read(relative).split("\n");
@@ -104,5 +106,13 @@ describe("project guardrails", () => {
       })
       .map((file) => path.relative(root, file));
     expect(offenders).toEqual([]);
+  });
+});
+
+describe("last step", () => {
+  it("cannot call tools, so the reply ends with a summary", () => {
+    expect(stepSettings(0)).toBeUndefined();
+    expect(stepSettings(MAX_STEPS - 2)).toBeUndefined();
+    expect(stepSettings(MAX_STEPS - 1)).toEqual({ toolChoice: "none" });
   });
 });

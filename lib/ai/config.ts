@@ -28,6 +28,12 @@ export function modelMode(): ModelMode {
 }
 
 export const MAX_STEPS = 12;
+
+// The last allowed step cannot call tools, so a reply always ends with a written summary instead
+// of being cut off in the middle of work. Earlier steps are left as they are.
+export function stepSettings(stepNumber: number): { toolChoice: "none" } | undefined {
+  return stepNumber >= MAX_STEPS - 1 ? { toolChoice: "none" } : undefined;
+}
 export const MAX_MESSAGE_CHARS = 8000;
 export const HISTORY_MESSAGES = 20;
 export const SNAPSHOT_BYTES = 60_000;

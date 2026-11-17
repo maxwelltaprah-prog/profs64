@@ -12,6 +12,7 @@ import {
   dailyCreditCap,
   HISTORY_MESSAGES,
   MAX_STEPS,
+  stepSettings,
   REQUEST_TIMEOUT_MS,
   SNAPSHOT_BYTES,
 } from "@/lib/ai/config";
@@ -148,6 +149,7 @@ export const POST = withApi("chat", async (request, { requestId }) => {
       messages: modelMessages,
       tools,
       stopWhen: isStepCount(MAX_STEPS),
+      prepareStep: ({ stepNumber }) => stepSettings(stepNumber),
       maxOutputTokens: DEFAULT_MODEL.maxOutputTokens,
       abortSignal: AbortSignal.any([request.signal, stopper.signal]),
       timeout: { totalMs: REQUEST_TIMEOUT_MS },
