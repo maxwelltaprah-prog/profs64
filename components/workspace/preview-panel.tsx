@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Monitor, RefreshCw, Smartphone, Sparkles, Tablet } from "lucide-react";
+import { AlertCircle, Monitor, RefreshCw, Smartphone, Tablet } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,10 +39,13 @@ const VIEWPORTS: Array<{ id: Viewport; label: string; Icon: typeof Monitor; clas
 export function PreviewPanel({
   files,
   empty = false,
+  onViewCode,
 }: {
   files: ProjectFile[];
   /** The project still holds only the starter files: show "nothing built yet", not the starter. */
   empty?: boolean;
+  /** Switches to the code view; offered from the empty state. */
+  onViewCode?: () => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const transpiler = useRef<Transpile | null>(null);
@@ -213,15 +216,22 @@ export function PreviewPanel({
 
       <div className="bg-surface-2 relative flex min-h-0 flex-1 justify-center overflow-auto p-3">
         {empty ? (
-          <div className="border-hairline-strong bg-surface m-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
-            <span className="bg-surface-2 text-muted flex size-10 items-center justify-center rounded-full">
-              <Sparkles {...iconProps} size={18} />
-            </span>
-            <h3 className="text-sm font-semibold tracking-tight">Nothing built yet</h3>
-            <p className="text-muted text-[13px] leading-5">
-              Describe what you want in the chat. The app appears here as soon as the assistant has
-              written it, and you can open the code at any time.
+          <div className="m-auto w-full max-w-xs px-2">
+            <h3 className="text-text text-sm font-medium tracking-tight">Nothing built yet</h3>
+            <p className="text-muted mt-1.5 text-[13px] leading-5">
+              The preview runs here once the first version of the app is written.
             </p>
+            <div className="border-hairline mt-4 border-t pt-3 text-[13px]">
+              {onViewCode ? (
+                <button
+                  type="button"
+                  onClick={onViewCode}
+                  className="text-muted hover:text-text underline underline-offset-4"
+                >
+                  View the starter files
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : null}
         <div

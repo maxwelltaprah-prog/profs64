@@ -253,7 +253,11 @@ export function Workspace({
                 />
               </div>
             ) : (
-              <PreviewPanel files={current} empty={isStarterUntouched(current)} />
+              <PreviewPanel
+                files={current}
+                empty={isStarterUntouched(current)}
+                onViewCode={() => setTab("code")}
+              />
             )}
           </>
         }
