@@ -13,12 +13,21 @@ export function SharePanel({
   projectId,
   initialSlug,
   available,
+  onChange,
 }: {
   projectId: string;
   initialSlug: string | null;
   available: boolean;
+  /** Called after the link is created or removed, so other screens can show the new state. */
+  onChange?: ((slug: string | null) => void) | undefined;
 }) {
   const [slug, setSlug] = useState<string | null>(initialSlug);
+
+  useEffect(() => {
+    // Another place (the header or the settings) may have changed the link.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSlug(initialSlug);
+  }, [initialSlug]);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +49,10 @@ export function SharePanel({
         slug?: string;
         error?: { message?: string };
       } | null;
-      if (response.ok && body?.slug) setSlug(body.slug);
-      else setError(body?.error?.message ?? "Could not create a link. Try again.");
+      if (response.ok && body?.slug) {
+        setSlug(body.slug);
+        onChange?.(body.slug);
+      } else setError(body?.error?.message ?? "Could not create a link. Try again.");
     } catch {
       setError("Could not reach the server. Try again.");
     } finally {
@@ -54,8 +65,10 @@ export function SharePanel({
     setError(null);
     try {
       const response = await fetch(`/api/projects/${projectId}/share`, { method: "DELETE" });
-      if (response.ok) setSlug(null);
-      else setError("Could not stop sharing. Try again.");
+      if (response.ok) {
+        setSlug(null);
+        onChange?.(null);
+      } else setError("Could not stop sharing. Try again.");
     } catch {
       setError("Could not reach the server. Try again.");
     } finally {
@@ -130,11 +143,13 @@ export function ShareButton({
   projectId,
   initialSlug,
   available,
+  onChange,
   className,
 }: {
   projectId: string;
   initialSlug: string | null;
   available: boolean;
+  onChange?: ((slug: string | null) => void) | undefined;
   className?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -167,7 +182,12 @@ export function ShareButton({
           </Button>
         </div>
         <div className="border-hairline border-t px-5 py-4">
-          <SharePanel projectId={projectId} initialSlug={initialSlug} available={available} />
+          <SharePanel
+            projectId={projectId}
+            initialSlug={initialSlug}
+            available={available}
+            onChange={onChange}
+          />
         </div>
       </dialog>
     </>

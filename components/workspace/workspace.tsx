@@ -117,6 +117,24 @@ export function Workspace({
   ];
 
   const phoneView: Tab | "chat" = mobileChat ? "chat" : tab;
+  // On a phone the preview is out of sight while the chat is open, so a dot says when the files
+  // changed since the preview was last looked at.
+  const [unseen, setUnseen] = useState(false);
+  const firstFiles = useRef(true);
+  useEffect(() => {
+    if (firstFiles.current) {
+      firstFiles.current = false;
+      return;
+    }
+    // Files change from the assistant's work; flag them until the preview is opened.
+
+    setUnseen(true);
+  }, [current]);
+  useEffect(() => {
+    // Looking at the preview or the code clears the flag.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (phoneView !== "chat") setUnseen(false);
+  }, [phoneView]);
   const phoneTabs: Array<{ id: Tab | "chat"; label: string; Icon: typeof Code2 }> = [
     { id: "chat", label: "Chat", Icon: MessageSquare },
     ...tabs,
@@ -151,6 +169,13 @@ export function Workspace({
             {label}
             {id === "chat" && chatBusy && phoneView !== "chat" ? (
               <span aria-label="The assistant is working" className="thinking-dot bg-accent" />
+            ) : null}
+            {id === "preview" && unseen && phoneView === "chat" ? (
+              <span
+                role="status"
+                aria-label="The preview has new changes"
+                className="bg-accent size-2 rounded-full"
+              />
             ) : null}
           </button>
         ))}

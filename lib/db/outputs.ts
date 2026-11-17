@@ -21,13 +21,29 @@ export async function listRatings(
   projectId: string,
   supabase?: SupabaseClient,
 ): Promise<Map<string, Rating>> {
-  if (!isUuid(projectId)) throw notFound();
+  return ratingsFor("projectId", projectId, supabase);
+}
+
+// The same for the replies of a full-page conversation.
+export async function listConversationRatings(
+  conversationId: string,
+  supabase?: SupabaseClient,
+): Promise<Map<string, Rating>> {
+  return ratingsFor("conversationId", conversationId, supabase);
+}
+
+async function ratingsFor(
+  key: "projectId" | "conversationId",
+  parentId: string,
+  supabase?: SupabaseClient,
+): Promise<Map<string, Rating>> {
+  if (!isUuid(parentId)) throw notFound();
   const client = supabase ?? (await createSupabaseServerClient());
   const { data, error } = await client
     .from("audit_log")
     .select("metadata")
     .eq("event", FEEDBACK_EVENT)
-    .eq("metadata->>projectId", projectId)
+    .eq(`metadata->>${key}`, parentId)
     .order("id", { ascending: false })
     .limit(500);
   if (error) return new Map();

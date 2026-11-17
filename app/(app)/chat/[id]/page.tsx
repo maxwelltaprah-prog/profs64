@@ -5,6 +5,7 @@ import { toUiMessages } from "@/lib/ai/messages";
 import { openFreeWindowUntil } from "@/lib/db/agent-status";
 import { getOptionalUser } from "@/lib/db/auth";
 import { getConversation, listConversationMessages } from "@/lib/db/conversations";
+import { listConversationRatings } from "@/lib/db/outputs";
 import { loadShell } from "@/lib/db/shell";
 import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { AppError } from "@/lib/security/errors";
@@ -28,9 +29,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     throw error;
   }
 
-  const [shell, stored] = await Promise.all([
+  const [shell, stored, ratings] = await Promise.all([
     loadShell(user.id),
     listConversationMessages(conversation.id, supabase),
+    listConversationRatings(conversation.id, supabase).catch(
+      () => new Map<string, "up" | "down">(),
+    ),
   ]);
   const freeUntil = await openFreeWindowUntil(user.id, shell.balance, supabase);
 
@@ -50,6 +54,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           conversationId={conversation.id}
           initialMessages={toUiMessages(stored, 2000)}
           initialFreeUntil={freeUntil}
+          initialRatings={Object.fromEntries(ratings)}
         />
       </main>
     </>

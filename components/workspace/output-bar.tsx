@@ -24,12 +24,15 @@ export function OutputBar({
   info,
   onRate,
   onRegenerate,
+  bare = false,
 }: {
   text: string;
   info: OutputInfo | undefined;
   onRate: (rating: Rating | null) => void;
   /** Given only for the newest reply when a new one can be requested. */
   onRegenerate?: (() => void) | undefined;
+  /** No top margin, for use inside another row. */
+  bare?: boolean;
 }) {
   const [note, setNote] = useState<Note>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,7 +77,7 @@ export function OutputBar({
     "press text-subtle hover:text-text hover:bg-surface-2 flex size-7 items-center justify-center rounded-md";
 
   return (
-    <div className="mt-2 flex min-h-7 items-center gap-0.5">
+    <div className={cn("flex min-h-7 items-center gap-0.5", !bare && "mt-2")}>
       <button
         type="button"
         aria-label="Copy reply"

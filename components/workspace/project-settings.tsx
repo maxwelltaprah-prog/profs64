@@ -327,6 +327,7 @@ export function ProjectSettings({
   built,
   shareSlug,
   shareAvailable,
+  onShareChange,
 }: {
   open: boolean;
   section: SettingsSection;
@@ -339,6 +340,7 @@ export function ProjectSettings({
   built: boolean;
   shareSlug: string | null;
   shareAvailable: boolean;
+  onShareChange?: ((slug: string | null) => void) | undefined;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
 
@@ -429,6 +431,7 @@ export function ProjectSettings({
                     projectId={projectId}
                     initialSlug={shareSlug}
                     available={shareAvailable}
+                    onChange={onShareChange}
                   />
                 </div>
               ) : null}

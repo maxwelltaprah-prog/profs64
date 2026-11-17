@@ -2,13 +2,14 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { AlertCircle, Check, Copy, Sparkles } from "lucide-react";
+import { AlertCircle, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AgentComposer } from "@/components/chat/agent-composer";
 import { DocumentCard } from "@/components/chat/document-card";
 import { iconProps } from "@/components/ui/icons";
 import { MessageText } from "@/components/workspace/message-text";
+import { OutputBar } from "@/components/workspace/output-bar";
 import { cn } from "@/lib/utils/cn";
 import {
   documentStep,
@@ -19,9 +20,7 @@ import {
   visibleDocumentSteps,
 } from "@/lib/workspace/agent";
 import { friendlyChatError } from "@/lib/workspace/chat-lines";
-import { creditsLabel } from "@/lib/workspace/outputs";
-
-import { ReadAloudButton, RegenerateButton } from "./reply-actions";
+import { creditsLabel, type Rating } from "@/lib/workspace/outputs";
 
 const timeFormat = new Intl.DateTimeFormat("en", {
   hour: "numeric",
@@ -29,37 +28,19 @@ const timeFormat = new Intl.DateTimeFormat("en", {
   weekday: "short",
 });
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      type="button"
-      aria-label={copied ? "Copied" : "Copy reply"}
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        } catch {
-          // Clipboard blocked; the text is still selectable.
-        }
-      }}
-      className="press text-subtle hover:text-text hover:bg-surface-2 inline-flex size-7 items-center justify-center rounded-md"
-    >
-      {copied ? <Check {...iconProps} /> : <Copy {...iconProps} />}
-    </button>
-  );
-}
-
 function AssistantReply({
   message,
   conversationId,
   streaming,
+  rating,
+  onRate,
   onRegenerate,
 }: {
   message: UIMessage;
   conversationId: string;
   streaming: boolean;
+  rating: Rating | null;
+  onRate: (rating: Rating | null) => void;
   /** Given only for the newest reply when a new one can be requested. */
   onRegenerate?: (() => void) | undefined;
 }) {
@@ -108,9 +89,15 @@ function AssistantReply({
       })}
       {!streaming && (text || credits !== null || free) ? (
         <div className="text-subtle flex items-center gap-2 text-xs">
-          {text ? <CopyButton text={text} /> : null}
-          {text ? <ReadAloudButton text={text} /> : null}
-          {text && onRegenerate ? <RegenerateButton onClick={onRegenerate} /> : null}
+          {text ? (
+            <OutputBar
+              bare
+              text={text}
+              info={{ usage: null, rating }}
+              onRate={onRate}
+              onRegenerate={onRegenerate}
+            />
+          ) : null}
           {free ? (
             <span className="border-hairline inline-flex items-center gap-1 rounded-full border px-2 py-0.5">
               <Sparkles size={12} strokeWidth={1.75} aria-hidden="true" />
@@ -129,15 +116,19 @@ export function ConversationView({
   conversationId,
   initialMessages,
   initialFreeUntil,
+  initialRatings = {},
 }: {
   conversationId: string;
   initialMessages: UIMessage[];
   /** Set when the person is out of credits and the 24-hour free window is open. */
   initialFreeUntil: string | null;
+  /** The person's thumbs up or down per reply, by message id. */
+  initialRatings?: Record<string, Rating>;
 }) {
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [freeUntil, setFreeUntil] = useState<string | null>(initialFreeUntil);
+  const [ratings, setRatings] = useState<Record<string, Rating | null>>(initialRatings);
   const log = useRef<HTMLDivElement>(null);
   const started = useRef(false);
 
@@ -178,6 +169,25 @@ export function ConversationView({
     onError: (chatError) => setError(friendlyChatError(chatError)),
   });
   const busy = status === "submitted" || status === "streaming";
+
+  const rate = async (messageId: string, next: Rating | null) => {
+    const previous = ratings[messageId] ?? null;
+    setRatings((current) => ({ ...current, [messageId]: next }));
+    try {
+      const response = await fetch(
+        `/api/conversations/${conversationId}/messages/${messageId}/feedback`,
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ rating: next ?? "none" }),
+        },
+      );
+      if (!response.ok) throw new Error("rating failed");
+    } catch {
+      setRatings((current) => ({ ...current, [messageId]: previous }));
+      setError("Your rating could not be saved. Try again.");
+    }
+  };
 
   const send = (text: string) => {
     setError(null);
@@ -243,6 +253,8 @@ export function ConversationView({
                 message={message}
                 conversationId={conversationId}
                 streaming={busy && index === messages.length - 1}
+                rating={ratings[message.id] ?? null}
+                onRate={(next) => void rate(message.id, next)}
                 onRegenerate={
                   index === messages.length - 1 && !busy
                     ? () => {

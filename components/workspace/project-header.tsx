@@ -23,7 +23,7 @@ export function ProjectHeader({
   createdAt,
   ownerEmail,
   built,
-  shareSlug,
+  shareSlug: initialShareSlug,
   shareAvailable,
 }: {
   balance: number;
@@ -36,6 +36,7 @@ export function ProjectHeader({
   shareSlug: string | null;
   shareAvailable: boolean;
 }) {
+  const [shareSlug, setShareSlug] = useState<string | null>(initialShareSlug);
   const [open, setOpen] = useState(false);
   const [section, setSection] = useState<SettingsSection>("details");
 
@@ -89,6 +90,7 @@ export function ProjectHeader({
               projectId={projectId}
               initialSlug={shareSlug}
               available={shareAvailable}
+              onChange={setShareSlug}
               className="max-sm:hidden"
             />
             <Button
@@ -120,6 +122,7 @@ export function ProjectHeader({
         built={built}
         shareSlug={shareSlug}
         shareAvailable={shareAvailable}
+        onShareChange={setShareSlug}
       />
     </>
   );
