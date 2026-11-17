@@ -399,9 +399,10 @@ export async function renderPptx(
           : { x: 0.8, y: 1.7, w: 11.7, h: 4.9 }
         : {
             x: 0.8,
-            y: Math.max(Math.min(top, 3.5), 1.7),
+            // Below the bullets and any supporting sentence, never over them.
+            y: Math.max(Math.min(top, 4.1), 1.7),
             w: 11.7,
-            h: 6.6 - Math.max(Math.min(top, 3.5), 1.7),
+            h: 6.7 - Math.max(Math.min(top, 4.1), 1.7),
           };
       drawVisual(page, visual, box, images);
     }
