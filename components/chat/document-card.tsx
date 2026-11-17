@@ -1,5 +1,9 @@
-import { Download, FileText, FileType2, Presentation } from "lucide-react";
+"use client";
 
+import { Download, Eye, FileText, FileType2, Presentation } from "lucide-react";
+import { useState } from "react";
+
+import { DocumentPreview } from "@/components/chat/document-preview";
 import { iconProps } from "@/components/ui/icons";
 import { documentUrl, KIND_LABEL, type AgentDocument } from "@/lib/workspace/agent";
 
@@ -13,6 +17,7 @@ export function DocumentCard({
   document: AgentDocument;
 }) {
   const Icon = ICON[document.kind];
+  const [open, setOpen] = useState(false);
   return (
     <div className="chat-in border-hairline bg-surface flex max-w-md items-center gap-3 rounded-xl border p-3 shadow-[0_1px_2px_rgb(0_0_0/0.04)]">
       <span className="bg-accent-subtle text-accent flex size-10 shrink-0 items-center justify-center rounded-lg">
@@ -26,6 +31,14 @@ export function DocumentCard({
           {KIND_LABEL[document.kind]} · .{document.kind}
         </span>
       </span>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="press border-hairline-strong bg-surface hover:bg-surface-2 inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border px-3 text-[13px] font-medium"
+      >
+        <Eye {...iconProps} />
+        Preview
+      </button>
       <a
         href={documentUrl(conversationId, document.id)}
         download
@@ -34,6 +47,13 @@ export function DocumentCard({
         <Download {...iconProps} />
         Download
       </a>
+      {open ? (
+        <DocumentPreview
+          conversationId={conversationId}
+          document={document}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

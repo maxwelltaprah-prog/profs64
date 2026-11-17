@@ -27,6 +27,7 @@ import {
   type KeyboardEvent,
 } from "react";
 
+import { TopUpButton } from "@/components/billing/top-up-dialog";
 import { Button } from "@/components/ui/button";
 import { iconProps } from "@/components/ui/icons";
 import { Kbd } from "@/components/ui/kbd";
@@ -829,13 +830,16 @@ export function ChatPanel({
       </div>
 
       {!hasCredits && canUseAssistant ? (
-        <p
+        <div
           role="status"
-          className="border-hairline bg-accent-subtle border-t px-4 py-2 text-[13px]"
+          className="border-hairline bg-accent-subtle flex flex-wrap items-center justify-between gap-2 border-t px-4 py-2 text-[13px]"
         >
-          You are out of credits, so the assistant is paused. Your projects and files are still
-          available.
-        </p>
+          <p>
+            You are out of credits, so the assistant is paused. Your projects and files are still
+            available.
+          </p>
+          <TopUpButton />
+        </div>
       ) : null}
       {error ? (
         <p role="alert" className="border-danger bg-danger-subtle border-t px-4 py-2 text-[13px]">

@@ -96,11 +96,16 @@ export const slideSchema = z.strictObject({
   // Shown below the bullets, for a short supporting sentence or a quote.
   body: text(600).optional(),
   visual: visualSchema.optional(),
+  // Where a number, quote or figure came from, shown small at the foot of the slide.
+  source: text(160).optional(),
   notes: text(2000).optional(),
 });
 export const deckSpecSchema = z.strictObject({
   title: text(120),
   subtitle: text(200).optional(),
+  // "academic" follows the communication-first rules for research talks; theme picks the colours.
+  style: z.enum(["modern", "academic"]).optional(),
+  theme: z.enum(["teal", "navy", "slate", "terracotta"]).optional(),
   slides: z.array(slideSchema).min(1).max(40),
 });
 export type DeckSpec = z.infer<typeof deckSpecSchema>;

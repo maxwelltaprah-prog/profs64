@@ -63,3 +63,7 @@ Added on 2026-11-09 so generated apps feel smooth, from Lovable's `vite_react_sh
 ## Synthetic user feedback skill (2026-11-16, development only)
 
 `.claude/skills/synthetic-user-feedback` from github.com/travisseh/synthetic-user-feedback (MIT, three markdown files, no code, no scripts, no network calls). Read in full before installing. Never bundled or run by the app. `references/buildr-personas.md` is ours: four draft personas for Buildr, not reviewed by the owner. Reports are saved in `docs/`.
+
+## Design guidance: academic-pptx-skill (2026-11-17)
+
+Not a code dependency. https://github.com/Gabberflast/academic-pptx-skill (MIT, plain markdown, read in full before use) was reviewed and its rules for research talks were folded into `lib/documents/render-pptx.ts` (the "academic" deck style: Arial, navy and blue, white slides, no accent decoration, 20 pt body, source lines) and the assistant prompt (action titles, research-question, methods, results, conclusions and references slides, never invent citations). The skill is aimed at a coding agent with a shell; the assistant here has no shell, so its file-creation steps were not installed. Its SKILL.md frontmatter says "Proprietary" while the repo LICENSE is MIT; the LICENSE file was taken as governing, which the owner may want to confirm with the author.

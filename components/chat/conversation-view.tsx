@@ -5,6 +5,7 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import { AlertCircle, ImageIcon, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { TopUpButton } from "@/components/billing/top-up-dialog";
 import { AgentComposer } from "@/components/chat/agent-composer";
 import { DocumentCard } from "@/components/chat/document-card";
 import { iconProps } from "@/components/ui/icons";
@@ -322,6 +323,7 @@ export function ConversationView({
               {timeFormat.format(new Date(freeUntil))}. Free replies can be slower and less
               accurate, and they are not charged.
             </span>
+            <TopUpButton label="Top up" />
           </p>
         ) : null}
         <AgentComposer

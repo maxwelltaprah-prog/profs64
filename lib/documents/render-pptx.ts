@@ -4,19 +4,14 @@ import PptxGenJS from "pptxgenjs";
 
 import { base64Of, imageInfo } from "./image";
 import { type DeckSpec, type Visual } from "./spec";
+import { themeFor, type Theme } from "./themes";
 
-// A restrained 16:9 deck: white slides, near-black text, one accent rule, generous margins. Visuals
-// (charts, stat cards, process flows, timelines) are native PowerPoint objects drawn from the
-// slide's data. Pictures are only the ones the person uploaded: PNG or JPEG bytes that were checked
-// on upload and are checked again here, passed in by the caller, never fetched.
-const INK = "1C1C1E";
-const MUTED = "6B6B72";
-const ACCENT = "0F766E";
-const FONT = "Calibri";
-const LINE = "D9D9DE";
-const SURFACE = "F6F6F7";
-const SERIES = [ACCENT, "64748B", "B45309", "1D4ED8"];
-
+// 16:9 decks with a theme each. Visuals (charts, stat cards, process flows, timelines) are native
+// PowerPoint objects drawn from the slide's data. Pictures are only the ones the person uploaded:
+// PNG or JPEG bytes that were checked on upload and are checked again here, passed in by the
+// caller, never fetched. The "academic" style follows the communication-first rules of the
+// academic-pptx skill (github.com/Gabberflast/academic-pptx-skill, MIT): one sans-serif face,
+// navy and blue, white content slides, no decoration under titles, 20 pt body, sources on slides.
 // A picture the caller has already loaded, by id.
 export type DeckImages = ReadonlyMap<string, Uint8Array>;
 
@@ -28,7 +23,7 @@ interface Box {
   h: number;
 }
 
-function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
+function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages, t: Theme) {
   const { x, y, w, h } = box;
   if (visual.type === "chart") {
     const labels = visual.categories;
@@ -46,29 +41,29 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
       w,
       h,
       chartColors: circular
-        ? labels.map((_, i) => SERIES[i % SERIES.length] ?? ACCENT)
-        : SERIES.slice(0, data.length),
+        ? labels.map((_, i) => t.series[i % t.series.length] ?? t.accent)
+        : t.series.slice(0, data.length),
       showLegend: circular || data.length > 1,
       legendPos: "b",
-      legendFontFace: FONT,
+      legendFontFace: t.font,
       legendFontSize: 12,
-      legendColor: MUTED,
+      legendColor: t.muted,
       showTitle: Boolean(visual.title),
       ...(visual.title
-        ? { title: visual.title, titleFontFace: FONT, titleFontSize: 14, titleColor: INK }
+        ? { title: visual.title, titleFontFace: t.font, titleFontSize: 14, titleColor: t.ink }
         : {}),
-      catAxisLabelFontFace: FONT,
+      catAxisLabelFontFace: t.font,
       catAxisLabelFontSize: 12,
-      catAxisLabelColor: MUTED,
-      valAxisLabelFontFace: FONT,
+      catAxisLabelColor: t.muted,
+      valAxisLabelFontFace: t.font,
       valAxisLabelFontSize: 12,
-      valAxisLabelColor: MUTED,
-      valGridLine: { color: LINE, size: 0.5 },
+      valAxisLabelColor: t.muted,
+      valGridLine: { color: t.line, size: 0.5 },
       catGridLine: { style: "none" },
       showValue: circular || (data.length === 1 && labels.length <= 8),
-      dataLabelFontFace: FONT,
+      dataLabelFontFace: t.font,
       dataLabelFontSize: 12,
-      dataLabelColor: circular ? "FFFFFF" : INK,
+      dataLabelColor: circular ? "FFFFFF" : t.ink,
       ...(visual.kind === "bar" ? { barGapWidthPct: 60 } : {}),
       ...(visual.kind === "line" ? { lineSize: 3, lineDataSymbolSize: 8 } : {}),
     });
@@ -89,18 +84,18 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
         w: width,
         h: height,
         rectRadius: 0.08,
-        fill: { color: SURFACE },
-        line: { color: LINE, width: 0.75 },
+        fill: { color: t.surface },
+        line: { color: t.line, width: 0.75 },
       });
       page.addText(item.value, {
         x: left + 0.2,
         y: top + 0.25,
         w: width - 0.4,
         h: 1.0,
-        fontFace: FONT,
-        fontSize: 36,
+        fontFace: t.font,
+        fontSize: 44,
         bold: true,
-        color: ACCENT,
+        color: t.accent,
         valign: "middle",
         fit: "shrink",
       });
@@ -109,9 +104,9 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
         y: top + 1.25,
         w: width - 0.4,
         h: height - 1.45,
-        fontFace: FONT,
-        fontSize: 14,
-        color: MUTED,
+        fontFace: t.font,
+        fontSize: 16,
+        color: t.muted,
         valign: "top",
       });
     });
@@ -133,23 +128,23 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
         h: height,
         rectRadius: 0.08,
         fill: { color: "FFFFFF" },
-        line: { color: LINE, width: 1 },
+        line: { color: t.line, width: 1 },
       });
       page.addShape("ellipse", {
         x: left + 0.2,
         y: top + 0.2,
         w: 0.42,
         h: 0.42,
-        fill: { color: ACCENT },
-        line: { color: ACCENT },
+        fill: { color: t.accent },
+        line: { color: t.accent },
       });
       page.addText(String(index + 1), {
         x: left + 0.2,
         y: top + 0.2,
         w: 0.42,
         h: 0.42,
-        fontFace: FONT,
-        fontSize: 14,
+        fontFace: t.font,
+        fontSize: 16,
         bold: true,
         color: "FFFFFF",
         align: "center",
@@ -160,10 +155,10 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
         y: top + 0.75,
         w: width - 0.4,
         h: 0.6,
-        fontFace: FONT,
-        fontSize: 16,
+        fontFace: t.font,
+        fontSize: 18,
         bold: true,
-        color: INK,
+        color: t.ink,
         valign: "top",
         fit: "shrink",
       });
@@ -173,9 +168,9 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
           y: top + 1.35,
           w: width - 0.4,
           h: height - 1.5,
-          fontFace: FONT,
-          fontSize: 12,
-          color: MUTED,
+          fontFace: t.font,
+          fontSize: 14,
+          color: t.muted,
           valign: "top",
           fit: "shrink",
         });
@@ -186,8 +181,8 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
           y: top + height / 2 - 0.14,
           w: gap - 0.16,
           h: 0.28,
-          fill: { color: MUTED },
-          line: { color: MUTED },
+          fill: { color: t.muted },
+          line: { color: t.muted },
         });
       }
     });
@@ -198,7 +193,7 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
     const count = visual.events.length;
     const width = w / count;
     const lineY = y + h * 0.36;
-    page.addShape("line", { x, y: lineY, w, h: 0, line: { color: LINE, width: 2 } });
+    page.addShape("line", { x, y: lineY, w, h: 0, line: { color: t.line, width: 2 } });
     visual.events.forEach((event, index) => {
       const left = x + index * width;
       page.addText(event.label, {
@@ -206,10 +201,10 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
         y: lineY - 0.7,
         w: width - 0.1,
         h: 0.45,
-        fontFace: FONT,
-        fontSize: 13,
+        fontFace: t.font,
+        fontSize: 15,
         bold: true,
-        color: ACCENT,
+        color: t.accent,
         valign: "bottom",
         fit: "shrink",
       });
@@ -218,7 +213,7 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
         y: lineY - 0.11,
         w: 0.22,
         h: 0.22,
-        fill: { color: ACCENT },
+        fill: { color: t.accent },
         line: { color: "FFFFFF", width: 2 },
       });
       page.addText(event.title, {
@@ -226,10 +221,10 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
         y: lineY + 0.25,
         w: width - 0.2,
         h: 0.6,
-        fontFace: FONT,
-        fontSize: 15,
+        fontFace: t.font,
+        fontSize: 18,
         bold: true,
-        color: INK,
+        color: t.ink,
         valign: "top",
         fit: "shrink",
       });
@@ -239,9 +234,9 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
           y: lineY + 0.85,
           w: width - 0.2,
           h: Math.max(0.6, h - (lineY - y) - 1.0),
-          fontFace: FONT,
-          fontSize: 12,
-          color: MUTED,
+          fontFace: t.font,
+          fontSize: 14,
+          color: t.muted,
           valign: "top",
           fit: "shrink",
         });
@@ -276,10 +271,10 @@ function drawVisual(page: Page, visual: Visual, box: Box, images: DeckImages) {
       y: y + height + 0.05,
       w,
       h: captionHeight,
-      fontFace: FONT,
+      fontFace: t.font,
       fontSize: 12,
       italic: true,
-      color: MUTED,
+      color: t.muted,
       align: "center",
       valign: "top",
     });
@@ -290,131 +285,286 @@ export async function renderPptx(
   spec: DeckSpec,
   images: DeckImages = new Map(),
 ): Promise<Uint8Array> {
+  const t = themeFor(spec);
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE"; // 13.33 x 7.5 in
   pptx.title = spec.title;
   pptx.author = "Buildr";
 
+  // Cover: dark, with the title large and left-aligned.
   const cover = pptx.addSlide();
-  cover.background = { color: "FFFFFF" };
+  cover.background = { color: t.primary };
   cover.addShape("rect", {
-    x: 0.8,
-    y: 3.05,
-    w: 0.9,
-    h: 0.08,
-    fill: { color: ACCENT },
-    line: { color: ACCENT },
+    x: 0,
+    y: 0,
+    w: 0.35,
+    h: 7.5,
+    fill: { color: t.accent },
+    line: { color: t.accent },
   });
   cover.addText(spec.title, {
-    x: 0.8,
-    y: 1.6,
-    w: 11.7,
-    h: 1.4,
-    fontFace: FONT,
-    fontSize: 40,
+    x: 1.0,
+    y: 1.7,
+    w: 11.3,
+    h: 2.2,
+    fontFace: t.font,
+    fontSize: 44,
     bold: true,
-    color: INK,
+    color: "FFFFFF",
     valign: "bottom",
+    fit: "shrink",
   });
+  if (!t.academic) {
+    cover.addShape("rect", {
+      x: 1.0,
+      y: 4.1,
+      w: 1.2,
+      h: 0.07,
+      fill: { color: t.accent },
+      line: { color: t.accent },
+    });
+  }
   if (spec.subtitle) {
     cover.addText(spec.subtitle, {
-      x: 0.8,
-      y: 3.35,
-      w: 11.7,
-      h: 1.0,
-      fontFace: FONT,
-      fontSize: 20,
-      color: MUTED,
+      x: 1.0,
+      y: 4.35,
+      w: 11.3,
+      h: 1.2,
+      fontFace: t.font,
+      fontSize: 22,
+      color: "D6E2F0",
       valign: "top",
+      fit: "shrink",
     });
   }
 
   spec.slides.forEach((slide, index) => {
     const page = pptx.addSlide();
     page.background = { color: "FFFFFF" };
-    page.addShape("rect", {
-      x: 0.8,
-      y: 1.35,
-      w: 0.6,
-      h: 0.06,
-      fill: { color: ACCENT },
-      line: { color: ACCENT },
-    });
-    page.addText(slide.title, {
-      x: 0.8,
-      y: 0.45,
-      w: 11.7,
-      h: 0.85,
-      fontFace: FONT,
-      fontSize: 30,
-      bold: true,
-      color: INK,
-      valign: "bottom",
-    });
-    // Charts and pictures sit beside the bullets; the wide visuals (stat cards, process flow,
-    // timeline) take a band below them.
     const visual = slide.visual;
     const side = visual?.type === "chart" || visual?.type === "image";
-    const hasBullets = Boolean(slide.bullets && slide.bullets.length > 0);
-    const textWidth = visual && side && hasBullets ? 5.2 : 11.7;
-    let top = 1.7;
-    if (slide.bullets && slide.bullets.length > 0) {
-      const limit = visual && !side ? 1.7 : 4.6;
-      const height = Math.min(limit, (visual && !side ? 0.42 : 0.55) * slide.bullets.length + 0.3);
+    const bullets = slide.bullets ?? [];
+    const hasBullets = bullets.length > 0;
+
+    // Title: action titles read as sentences, so they get two lines of room.
+    if (!t.academic) {
+      page.addShape("rect", {
+        x: 0.55,
+        y: 0.5,
+        w: 0.09,
+        h: 0.95,
+        fill: { color: t.accent },
+        line: { color: t.accent },
+      });
+    }
+    page.addText(slide.title, {
+      x: t.academic ? 0.6 : 0.85,
+      y: 0.4,
+      w: 11.9,
+      h: 1.15,
+      fontFace: t.font,
+      fontSize: slide.title.length > 70 ? 26 : 30,
+      bold: true,
+      color: t.primary,
+      valign: "middle",
+      fit: "shrink",
+    });
+    if (t.academic) {
+      page.addShape("rect", {
+        x: 0.6,
+        y: 1.6,
+        w: 12.1,
+        h: 0.02,
+        fill: { color: t.line },
+        line: { color: t.line },
+      });
+    }
+
+    // Content area: y 1.85 to 6.5. Charts and pictures sit in a card beside the bullets (figure
+    // left in the academic style, as the skill asks); wide visuals take a band below the text.
+    const bodySize = t.academic ? 20 : 22;
+    const figureFirst = t.academic;
+    const figX = figureFirst ? 0.6 : 6.9;
+    const textX = figureFirst && visual && side && hasBullets ? 7.2 : 0.85;
+    const textW =
+      visual && side && hasBullets ? 5.5 : !visual && slide.body && hasBullets ? 7.4 : 11.9;
+
+    if (hasBullets) {
+      const compact = Boolean(visual) && !side;
+      const rows = compact ? Math.min(bullets.length, 4) : bullets.length;
+      const height = compact ? Math.min(1.9, 0.45 * rows + 0.2) : Math.min(4.5, 0.75 * rows + 0.3);
       page.addText(
-        slide.bullets.map((bullet) => ({
+        bullets.map((bullet) => ({
           text: bullet,
-          options: { bullet: { indent: 18 }, paraSpaceAfter: visual && !side ? 4 : 8 },
+          options: { bullet: { indent: 20 }, paraSpaceAfter: compact ? 4 : 12 },
         })),
         {
-          x: 0.8,
-          y: top,
-          w: textWidth,
+          x: textX,
+          y: 1.9,
+          w: textW,
           h: height,
-          fontFace: FONT,
-          fontSize: visual && !side ? 16 : textWidth < 11 ? 18 : 20,
-          color: INK,
+          fontFace: t.font,
+          fontSize: compact ? 18 : visual && side ? 20 : bodySize,
+          color: t.ink,
           valign: "top",
+          fit: "shrink",
         },
       );
-      top += height + 0.2;
     }
+
+    // The supporting sentence becomes the callout: the one thing to remember from the slide.
+    let bandTop = hasBullets
+      ? visual && !side
+        ? 1.9 + Math.min(1.9, 0.45 * Math.min(bullets.length, 4) + 0.2) + 0.1
+        : 6.0
+      : 1.9;
     if (slide.body) {
-      page.addText(slide.body, {
-        x: 0.8,
-        y: Math.min(top, visual && !side ? 3.4 : 6.0),
-        w: textWidth,
-        h: visual && !side ? 0.6 : 1.0,
-        fontFace: FONT,
-        fontSize: 16,
-        color: MUTED,
-        valign: "top",
-      });
-      if (visual && !side) top = Math.max(top, 3.4) + 0.7;
+      if (visual && !side) {
+        page.addShape("rect", {
+          x: 0.85,
+          y: bandTop,
+          w: 0.06,
+          h: 0.55,
+          fill: { color: t.accent },
+          line: { color: t.accent },
+        });
+        page.addText(slide.body, {
+          x: 1.05,
+          y: bandTop,
+          w: 11.6,
+          h: 0.55,
+          fontFace: t.font,
+          fontSize: 16,
+          color: t.muted,
+          valign: "middle",
+          fit: "shrink",
+        });
+        bandTop += 0.7;
+      } else if (visual && side) {
+        // Placed under the bullets on the text side.
+        page.addShape("roundRect", {
+          x: textX,
+          y: 5.0,
+          w: textW,
+          h: 1.4,
+          rectRadius: 0.06,
+          fill: { color: t.tint },
+          line: { color: t.tint },
+        });
+        page.addText(slide.body, {
+          x: textX + 0.2,
+          y: 5.0,
+          w: textW - 0.4,
+          h: 1.4,
+          fontFace: t.font,
+          fontSize: 16,
+          color: t.primary,
+          valign: "middle",
+          fit: "shrink",
+        });
+      } else {
+        // Text-only slide: a tinted panel on the right keeps the page balanced.
+        const y = hasBullets ? 1.9 : 2.2;
+        page.addShape("roundRect", {
+          x: hasBullets ? 8.6 : 0.85,
+          y,
+          w: hasBullets ? 4.1 : 11.9,
+          h: hasBullets ? 3.6 : 2.4,
+          rectRadius: 0.08,
+          fill: { color: t.tint },
+          line: { color: t.tint },
+        });
+        page.addShape("rect", {
+          x: hasBullets ? 8.6 : 0.85,
+          y,
+          w: 0.08,
+          h: hasBullets ? 3.6 : 2.4,
+          fill: { color: t.accent },
+          line: { color: t.accent },
+        });
+        page.addText(slide.body, {
+          x: (hasBullets ? 8.6 : 0.85) + 0.3,
+          y,
+          w: (hasBullets ? 4.1 : 11.9) - 0.5,
+          h: hasBullets ? 3.6 : 2.4,
+          fontFace: t.font,
+          fontSize: hasBullets ? 18 : 24,
+          color: t.primary,
+          valign: "middle",
+          fit: "shrink",
+        });
+      }
     }
+
     if (visual) {
-      const box: Box = side
-        ? hasBullets
-          ? { x: 6.4, y: 1.7, w: 6.1, h: 4.9 }
-          : { x: 0.8, y: 1.7, w: 11.7, h: 4.9 }
-        : {
-            x: 0.8,
-            // Below the bullets and any supporting sentence, never over them.
-            y: Math.max(Math.min(top, 4.1), 1.7),
-            w: 11.7,
-            h: 6.7 - Math.max(Math.min(top, 4.1), 1.7),
-          };
-      drawVisual(page, visual, box, images);
+      if (side) {
+        const card: Box = hasBullets
+          ? { x: figX, y: 1.9, w: 5.9, h: 4.55 }
+          : { x: 0.85, y: 1.9, w: 11.9, h: 4.55 };
+        page.addShape("roundRect", {
+          x: card.x,
+          y: card.y,
+          w: card.w,
+          h: card.h,
+          rectRadius: 0.06,
+          fill: { color: "FFFFFF" },
+          line: { color: t.line, width: 1 },
+        });
+        drawVisual(
+          page,
+          visual,
+          { x: card.x + 0.2, y: card.y + 0.2, w: card.w - 0.4, h: card.h - 0.4 },
+          images,
+          t,
+        );
+      } else {
+        const y = Math.min(Math.max(bandTop, 2.2), 4.4);
+        drawVisual(page, visual, { x: 0.85, y, w: 11.9, h: 6.5 - y }, images, t);
+      }
     }
-    page.addText(`${index + 2}`, {
-      x: 12.1,
-      y: 6.9,
-      w: 0.6,
-      h: 0.35,
-      fontFace: FONT,
-      fontSize: 11,
-      color: MUTED,
+
+    if (slide.source) {
+      page.addText(slide.source, {
+        x: 0.85,
+        y: 6.55,
+        w: 11.5,
+        h: 0.3,
+        fontFace: t.font,
+        fontSize: 12,
+        color: t.muted,
+        valign: "middle",
+        fit: "shrink",
+      });
+    }
+    // Footer: deck title on the left, page number on the right.
+    page.addShape("rect", {
+      x: 0.6,
+      y: 6.98,
+      w: 12.1,
+      h: 0.01,
+      fill: { color: t.line },
+      line: { color: t.line },
+    });
+    page.addText(spec.title, {
+      x: 0.6,
+      y: 7.03,
+      w: 9,
+      h: 0.3,
+      fontFace: t.font,
+      fontSize: 10,
+      color: t.muted,
+      valign: "middle",
+    });
+    page.addText(String(index + 2), {
+      x: 11.7,
+      y: 7.03,
+      w: 1.0,
+      h: 0.3,
+      fontFace: t.font,
+      fontSize: 10,
+      color: t.muted,
       align: "right",
+      valign: "middle",
     });
     if (slide.notes) page.addNotes(slide.notes);
   });
