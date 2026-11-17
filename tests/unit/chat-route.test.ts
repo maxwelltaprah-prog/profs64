@@ -26,6 +26,8 @@ const creditsSpentToday = vi.hoisted(() => vi.fn());
 const deductCredits = vi.hoisted(() => vi.fn());
 const insertAssistantMessage = vi.hoisted(() => vi.fn());
 const insertUserMessage = vi.hoisted(() => vi.fn());
+const newestReplyId = vi.hoisted(() => vi.fn());
+const deleteReply = vi.hoisted(() => vi.fn());
 const chooseModel = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/db/auth", () => ({ getVerifiedUser }));
@@ -49,7 +51,13 @@ vi.mock("@/lib/db/projects", async (original) => ({
     },
   ],
 }));
-vi.mock("@/lib/db/service", () => ({ creditsSpentToday, deductCredits, insertAssistantMessage }));
+vi.mock("@/lib/db/service", () => ({
+  creditsSpentToday,
+  deductCredits,
+  deleteReply,
+  insertAssistantMessage,
+  newestReplyId,
+}));
 vi.mock("@/lib/db/supabase-server", () => ({
   createSupabaseServerClient: async () => ({ from: () => ({ insert: insertUserMessage }) }),
 }));
@@ -110,6 +118,8 @@ beforeEach(() => {
     deductCredits,
     insertAssistantMessage,
     insertUserMessage,
+    newestReplyId,
+    deleteReply,
     chooseModel,
     stopRequestedSince,
   ])
@@ -125,6 +135,8 @@ beforeEach(() => {
   }));
   insertAssistantMessage.mockResolvedValue(undefined);
   insertUserMessage.mockResolvedValue({ error: null });
+  newestReplyId.mockResolvedValue("m2");
+  deleteReply.mockResolvedValue(undefined);
   stopRequestedSince.mockResolvedValue(false);
   chooseModel.mockImplementation(() => ({
     model: createFakeModel(state.fake),
@@ -507,5 +519,56 @@ describe("Stop and disconnects", () => {
     await vi.waitFor(() => expect(deductCredits).toHaveBeenCalled(), { timeout: 3000 });
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(deductCredits).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("regenerate", () => {
+  it("answers again without a new user message and removes the old reply only after saving the new", async () => {
+    const order: string[] = [];
+    insertAssistantMessage.mockImplementation(async () => void order.push("insert"));
+    deleteReply.mockImplementation(async () => void order.push("delete"));
+    const response = await (await load())(post({ ...goodBody(), regenerate: true }));
+    expect(response.status).toBe(200);
+    await drain(response);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(newestReplyId).toHaveBeenCalledWith("project", PROJECT);
+    expect(insertUserMessage).not.toHaveBeenCalled();
+    expect(order).toEqual(["insert", "delete"]);
+    expect(deleteReply).toHaveBeenCalledWith("project", PROJECT, "m2");
+  });
+
+  it("keeps the old reply when the new one could not be saved", async () => {
+    insertAssistantMessage.mockRejectedValue(new Error("write failed"));
+    await drain(await (await load())(post({ ...goodBody(), regenerate: true })));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(deleteReply).not.toHaveBeenCalled();
+  });
+
+  it("is a 409 when the newest message is not a reply, and nothing reaches the model", async () => {
+    newestReplyId.mockResolvedValue(null);
+    const response = await (await load())(post({ ...goodBody(), regenerate: true }));
+    expect(response.status).toBe(409);
+    expect((await response.json()).error.code).toBe("nothing_to_regenerate");
+    expect(deductCredits).not.toHaveBeenCalled();
+    expect(deleteReply).not.toHaveBeenCalled();
+  });
+
+  it("still passes every gate first", async () => {
+    state.balance = 0;
+    const response = await (await load())(post({ ...goodBody(), regenerate: true }));
+    expect(response.status).toBe(402);
+    expect(newestReplyId).not.toHaveBeenCalled();
+  });
+
+  it("does not look up or delete anything on an ordinary message", async () => {
+    await drain(await (await load())(post(goodBody("hello"))));
+    expect(newestReplyId).not.toHaveBeenCalled();
+    expect(deleteReply).not.toHaveBeenCalled();
+    expect(insertUserMessage).toHaveBeenCalled();
+  });
+
+  it("rejects a non-boolean flag", async () => {
+    const response = await (await load())(post({ ...goodBody(), regenerate: "yes" }));
+    expect(response.status).toBe(422);
   });
 });

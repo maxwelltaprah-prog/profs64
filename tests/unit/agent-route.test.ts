@@ -23,6 +23,8 @@ const insertAssistant = vi.hoisted(() => vi.fn());
 const insertDocument = vi.hoisted(() => vi.fn());
 const recordAuditEvent = vi.hoisted(() => vi.fn());
 const insertUserMessage = vi.hoisted(() => vi.fn());
+const newestReplyId = vi.hoisted(() => vi.fn());
+const deleteReply = vi.hoisted(() => vi.fn());
 const chooseModel = vi.hoisted(() => vi.fn());
 const chooseFreeModel = vi.hoisted(() => vi.fn());
 
@@ -39,7 +41,9 @@ vi.mock("@/lib/db/projects", async (original) => ({
 vi.mock("@/lib/db/service", () => ({
   creditsSpentToday: async () => state.spentToday,
   deductCredits,
+  deleteReply,
   insertConversationAssistantMessage: insertAssistant,
+  newestReplyId,
   insertConversationDocument: insertDocument,
   recordAuditEvent,
   touchConversation: async () => undefined,
@@ -95,6 +99,8 @@ beforeEach(() => {
     insertDocument,
     recordAuditEvent,
     insertUserMessage,
+    newestReplyId,
+    deleteReply,
     chooseModel,
     chooseFreeModel,
   ])
@@ -110,6 +116,8 @@ beforeEach(() => {
   insertDocument.mockResolvedValue({ id: "44444444-4444-4444-8444-444444444444" });
   recordAuditEvent.mockResolvedValue(undefined);
   insertUserMessage.mockResolvedValue({ error: null });
+  newestReplyId.mockResolvedValue("old-reply");
+  deleteReply.mockResolvedValue(undefined);
   chooseModel.mockImplementation(() => ({
     model: createFakeModel(),
     usedModelId: () => "z-ai/glm-5.2",
@@ -222,5 +230,45 @@ describe("abuse and access", () => {
     getVerifiedUser.mockRejectedValue(errors.unauthenticated());
     expect((await send("hi")).status).toBe(401);
     expect(insertUserMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe("regenerate", () => {
+  const sendRegenerate = async () => {
+    const { POST } = (await import("@/app/api/conversations/[id]/chat/route")) as {
+      POST: Handler;
+    };
+    return POST(
+      new Request(`https://app.example/api/conversations/${CONVERSATION}/chat`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://app.example",
+          host: "app.example",
+          "x-forwarded-for": `10.1.0.${Math.floor(Math.random() * 200)}`,
+        },
+        body: JSON.stringify({
+          regenerate: true,
+          message: { role: "user", parts: [{ type: "text", text: "hello" }] },
+        }),
+      }),
+      { params: Promise.resolve({ id: CONVERSATION }) } as never,
+    );
+  };
+
+  it("replaces the newest reply without adding a user message", async () => {
+    const response = await sendRegenerate();
+    expect(response.status).toBe(200);
+    await drain(response);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(newestReplyId).toHaveBeenCalledWith("conversation", CONVERSATION);
+    expect(insertUserMessage).not.toHaveBeenCalled();
+    expect(deleteReply).toHaveBeenCalledWith("conversation", CONVERSATION, "old-reply");
+  });
+
+  it("is a 409 when there is no reply to replace", async () => {
+    newestReplyId.mockResolvedValue(null);
+    const response = await sendRegenerate();
+    expect(response.status).toBe(409);
   });
 });

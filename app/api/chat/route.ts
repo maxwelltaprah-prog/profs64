@@ -34,7 +34,13 @@ import {
   listProjectFiles,
   translateDbError,
 } from "@/lib/db/projects";
-import { creditsSpentToday, deductCredits, insertAssistantMessage } from "@/lib/db/service";
+import {
+  creditsSpentToday,
+  deductCredits,
+  deleteReply,
+  insertAssistantMessage,
+  newestReplyId,
+} from "@/lib/db/service";
 import { latestStopId, stopRequestedSince } from "@/lib/db/stop";
 import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { withApi } from "@/lib/security/api";
@@ -42,6 +48,7 @@ import { getClientIp, hashForKey } from "@/lib/security/client-ip";
 import {
   aiUnavailable,
   chatBusy,
+  nothingToRegenerate,
   dailyLimitReached,
   insufficientCredits,
 } from "@/lib/security/errors";
@@ -87,16 +94,27 @@ export const POST = withApi("chat", async (request, { requestId }) => {
 
   async function startChat(): Promise<Response> {
     const text = body.message.parts[0]?.text ?? "";
-    const { error: insertError } = await supabase
-      .from("messages")
-      .insert({ project_id: projectId, role: "user", parts: [{ type: "text", text }] });
-    if (insertError) throw translateDbError(insertError);
+    // Regenerate answers the message before the newest reply again, with no new user message.
+    // The old reply is hidden from the model now and removed once its replacement is saved.
+    let replacedId: string | null = null;
+    if (body.regenerate) {
+      replacedId = await newestReplyId("project", projectId);
+      if (!replacedId) throw nothingToRegenerate();
+    } else {
+      const { error: insertError } = await supabase
+        .from("messages")
+        .insert({ project_id: projectId, role: "user", parts: [{ type: "text", text }] });
+      if (insertError) throw translateDbError(insertError);
+    }
 
     const [files, stored] = await Promise.all([
       listProjectFiles(projectId, supabase),
       listMessages(projectId, supabase),
     ]);
-    const history = toUiMessages(stored, HISTORY_MESSAGES);
+    const history = toUiMessages(
+      stored.filter((message) => message.id !== replacedId),
+      HISTORY_MESSAGES,
+    );
     const snapshot = buildSnapshot(files, SNAPSHOT_BYTES);
     const tools = createProjectTools(createDbFileStore(supabase, projectId));
 
@@ -193,6 +211,7 @@ export const POST = withApi("chat", async (request, { requestId }) => {
           if (charged) parts.push(usagePart(charged));
           try {
             await insertAssistantMessage({ id: assistantId, projectId, parts });
+            if (replacedId) await deleteReply("project", projectId, replacedId);
           } catch (error) {
             logger.error("assistant_message_write_failed", { requestId, error });
           }

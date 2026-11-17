@@ -106,3 +106,5 @@ export const chatBusy = () =>
     "chat_busy",
     "A response is already being written. Wait for it to finish or press Stop.",
   );
+export const nothingToRegenerate = () =>
+  new AppError(409, "nothing_to_regenerate", "There is no reply to regenerate.");

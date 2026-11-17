@@ -21,6 +21,8 @@ import {
 import { friendlyChatError } from "@/lib/workspace/chat-lines";
 import { creditsLabel } from "@/lib/workspace/outputs";
 
+import { ReadAloudButton, RegenerateButton } from "./reply-actions";
+
 const timeFormat = new Intl.DateTimeFormat("en", {
   hour: "numeric",
   minute: "2-digit",
@@ -53,10 +55,13 @@ function AssistantReply({
   message,
   conversationId,
   streaming,
+  onRegenerate,
 }: {
   message: UIMessage;
   conversationId: string;
   streaming: boolean;
+  /** Given only for the newest reply when a new one can be requested. */
+  onRegenerate?: (() => void) | undefined;
 }) {
   const parts = message.parts as unknown[];
   const credits = replyCredits(parts);
@@ -104,6 +109,8 @@ function AssistantReply({
       {!streaming && (text || credits !== null || free) ? (
         <div className="text-subtle flex items-center gap-2 text-xs">
           {text ? <CopyButton text={text} /> : null}
+          {text ? <ReadAloudButton text={text} /> : null}
+          {text && onRegenerate ? <RegenerateButton onClick={onRegenerate} /> : null}
           {free ? (
             <span className="border-hairline inline-flex items-center gap-1 rounded-full border px-2 py-0.5">
               <Sparkles size={12} strokeWidth={1.75} aria-hidden="true" />
@@ -139,12 +146,18 @@ export function ConversationView({
       new DefaultChatTransport({
         api: `/api/conversations/${conversationId}/chat`,
         // Only the newest message is sent; the server loads the rest of the conversation itself.
-        prepareSendMessagesRequest: ({ messages }) => {
+        prepareSendMessagesRequest: ({ messages, trigger }) => {
+          // For a regenerate the newest message is the user message the reply answered.
           const last = messages[messages.length - 1];
           const text = (last?.parts ?? [])
             .map((part) => (part.type === "text" ? part.text : ""))
             .join("");
-          return { body: { message: { role: "user", parts: [{ type: "text", text }] } } };
+          return {
+            body: {
+              message: { role: "user", parts: [{ type: "text", text }] },
+              ...(trigger === "regenerate-message" ? { regenerate: true } : {}),
+            },
+          };
         },
         // The server says in a header whether this reply runs on the free model.
         fetch: async (request, init) => {
@@ -158,7 +171,7 @@ export function ConversationView({
     [conversationId],
   );
 
-  const { messages, sendMessage, status, stop } = useChat({
+  const { messages, sendMessage, regenerate, status, stop } = useChat({
     id: conversationId,
     messages: initialMessages,
     transport,
@@ -230,6 +243,14 @@ export function ConversationView({
                 message={message}
                 conversationId={conversationId}
                 streaming={busy && index === messages.length - 1}
+                onRegenerate={
+                  index === messages.length - 1 && !busy
+                    ? () => {
+                        setError(null);
+                        void regenerate();
+                      }
+                    : undefined
+                }
               />
             ),
           )}

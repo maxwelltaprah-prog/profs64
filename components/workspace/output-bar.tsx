@@ -3,6 +3,7 @@
 import { Check, Copy, Share2, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { ReadAloudButton, RegenerateButton } from "@/components/chat/reply-actions";
 import { iconProps } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
 import { creditsLabel, type OutputInfo, type Rating } from "@/lib/workspace/outputs";
@@ -15,17 +16,20 @@ const NOTE_TEXT: Record<Exclude<Note, null>, string> = {
   shared: "Shared",
 };
 
-// Copy, like, dislike, share and the credits used, under one finished reply. Share uses the
+// Copy, read aloud, like, dislike, regenerate (newest reply only), share and the credits used, under one finished reply. Share uses the
 // device's own share sheet when there is one and otherwise copies the text; it never creates a
 // public link, so nothing leaves the person's account unless they send it themselves.
 export function OutputBar({
   text,
   info,
   onRate,
+  onRegenerate,
 }: {
   text: string;
   info: OutputInfo | undefined;
   onRate: (rating: Rating | null) => void;
+  /** Given only for the newest reply when a new one can be requested. */
+  onRegenerate?: (() => void) | undefined;
 }) {
   const [note, setNote] = useState<Note>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,6 +87,7 @@ export function OutputBar({
           <Copy {...iconProps} />
         )}
       </button>
+      <ReadAloudButton text={text} />
       <button
         type="button"
         aria-label="Good reply"
@@ -101,6 +106,7 @@ export function OutputBar({
       >
         <ThumbsDown {...iconProps} />
       </button>
+      {onRegenerate ? <RegenerateButton onClick={onRegenerate} /> : null}
       <button
         type="button"
         aria-label="Share reply"

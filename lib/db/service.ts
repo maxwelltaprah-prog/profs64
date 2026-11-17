@@ -172,3 +172,44 @@ export async function touchConversation(id: string): Promise<void> {
     .update({ updated_at: new Date().toISOString() })
     .eq("id", id);
 }
+
+// Regenerate support. The newest reply is only looked up first (so it can be left out of the
+// history the model sees) and is removed after its replacement has been saved, so a failed
+// attempt never leaves the person without a reply. Only assistant replies are ever matched, so a
+// person's own message cannot be removed this way. The caller has already verified ownership of
+// the project or conversation through RLS.
+const replyTable = (kind: "project" | "conversation") =>
+  kind === "project"
+    ? ({ table: "messages", column: "project_id" } as const)
+    : ({ table: "conversation_messages", column: "conversation_id" } as const);
+
+export async function newestReplyId(
+  kind: "project" | "conversation",
+  parentId: string,
+): Promise<string | null> {
+  const { table, column } = replyTable(kind);
+  const { data, error } = await serviceClient()
+    .from(table)
+    .select("id, role")
+    .eq(column, parentId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (error) throw new Error(`reply lookup failed: ${error.code ?? "unknown"}`);
+  const last = (data as Array<{ id: string; role: string }> | null)?.[0];
+  return last && last.role === "assistant" ? last.id : null;
+}
+
+export async function deleteReply(
+  kind: "project" | "conversation",
+  parentId: string,
+  replyId: string,
+): Promise<void> {
+  const { table, column } = replyTable(kind);
+  const { error } = await serviceClient()
+    .from(table)
+    .delete()
+    .eq("id", replyId)
+    .eq(column, parentId)
+    .eq("role", "assistant");
+  if (error) throw new Error(`reply delete failed: ${error.code ?? "unknown"}`);
+}

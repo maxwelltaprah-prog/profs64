@@ -177,6 +177,7 @@ function AssistantMessage({
   onRate,
   onOpenFile,
   onOpenPreview,
+  onRegenerate,
 }: {
   message: UIMessage;
   live: boolean;
@@ -185,6 +186,7 @@ function AssistantMessage({
   onRate: (rating: Rating | null) => void;
   onOpenFile: ((path: string) => void) | undefined;
   onOpenPreview: (() => void) | undefined;
+  onRegenerate?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const groups = useMemo(() => groupParts(message.parts), [message.parts]);
@@ -302,7 +304,9 @@ function AssistantMessage({
         </div>
       ) : null}
 
-      {copyText ? <OutputBar text={copyText} info={info} onRate={onRate} /> : null}
+      {copyText ? (
+        <OutputBar text={copyText} info={info} onRate={onRate} onRegenerate={onRegenerate} />
+      ) : null}
     </div>
   );
 }
@@ -392,13 +396,18 @@ export function ChatPanel({
       new DefaultChatTransport({
         api: "/api/chat",
         // Only the newest message goes to the server; history is loaded there from the database.
-        prepareSendMessagesRequest: ({ messages }) => {
+        prepareSendMessagesRequest: ({ messages, trigger }) => {
+          // For a regenerate the newest message is the user message the reply answered.
           const last = messages[messages.length - 1];
           const text = (last?.parts ?? [])
             .map((part) => (part.type === "text" ? part.text : ""))
             .join("");
           return {
-            body: { id: projectId, message: { role: "user", parts: [{ type: "text", text }] } },
+            body: {
+              id: projectId,
+              message: { role: "user", parts: [{ type: "text", text }] },
+              ...(trigger === "regenerate-message" ? { regenerate: true } : {}),
+            },
           };
         },
       }),
@@ -425,7 +434,7 @@ export function ChatPanel({
     [],
   );
 
-  const { messages, sendMessage, status, stop } = useChat({
+  const { messages, sendMessage, regenerate, status, stop } = useChat({
     id: projectId,
     messages: initialMessages,
     transport,
@@ -789,6 +798,14 @@ export function ChatPanel({
                         onRate={(next) => void rate(message.id, next)}
                         onOpenFile={onOpenFile}
                         onOpenPreview={onOpenPreview}
+                        onRegenerate={
+                          index === messages.length - 1 && !busy && enabled
+                            ? () => {
+                                setError(null);
+                                void regenerate();
+                              }
+                            : undefined
+                        }
                       />
                     )}
                   </li>

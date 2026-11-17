@@ -28,8 +28,10 @@ import { getCreditBalance, translateDbError } from "@/lib/db/projects";
 import {
   creditsSpentToday,
   deductCredits,
+  deleteReply,
   insertConversationAssistantMessage,
   insertConversationDocument,
+  newestReplyId,
   recordAuditEvent,
   touchConversation,
 } from "@/lib/db/service";
@@ -37,7 +39,7 @@ import { latestStopId, stopRequestedSince } from "@/lib/db/stop";
 import { createSupabaseServerClient } from "@/lib/db/supabase-server";
 import { withApi } from "@/lib/security/api";
 import { getClientIp, hashForKey } from "@/lib/security/client-ip";
-import { aiUnavailable, AppError, chatBusy } from "@/lib/security/errors";
+import { aiUnavailable, AppError, chatBusy, nothingToRegenerate } from "@/lib/security/errors";
 import { logger } from "@/lib/security/logger";
 import { enforceLimits, LIMITS } from "@/lib/security/rate-limit";
 import { readJson } from "@/lib/security/request";
@@ -107,12 +109,25 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     async function start(): Promise<Response> {
       const text = body.message.parts[0]?.text ?? "";
-      const { error: insertError } = await supabase
-        .from("conversation_messages")
-        .insert({ conversation_id: id, role: "user", parts: [{ type: "text", text }] });
-      if (insertError) throw translateDbError(insertError);
+      // Regenerate answers the message before the newest reply again, with no new user message.
+      // The old reply is hidden from the model now and removed once its replacement is saved.
+      let replacedId: string | null = null;
+      if (body.regenerate) {
+        replacedId = await newestReplyId("conversation", id);
+        if (!replacedId) throw nothingToRegenerate();
+      } else {
+        const { error: insertError } = await supabase
+          .from("conversation_messages")
+          .insert({ conversation_id: id, role: "user", parts: [{ type: "text", text }] });
+        if (insertError) throw translateDbError(insertError);
+      }
 
-      const history = toUiMessages(await listConversationMessages(id, supabase), HISTORY_MESSAGES);
+      const history = toUiMessages(
+        (await listConversationMessages(id, supabase)).filter(
+          (message) => message.id !== replacedId,
+        ),
+        HISTORY_MESSAGES,
+      );
       const tools = createAgentTools({
         save: (document) => insertConversationDocument({ conversationId: id, ...document }),
       });
@@ -204,6 +219,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
                 parts,
               });
               await touchConversation(id);
+              if (replacedId) await deleteReply("conversation", id, replacedId);
             } catch (error) {
               logger.error("assistant_message_write_failed", { requestId, error });
             }

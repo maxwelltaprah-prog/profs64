@@ -59,6 +59,9 @@ export const createProjectSchema = z.strictObject({
 // so a client can never supply or rewrite earlier turns.
 export const chatBodySchema = z.strictObject({
   id: z.uuid(),
+  // Replace the newest reply instead of adding a message: the server drops that reply and answers
+  // the last message again. History still comes from the database, never from the client.
+  regenerate: z.boolean().optional(),
   message: z.object({
     id: z.string().max(100).optional(),
     role: z.literal("user"),
