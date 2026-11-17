@@ -53,6 +53,20 @@ export function translateDbError(error: { message?: string; code?: string } | nu
       "This conversation is full. Start a new project to continue.",
     );
   }
+  if (message.includes("image limit reached")) {
+    return new AppError(409, "image_limit", "This chat has reached the limit of 20 pictures.");
+  }
+  if (message.includes("record limit reached")) {
+    return new AppError(409, "record_limit", "This app's data store is full (1,000 records).");
+  }
+  // The tables from the images/data-store migration are not there yet (it is applied by the owner).
+  if (error?.code === "42P01" || error?.code === "PGRST205" || error?.code === "PGRST200") {
+    return new AppError(
+      503,
+      "database_update_needed",
+      "This feature needs a database update that has not been applied yet.",
+    );
+  }
   return new AppError(500, "internal", "Something went wrong. Try again in a moment.");
 }
 

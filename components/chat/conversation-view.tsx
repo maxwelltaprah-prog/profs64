@@ -19,6 +19,13 @@ import {
   replyText,
   visibleDocumentSteps,
 } from "@/lib/workspace/agent";
+import {
+  MAX_IMAGES_PER_MESSAGE,
+  quickImageCheck,
+  uploadChatImage,
+  withImageMarker,
+  type ChatImage,
+} from "@/lib/workspace/chat-images";
 import { friendlyChatError } from "@/lib/workspace/chat-lines";
 import { creditsLabel, type Rating } from "@/lib/workspace/outputs";
 
@@ -189,6 +196,22 @@ export function ConversationView({
     }
   };
 
+  const [images, setImages] = useState<ChatImage[]>([]);
+  const attach = async (picked: File[]) => {
+    const problem = picked.map(quickImageCheck).find((message) => message !== null);
+    if (problem) return setError(problem);
+    setError(null);
+    for (const file of picked.slice(0, Math.max(0, MAX_IMAGES_PER_MESSAGE - images.length))) {
+      try {
+        const image = await uploadChatImage(conversationId, file);
+        setImages((current) => [...current, image].slice(0, MAX_IMAGES_PER_MESSAGE));
+      } catch (uploadError) {
+        setError(uploadError instanceof Error ? uploadError.message : "Could not attach that.");
+        return;
+      }
+    }
+  };
+
   const send = (text: string) => {
     setError(null);
     void sendMessage({ text });
@@ -307,11 +330,16 @@ export function ConversationView({
           onChange={setInput}
           busy={busy}
           onStop={stopReply}
+          attachments={images.map((image) => ({ key: image.id, name: image.name }))}
+          onAttach={(picked) => void attach(picked)}
+          onRemoveAttachment={(key) => setImages((current) => current.filter((i) => i.id !== key))}
           onSend={() => {
             const text = input.trim();
             if (!text) return;
             setInput("");
-            send(text);
+            const attached = images;
+            setImages([]);
+            send(withImageMarker(text, attached));
           }}
         />
       </div>

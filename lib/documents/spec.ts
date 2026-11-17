@@ -36,11 +36,66 @@ export const documentSpecSchema = z.strictObject({
 });
 export type DocumentSpec = z.infer<typeof documentSpecSchema>;
 
+// Visuals a slide can carry. Each is plain data drawn by the renderer as native, editable
+// PowerPoint objects (charts, shapes, text); nothing is fetched, and no markup or code is accepted.
+const chartVisual = z.strictObject({
+  type: z.literal("chart"),
+  kind: z.enum(["bar", "line", "pie", "doughnut"]),
+  // Used as the chart's title on the slide.
+  title: text(80).optional(),
+  categories: z.array(text(40)).min(2).max(12),
+  series: z
+    .array(
+      z.strictObject({
+        name: text(40),
+        values: z.array(z.number().finite().min(-1e12).max(1e12)).min(2).max(12),
+      }),
+    )
+    .min(1)
+    .max(4),
+});
+const statsVisual = z.strictObject({
+  type: z.literal("stats"),
+  items: z
+    .array(z.strictObject({ value: text(14), label: text(70) }))
+    .min(2)
+    .max(4),
+});
+const processVisual = z.strictObject({
+  type: z.literal("process"),
+  steps: z
+    .array(z.strictObject({ title: text(40), text: text(110).optional() }))
+    .min(2)
+    .max(6),
+});
+const timelineVisual = z.strictObject({
+  type: z.literal("timeline"),
+  events: z
+    .array(z.strictObject({ label: text(20), title: text(40), text: text(110).optional() }))
+    .min(2)
+    .max(6),
+});
+// A picture the person attached to this conversation, referred to by its id.
+const imageVisual = z.strictObject({
+  type: z.literal("image"),
+  imageId: z.uuid(),
+  caption: text(120).optional(),
+});
+export const visualSchema = z.discriminatedUnion("type", [
+  chartVisual,
+  statsVisual,
+  processVisual,
+  timelineVisual,
+  imageVisual,
+]);
+export type Visual = z.infer<typeof visualSchema>;
+
 export const slideSchema = z.strictObject({
   title: text(150),
   bullets: z.array(text(300)).max(10).optional(),
   // Shown below the bullets, for a short supporting sentence or a quote.
   body: text(600).optional(),
+  visual: visualSchema.optional(),
   notes: text(2000).optional(),
 });
 export const deckSpecSchema = z.strictObject({
@@ -119,4 +174,13 @@ export function normaliseDocumentInput(
     ok: false,
     error: `The outline is not valid at ${where}: ${issue?.message ?? "check its shape"}. Fix it and call create_document again.`,
   };
+}
+
+// The ids of the person's pictures a deck refers to.
+export function imageIdsIn(deck: DeckSpec): string[] {
+  const ids = new Set<string>();
+  for (const slide of deck.slides) {
+    if (slide.visual?.type === "image") ids.add(slide.visual.imageId);
+  }
+  return [...ids];
 }

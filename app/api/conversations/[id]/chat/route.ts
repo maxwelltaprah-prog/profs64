@@ -24,6 +24,7 @@ import {
   latestFreeWindowStart,
   listConversationMessages,
 } from "@/lib/db/conversations";
+import { existingImageIds } from "@/lib/db/images";
 import { getCreditBalance, translateDbError } from "@/lib/db/projects";
 import {
   creditsSpentToday,
@@ -130,6 +131,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       );
       const tools = createAgentTools({
         save: (document) => insertConversationDocument({ conversationId: id, ...document }),
+        knownImages: (ids) => existingImageIds(id, ids, supabase),
       });
       const free = freeUntil !== null;
       const chosen = free ? chooseFreeModel() : chooseModel();

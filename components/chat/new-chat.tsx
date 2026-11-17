@@ -6,6 +6,13 @@ import { useRef, useState } from "react";
 
 import { AgentComposer } from "@/components/chat/agent-composer";
 import { AGENT_SUGGESTIONS, firstMessageKey, titleFromPrompt } from "@/lib/workspace/agent";
+import {
+  MAX_IMAGES_PER_MESSAGE,
+  quickImageCheck,
+  uploadChatImage,
+  withImageMarker,
+  type ChatImage,
+} from "@/lib/workspace/chat-images";
 
 const ICONS = [Presentation, FileText, ScrollText, MessageCircleQuestion];
 
@@ -17,6 +24,7 @@ export function NewChat({ greeting }: { greeting: string }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<{ key: string; file: File }[]>([]);
 
   const start = async () => {
     const message = text.trim();
@@ -39,8 +47,19 @@ export function NewChat({ greeting }: { greeting: string }) {
         setBusy(false);
         return;
       }
+      // Pictures are attached now that the conversation exists, then named in the first message.
+      const uploaded: ChatImage[] = [];
       try {
-        window.sessionStorage.setItem(firstMessageKey(id), message);
+        for (const item of files) uploaded.push(await uploadChatImage(id, item.file));
+      } catch (uploadError) {
+        setError(
+          `${uploadError instanceof Error ? uploadError.message : "A picture could not be attached."} The chat was created without it; open it from your chats to continue.`,
+        );
+        setBusy(false);
+        return;
+      }
+      try {
+        window.sessionStorage.setItem(firstMessageKey(id), withImageMarker(message, uploaded));
       } catch {
         // Without storage the conversation opens empty and the text stays in this box's history.
       }
@@ -67,6 +86,19 @@ export function NewChat({ greeting }: { greeting: string }) {
           onChange={setText}
           onSend={() => void start()}
           busy={busy}
+          attachments={files.map((item) => ({ key: item.key, name: item.file.name }))}
+          onAttach={(picked) => {
+            const problem = picked.map(quickImageCheck).find((message) => message !== null);
+            if (problem) return setError(problem);
+            setError(null);
+            setFiles((current) =>
+              [...current, ...picked.map((file) => ({ key: crypto.randomUUID(), file }))].slice(
+                0,
+                MAX_IMAGES_PER_MESSAGE,
+              ),
+            );
+          }}
+          onRemoveAttachment={(key) => setFiles((current) => current.filter((i) => i.key !== key))}
         />
       </div>
       {error ? (

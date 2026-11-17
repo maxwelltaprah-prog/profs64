@@ -1,7 +1,8 @@
 import { getVerifiedUser } from "@/lib/db/auth";
 import { getConversationDocument } from "@/lib/db/conversations";
+import { loadImageBytes } from "@/lib/db/images";
 import { renderDocument } from "@/lib/documents/render";
-import { fileNameFor, MIME } from "@/lib/documents/spec";
+import { fileNameFor, imageIdsIn, MIME, deckSpecSchema } from "@/lib/documents/spec";
 import { withApi } from "@/lib/security/api";
 import { logger } from "@/lib/security/logger";
 import { enforceLimits, LIMITS } from "@/lib/security/rate-limit";
@@ -19,7 +20,15 @@ export async function GET(
     const document = await getConversationDocument(id, docId);
     let bytes: Uint8Array;
     try {
-      bytes = await renderDocument(document.kind, document.spec);
+      // A deck may use pictures the person attached. If they cannot be loaded the deck is still
+      // made, without them, rather than failing the download.
+      let images: Map<string, Uint8Array> | undefined;
+      if (document.kind === "pptx") {
+        const deck = deckSpecSchema.safeParse(document.spec);
+        const ids = deck.success ? imageIdsIn(deck.data) : [];
+        if (ids.length > 0) images = await loadImageBytes(id, ids).catch(() => undefined);
+      }
+      bytes = await renderDocument(document.kind, document.spec, images);
     } catch (error) {
       logger.error("document_render_failed", {
         requestId,

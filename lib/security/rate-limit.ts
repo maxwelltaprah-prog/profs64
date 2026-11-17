@@ -146,6 +146,8 @@ export const LIMITS = {
   agentFreeUser: { name: "agent-free-user", limit: 40, windowSeconds: 86400 },
   conversationCreateUser: { name: "conversation-create-user", limit: 60, windowSeconds: 3600 },
   documentDownloadUser: { name: "document-download-user", limit: 120, windowSeconds: 600 },
+  imageUploadUser: { name: "image-upload-user", limit: 30, windowSeconds: 3600 },
+  projectDataUser: { name: "project-data-user", limit: 600, windowSeconds: 600 },
   attachUser: { name: "attach-user", limit: 20, windowSeconds: 600 },
   passwordChangeUser: { name: "password-change-user", limit: 5, windowSeconds: 3600 },
   waitlistUser: { name: "waitlist-user", limit: 20, windowSeconds: 3600 },

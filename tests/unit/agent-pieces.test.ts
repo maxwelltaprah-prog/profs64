@@ -43,6 +43,7 @@ describe("document tool", () => {
   it("saves a validated outline and reports where it is", async () => {
     const saved: unknown[] = [];
     const tools = createAgentTools({
+      knownImages: async () => new Set(),
       save: async (input) => {
         saved.push(input);
         return { id: "doc-1" };
@@ -63,6 +64,7 @@ describe("document tool", () => {
 
   it("refuses oversized outlines and reports storage failures without detail", async () => {
     const tools = createAgentTools({
+      knownImages: async () => new Set(),
       save: async () => {
         throw new Error("db password in message");
       },
@@ -88,6 +90,7 @@ describe("document tool", () => {
   it("accepts an outline sent as a JSON string and infers the kind, as free models do", async () => {
     const saved: unknown[] = [];
     const tools = createAgentTools({
+      knownImages: async () => new Set(),
       save: async (input) => {
         saved.push(input);
         return { id: "doc-2" };
@@ -117,7 +120,10 @@ describe("document tool", () => {
 
   it("explains exactly what is wrong so the model can fix it, and saves nothing", async () => {
     const saved: unknown[] = [];
-    const tools = createAgentTools({ save: async (input) => (saved.push(input), { id: "x" }) });
+    const tools = createAgentTools({
+      knownImages: async () => new Set(),
+      save: async (input) => (saved.push(input), { id: "x" }),
+    });
     const run = tools.create_document.execute as (
       input: unknown,
       options: unknown,

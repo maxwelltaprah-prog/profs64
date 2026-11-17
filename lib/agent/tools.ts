@@ -5,6 +5,7 @@ import {
   MAX_SPEC_BYTES,
   normaliseDocumentInput,
   specOf,
+  imageIdsIn,
   type CreateDocumentInput,
 } from "@/lib/documents/spec";
 
@@ -14,6 +15,8 @@ export interface DocumentStore {
     title: string;
     spec: unknown;
   }): Promise<{ id: string }>;
+  // Which of these picture ids belong to this conversation. A deck can only use those.
+  knownImages(ids: readonly string[]): Promise<ReadonlySet<string>>;
 }
 
 export type DocumentToolOutput =
@@ -35,6 +38,24 @@ export function createAgentTools(store: DocumentStore) {
         const spec = specOf(input);
         if (new TextEncoder().encode(JSON.stringify(spec)).length > MAX_SPEC_BYTES) {
           return { ok: false, error: "The document is too long. Shorten it and try again." };
+        }
+        if (input.kind === "pptx") {
+          const used = imageIdsIn(input.deck);
+          if (used.length > 0) {
+            let known: ReadonlySet<string>;
+            try {
+              known = await store.knownImages(used);
+            } catch {
+              return { ok: false, error: "The attached pictures could not be checked. Try again." };
+            }
+            if (used.some((imageId) => !known.has(imageId))) {
+              return {
+                ok: false,
+                error:
+                  "A slide uses a picture that is not attached to this chat. Use only the image ids listed in the person's messages.",
+              };
+            }
+          }
         }
         try {
           const { id } = await store.save({ kind: input.kind, title: spec.title, spec });
