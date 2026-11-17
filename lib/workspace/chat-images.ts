@@ -48,3 +48,13 @@ export async function uploadChatImage(conversationId: string, file: File): Promi
   }
   return body.image;
 }
+
+const MARKER_LINE = /\n*\[Images attached: ([^\]]*)\]\s*$/;
+
+// Splits the marker off a stored message so the bubble can show names, not ids.
+export function splitImageMarker(text: string): { text: string; names: string[] } {
+  const match = MARKER_LINE.exec(text);
+  if (!match) return { text, names: [] };
+  const names = Array.from((match[1] ?? "").matchAll(/name="([^"]*)"/g)).map((m) => m[1] ?? "");
+  return { text: text.slice(0, match.index), names };
+}

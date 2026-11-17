@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { AlertCircle, Sparkles } from "lucide-react";
+import { AlertCircle, ImageIcon, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AgentComposer } from "@/components/chat/agent-composer";
@@ -23,6 +23,7 @@ import {
   MAX_IMAGES_PER_MESSAGE,
   quickImageCheck,
   uploadChatImage,
+  splitImageMarker,
   withImageMarker,
   type ChatImage,
 } from "@/lib/workspace/chat-images";
@@ -266,9 +267,7 @@ export function ConversationView({
           {messages.map((message, index) =>
             message.role === "user" ? (
               <div key={message.id} className="chat-in flex justify-end">
-                <p className="bg-surface-2 max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-[15px] leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
-                  {replyText(message.parts as unknown[])}
-                </p>
+                <UserBubble text={replyText(message.parts as unknown[])} />
               </div>
             ) : (
               <AssistantReply
@@ -343,6 +342,29 @@ export function ConversationView({
           }}
         />
       </div>
+    </div>
+  );
+}
+
+// A person's message. The picture marker the assistant reads is shown as named chips instead.
+function UserBubble({ text }: { text: string }) {
+  const shown = splitImageMarker(text);
+  return (
+    <div className="bg-surface-2 max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-[15px] leading-6 [overflow-wrap:anywhere]">
+      <p className="whitespace-pre-wrap">{shown.text}</p>
+      {shown.names.length > 0 ? (
+        <ul aria-label="Attached pictures" className="mt-2 flex flex-wrap gap-1.5">
+          {shown.names.map((name, i) => (
+            <li
+              key={`${i}-${name}`}
+              className="border-hairline bg-surface flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs"
+            >
+              <ImageIcon size={12} aria-hidden="true" />
+              <span className="truncate">{name}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

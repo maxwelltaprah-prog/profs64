@@ -204,3 +204,14 @@ describe("create_document and pictures", () => {
     expect(save).not.toHaveBeenCalled();
   });
 });
+
+describe("splitImageMarker", () => {
+  it("separates the marker from the text and lists names", async () => {
+    const { splitImageMarker, withImageMarker } = await import("@/lib/workspace/chat-images");
+    const text = withImageMarker("Polish this", [
+      { id: ID, name: "ppt.png", width: 1054, height: 611 },
+    ]);
+    expect(splitImageMarker(text)).toEqual({ text: "Polish this", names: ["ppt.png"] });
+    expect(splitImageMarker("plain")).toEqual({ text: "plain", names: [] });
+  });
+});
