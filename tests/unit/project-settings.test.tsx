@@ -125,7 +125,7 @@ describe("ProjectSettings", () => {
     expect(screen.getByText("Not started")).toBeDefined();
     expect(screen.getByText("Private")).toBeDefined();
     expect(screen.getByText("Not pushed")).toBeDefined();
-    expect(screen.getByText("Planned")).toBeDefined();
+    expect(screen.getByText("Guide")).toBeDefined();
   });
 
   it("renames through the API and refreshes", async () => {

@@ -247,8 +247,8 @@ function DetailsSection({
           <StatusCard
             step="04 · Address"
             title="Custom domain"
-            status="Planned"
-            text="Hosting and domains are not available yet."
+            status="Guide"
+            text="Hosting is not built in yet. Here is how to put the app online today."
             onClick={() => go("domains")}
           />
         </div>
@@ -438,17 +438,32 @@ export function ProjectSettings({
               {section === "github" ? <GitHubPanel projectId={projectId} built={built} /> : null}
               {section === "domains" ? (
                 <div className="flex max-w-xl flex-col gap-3 text-[13px] leading-5">
-                  <p className="border-hairline bg-surface-2 text-muted w-fit rounded-full border px-2.5 py-0.5 text-xs">
-                    Planned
-                  </p>
                   <p>
-                    Hosting and custom domains are not available yet. Your app runs in the preview
-                    and in the public preview link.
+                    Buildr does not host apps or sell domains yet. Your app runs in the preview and
+                    the public preview link. To put it online at an address you control, use a free
+                    static host:
                   </p>
+                  <ol className="list-decimal space-y-1.5 pl-5">
+                    <li>
+                      Get the code: push it to GitHub from the GitHub section, or download the
+                      codebase from the Code tab.
+                    </li>
+                    <li>
+                      Create a free account at Vercel, Netlify or Cloudflare Pages and import the
+                      repository (or upload the downloaded folder).
+                    </li>
+                    <li>
+                      Use the Vite settings: build command <code>npm run build</code>, output folder{" "}
+                      <code>dist</code>.
+                    </li>
+                    <li>
+                      Add your domain in that host&apos;s Domains settings and follow its DNS steps.
+                    </li>
+                  </ol>
                   <p className="text-muted">
-                    To put it on your own address today, push the code to GitHub and deploy it on
-                    Vercel, Netlify or Cloudflare Pages, which can connect a domain you own. You can
-                    also download the codebase from the Code tab.
+                    Saved data: outside Buildr the app keeps its records in each visitor&apos;s own
+                    browser, because the built-in data store only exists inside Buildr. If you need
+                    shared data for real visitors, connect your own database service.
                   </p>
                 </div>
               ) : null}
