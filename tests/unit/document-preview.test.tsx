@@ -81,3 +81,17 @@ describe("DocumentCard preview", () => {
     expect(screen.getAllByText("Download").length).toBeGreaterThan(0);
   });
 });
+
+describe("SlideSvg colours", () => {
+  it("uses valid SVG colours (with #), not bare hex", () => {
+    const { container } = render(<SlideSvg deck={deck} index={0} images={{}} />);
+    const fills = Array.from(container.querySelectorAll("[fill]")).map((e) =>
+      e.getAttribute("fill"),
+    );
+    expect(fills.filter((f) => f && /^[0-9A-Fa-f]{6}$/.test(f))).toEqual([]);
+    const strokes = Array.from(container.querySelectorAll("[stroke]")).map((e) =>
+      e.getAttribute("stroke"),
+    );
+    expect(strokes.filter((f) => f && /^[0-9A-Fa-f]{6}$/.test(f))).toEqual([]);
+  });
+});

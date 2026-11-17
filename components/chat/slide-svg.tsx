@@ -4,6 +4,22 @@ import { themeFor, type Theme } from "@/lib/documents/themes";
 // A slide drawn as SVG from the same outline and theme the .pptx is made from. SVG attributes (not
 // style attributes) keep it inside the strict CSP, and it scales to any width. It is a close
 // preview, not the file: PowerPoint lays text out slightly differently.
+// Theme colours are bare hex for PowerPoint; SVG needs the leading #.
+function forSvg(t: Theme): Theme {
+  const hash = (c: string) => (c.startsWith("#") ? c : `#${c}`);
+  return {
+    ...t,
+    primary: hash(t.primary),
+    accent: hash(t.accent),
+    tint: hash(t.tint),
+    ink: hash(t.ink),
+    muted: hash(t.muted),
+    line: hash(t.line),
+    surface: hash(t.surface),
+    series: t.series.map(hash),
+  };
+}
+
 const W = 1333;
 const H = 750;
 const PX = 100 / 72; // points to viewBox units (100 units per inch)
@@ -487,7 +503,7 @@ export function SlideSvg({
   index: number;
   images: Readonly<Record<string, string>>;
 }) {
-  const t = themeFor(deck);
+  const t = forSvg(themeFor(deck));
   const font = `${t.font}, Arial, sans-serif`;
   if (index < 0) {
     return (
