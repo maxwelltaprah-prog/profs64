@@ -164,7 +164,11 @@ export const POST = withApi("chat", async (request, { requestId }) => {
           biller.activitySeen();
         }
       },
-      onStepEnd: (step) => biller.stepEnded(step.usage),
+      onStepEnd: (step) => {
+        biller.stepEnded(step.usage);
+        // A step that hit the output cap loses its last tool call; worth seeing in the logs.
+        if (step.finishReason === "length") logger.warn("step_hit_output_cap", { requestId });
+      },
       onEnd: async (event) => {
         await biller.settle("finish", event.totalUsage);
       },

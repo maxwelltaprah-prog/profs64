@@ -17,7 +17,9 @@ export const DEFAULT_MODEL: ModelConfig = {
   label: "GLM 5.2",
   inputUsdPerMillion: 1.4,
   outputUsdPerMillion: 4.4,
-  maxOutputTokens: 6000,
+  // Reasoning tokens count against this too. At 6000 a large redesign ran out mid-file: the cut-off
+  // tool call was dropped, nothing was saved, and the request was still charged.
+  maxOutputTokens: 16000,
 };
 
 // Used only when the default model fails before producing any output.
@@ -26,7 +28,7 @@ export const FALLBACK_MODEL: ModelConfig = {
   label: "DeepSeek V3.2",
   inputUsdPerMillion: 0.29,
   outputUsdPerMillion: 0.43,
-  maxOutputTokens: 6000,
+  maxOutputTokens: 8000,
 };
 
 export const MODELS: ReadonlyArray<ModelConfig> = [DEFAULT_MODEL, FALLBACK_MODEL];
